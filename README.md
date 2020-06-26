@@ -1,18 +1,31 @@
-# ODP-SDK
+# Python SDK for Ocean Data Platform (ODP)
 
-Python SDK for Ocean Data Platform 
+Main entrypoint into the Ocean Data Platform SDK. All services are made available through this object.
 
-Main entrypoint into the Ocean Data Platform SDK. 
-All services are made available through this object.
+## Installation
 
-Example:
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install ODP-SDK.
 
+```bash
+pip install odp-sdk
+```
+
+## Usage
+
+Import the Ocean Data Platform SDK 
+```python
 from client import ODPClient
+```
+Connect to the platform
+```python
+client = ODPClient(api_key='your_personal_api_key_from_ODP',
+                       project="odp", client_name="odp")
+```
+Get dataframe of ocean data samples (casts) within search criteria
 
-client = ODPClient(api_key='....................',
-                   project="odp", client_name="odp")
-
+```python
 df=client.casts(longitude=[-10,35],
                 latitude=[50,80],
-                timespan=['2018-03-01','2018-09-01'],
+                timespan=['2015-01-01','2019-12-01'],
                 depth=[0,100]) 
+```
