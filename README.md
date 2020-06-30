@@ -27,5 +27,5 @@ Get dataframe of ocean data samples (casts) within search criteria
 df=client.casts(longitude=[-10,35],
                 latitude=[50,80],
                 timespan=['2015-01-01','2019-12-01'],
-                depth=[0,100]) 
+                n_threads=10) 
 ```
