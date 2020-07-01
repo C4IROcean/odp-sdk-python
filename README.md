@@ -29,3 +29,5 @@ df=client.casts(longitude=[-10,35],
                 timespan=['2015-01-01','2019-12-01'],
                 n_threads=10) 
 ```
+## Jupyter Notebook Examples 
+- Download data plot the casts and create a gridded map of surface temperature [here](https://github.com/C4IROcean/ODP-SDK/blob/master/ExampleNotebook-01.ipynb)
