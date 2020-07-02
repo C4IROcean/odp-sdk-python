@@ -55,12 +55,14 @@ class ODPClient(CogniteClient):
         
         '''
         
-        timespan=[pd.to_datetime(timespan[0]),
-                  pd.to_datetime(timespan[1])] # Time string to datetome          
+        # Time string to datetome          
         
         t0=time.time()
         print('Locating available casts..')
-        cast_names_filtered=self.get_filtered_casts(longitude, latitude, timespan)
+        casts=self.get_filtered_casts(longitude, latitude, timespan)
+        cast_names_filtered=casts['extId'].tolist()
+        print('-> {} casts found'.format(len(cast_names_filtered)))        
+        
         
         if cast_names_filtered==[]:
             print('No casts found in search')
@@ -75,9 +77,35 @@ class ODPClient(CogniteClient):
         
         data['datetime']=pd.to_datetime(data['date'],format='%Y%m%d') #Adding a column with datetime
         
-        print('Data retrieval completed in {:.2f}s'.format(time.time()-t0))
+        print('-> {} data rows downloaded in {:.2f}s'.format(len(data),time.time()-t0))
         
         return data
+    
+    def filter_casts(self,casts,longitude,latitude,timespan) :
+        '''
+        
+        Filtering a dataframe of casts based on longitude, latitude and time
+        
+        Input:
+        
+        casts:     Dataframe containing at least cast id, longitude, latitude and time
+        longitude: list of min and max logitude, i.e [-10,35]
+        latitude : list of min and max latitude, i.e [50,80]
+        timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+        
+        Output:
+        
+        Dataframe of filtered cast
+        
+        '''
+        casts['lon']=pd.to_numeric(casts['lon'])
+        casts['lat']=pd.to_numeric(casts['lat'])
+        casts['datetime']=pd.to_datetime(casts['date'],format='%Y%m%d')
+    
+        casts=casts[(casts.lat>latitude[0]) & (casts.lat<latitude[1]) &
+                   (casts.lon>longitude[0]) & (casts.lon<longitude[1]) &
+                   (casts.datetime>timespan[0]) & (casts.datetime<timespan[1])]#.values  
+        return casts
         
     def get_filtered_casts(self,longitude,latitude,timespan):
         
@@ -93,32 +121,30 @@ class ODPClient(CogniteClient):
         
         Output:
         
-        List of available cast external IDs
+        Dataframe of filtered cast
         
         '''
-        casts=self.get_available_casts(longitude,latitude,timespan)
-        casts['lon']=pd.to_numeric(casts['lon'])
-        casts['lat']=pd.to_numeric(casts['lat'])
-        casts['datetime']=pd.to_datetime(casts['date'],format='%Y%m%d')
-        #casts['cast_id']=casts['extId'].apply(lambda s: int(s.split('_')[-1]))
-        casts=casts[(casts.lat>latitude[0]) & (casts.lat<latitude[1]) &
-                   (casts.lon>longitude[0]) & (casts.lon<longitude[1]) &
-                   (casts.datetime>timespan[0]) & (casts.datetime<timespan[1])]#.values
         
-        cast_names_filtered=casts['extId'].tolist()
-        print('- {} casts found'.format(len(cast_names_filtered)))        
-        return cast_names_filtered
+        timespan=[pd.to_datetime(timespan[0]),
+                  pd.to_datetime(timespan[1])]         
+        
+        casts=self.get_available_casts(timespan[0].year,timespan[1].year)
+        filtered_casts=self.filter_casts(casts, longitude, latitude, timespan)
+        
+              
+        return filtered_casts
     
 
     
-    def get_available_casts(self,longitude,latitude,timespan):
+    def get_available_casts(self,year_start,year_end):
         
         '''
         
-        Retrieveing RAW table of avialable casts with corresponding location and time per year
+        Retrieveing RAW table of avialable casts for given years
         
         Input:
-        
+        year_start : casts from this year (int)
+        year_end :   casts to this year (int)
         
         Output:
         
@@ -126,11 +152,10 @@ class ODPClient(CogniteClient):
         
         '''
         
-        yr0=timespan[0].year
-        yr1=timespan[-1].year
+        
         
         flag=0
-        for yr in range(yr0,yr1+1):
+        for yr in range(year_start,year_end+1):
             try:
                 _df=self.raw_table_call(yr).to_pandas()
             except:
@@ -158,7 +183,11 @@ class ODPClient(CogniteClient):
         '''
         Download data from level_3 sequence by external_id
         '''
-        return self.sequences.data.retrieve(start=0,end=None,external_id=cast_name).to_pandas()  
+        try:
+            return self.sequences.data.retrieve(start=0,end=None,external_id=cast_name).to_pandas()  
+        except:
+            print('Failed retrieveing {}'.format(cast_name))
+            
     
     def download_data_from_casts(self,cast_names,n_threads=1):
         
