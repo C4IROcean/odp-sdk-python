@@ -14,7 +14,7 @@ pip install odp-sdk
 
 ## Usage
 
-Acessing the Ocean Data Platform require a personal api-key. Contact ODP to require one.
+Acessing the Ocean Data Platform requires a personal api-key. Contact ODP to require one.
 
 Import the Ocean Data Platform SDK 
 ```python
