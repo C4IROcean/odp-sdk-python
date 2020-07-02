@@ -1,11 +1,25 @@
-from setuptools import setup
-setup(name='odp_sdk',
-      version='0.1',
-      description='Python SDK for the Ocean Data Platform',
-      url='https://github.com/C4IROcean/ODP-SDK',
-      author='ocean-kristian',
-      author_email='kristian.authen@oceandata.earth',
-      license='Apache License 2.0',
-      packages=['client'],
-      install_requires=['cognite-sdk>=1.8',
-                        'matplotlib>=1.5'])
+
+import setuptools
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name="odp_sdk",
+    version="0.0.1",                        # Update this for every new version
+    author="ocean-kristian",
+    author_email="kristian.authen@oceandata.earth",
+    description='Python SDK for the Ocean Data Platform',
+    long_description="Connect to the Ocean Data Platform with Python through the Python SDK. Download queried ocean data easily and efficiently into data frames, for easy exploring and further processing in your data science project.",
+    long_description_content_type="text/markdown",
+    install_requires=["cognite-sdk>=1.8",                      # Add project dependencies here
+        "pandas>=0.20.0"                    # example: pandas version 0.20 or greater                          
+    ],                                             
+    url='https://github.com/C4IROcean/ODP-SDK',  
+    packages=setuptools.find_packages(),
+    classifiers=(                                 # Classifiers help people find your 
+        "Programming Language :: Python :: 3",    # projects. See all possible classifiers 
+        "License :: OSI Approved :: Apache License 2.0", # in https://pypi.org/classifiers/
+        "Operating System :: OS Independent",   
+    ),
+)
