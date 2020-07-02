@@ -1,6 +1,8 @@
 # Python SDK for Ocean Data Platform (ODP)
 
-Main entrypoint into the Ocean Data Platform SDK. All services are made available through this object.
+Connect to the Ocean Data Platform with Python through the Python SDK. Download queried ocean data easily and efficiently into data frames, for easy exploring and further processing in your data science project.
+
+This is an extensions package to the Cognite Python SDK.
 
 ## Installation
 
@@ -27,5 +29,7 @@ Get dataframe of ocean data samples (casts) within search criteria
 df=client.casts(longitude=[-10,35],
                 latitude=[50,80],
                 timespan=['2015-01-01','2019-12-01'],
-                depth=[0,100]) 
+                n_threads=10) 
 ```
+## Jupyter Notebook Examples 
+- Download data, plot the casts and create a gridded map of surface temperatures [here](https://github.com/C4IROcean/ODP-SDK/blob/master/Examples/ExampleNotebook-01.ipynb)
