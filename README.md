@@ -1,6 +1,8 @@
 # Python SDK for Ocean Data Platform (ODP)
 
-This is an extensions package to the Cognite Python SDK for easy access of data in the Ocean Data Platform.
+Connect to the Ocean Data Platform with Python through the Python SDK. Download queried ocean data easily and efficiently into data frames, for easy exploring and further processing in your data science project.
+
+This is an extensions package to the Cognite Python SDK.
 
 ## Installation
 
