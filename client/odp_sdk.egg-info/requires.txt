@@ -1,0 +1,2 @@
+cognite-sdk>=1.8
+pandas>=0.20.0

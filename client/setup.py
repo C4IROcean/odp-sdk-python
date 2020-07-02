@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
 
 setuptools.setup(
     name="odp_sdk",
-    version="0.0.1",                        # Update this for every new version
+    version="0.0.7",                        # Update this for every new version
     author="ocean-kristian",
     author_email="kristian.authen@oceandata.earth",
     description='Python SDK for the Ocean Data Platform',
@@ -15,11 +13,16 @@ setuptools.setup(
     install_requires=["cognite-sdk>=1.8",                      # Add project dependencies here
         "pandas>=0.20.0"                    # example: pandas version 0.20 or greater                          
     ],                                             
-    url='https://github.com/C4IROcean/ODP-SDK',  
+    url='https://github.com/C4IROcean/odp',  
     packages=setuptools.find_packages(),
     classifiers=(                                 # Classifiers help people find your 
         "Programming Language :: Python :: 3",    # projects. See all possible classifiers 
-        "License :: OSI Approved :: Apache License 2.0", # in https://pypi.org/classifiers/
+        "License :: OSI Approved :: Apache Software License", # in https://pypi.org/classifiers/
         "Operating System :: OS Independent",   
     ),
 )
+
+
+#python setup.py sdist bdist_wheel 
+#twine upload --repository testpypi dist/*
+
