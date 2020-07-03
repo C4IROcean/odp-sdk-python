@@ -33,6 +33,9 @@ df=client.casts(longitude=[-10,35],
                 timespan=['2015-01-01','2019-12-01'],
                 n_threads=10) 
 ```
+
+CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
+
 ## Jupyter Notebook Examples 
 Example notebooks is found in the Example folder, which includes:
 - Download data, plot the casts and create a gridded map of surface temperatures 
