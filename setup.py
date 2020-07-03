@@ -4,7 +4,7 @@ import setuptools
 
 setuptools.setup(
     name="odp_sdk",
-    version="0.0.14",  # Update this for every new version
+    version="0.3.0",  # Update this for every new version
     #py_modules = ['client'],
     author="ocean-kristian",
     author_email="kristian.authen@oceandata.earth",
