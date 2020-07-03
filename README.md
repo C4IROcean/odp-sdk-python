@@ -9,7 +9,7 @@ This is an extensions package to the Cognite Python SDK.
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install ODP-SDK.
 
 ```bash
-pip install odp-sdk
+pip install odp_sdk
 ```
 
 ## Usage
@@ -18,7 +18,7 @@ pip install odp-sdk
 
 Import the Ocean Data Platform SDK 
 ```python
-from client import ODPClient
+from odp_sdk import ODPClient
 ```
 Connect to the platform
 ```python
