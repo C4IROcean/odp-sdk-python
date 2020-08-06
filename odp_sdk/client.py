@@ -184,7 +184,9 @@ class ODPClient(CogniteClient):
         Download data from level_3 sequence by external_id
         '''
         try:
-            return self.sequences.data.retrieve(start=0,end=None,external_id=cast_name).to_pandas()  
+            _df = self.sequences.data.retrieve(start=0,end=None,external_id=cast_name).to_pandas()
+            _df['externalId'] = cast_name
+            return _df
         except:
             print('Failed retrieveing {}'.format(cast_name))
             
