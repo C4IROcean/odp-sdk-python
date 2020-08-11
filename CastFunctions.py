@@ -33,14 +33,14 @@ def interpolate_casts(df,variable,int_lon,int_lat,int_datetime,days_buffer=90):
     
     return g
 
-def interpolate_profile(ZV,z_int,max_z_extrapolation=10,max_z_copy_single_value=1, kind='linear'):
+def interpolate_profile(zv,z_int,max_z_extrapolation=10,max_z_copy_single_value=1, kind='linear'):
     
     '''
     
-    Interpolate profile ZV (depth, parameter) to a user defined depth.
+    Interpolate profile zv (depth, parameter) to a user defined depth.
     
     Input:
-    ZV    - 2-D array of depth and a parameter (temperature, oxygen, ...)
+    zv    - 2-D array of depth and a parameter (temperature, oxygen, ...)
     z_int - 1-D array of depth levles to interpolate to
     max_extrapolation_z - Maximum distance to extrapolate outside profile. Use 0 for no extrapolation.
     max_z_copy_single_value - Maximum distance for copying the value of a single value profile. 
@@ -53,7 +53,7 @@ def interpolate_profile(ZV,z_int,max_z_extrapolation=10,max_z_copy_single_value=
     -------------------------------------------------------------------
     
     Example:
-    ZV=array([[ 0.        , 21.64599991],
+    zv=array([[ 0.        , 21.64599991],
        [ 9.93530941, 21.54500008],
        [19.87013626, 20.96299934],
        [20.40699959, 29.80448341],
@@ -73,25 +73,25 @@ def interpolate_profile(ZV,z_int,max_z_extrapolation=10,max_z_copy_single_value=
     '''
     
     #Sorting by depth
-    ZV = ZV[np.argsort( ZV[:,0] )]
+    zv = zv[np.argsort( zv[:,0] )]
     z_int=np.sort(z_int)
     
     #Remove interpolations point outside extrapolation range
-    ind=(z_int>=(ZV[0,0]-max_z_extrapolation)) & (z_int<=(ZV[-1,0]+max_z_extrapolation))
+    ind=(z_int>=(zv[0,0]-max_z_extrapolation)) & (z_int<=(zv[-1,0]+max_z_extrapolation))
     _z_int=z_int[ind]
 
    
-    n_ZV=len(ZV)
+    n_zv=len(zv)
     v_int=np.ones(len(z_int))*np.nan
     
-    if n_ZV>1:
+    if n_zv>1:
         # Interpolation for more than one row
-        f=interp1d(ZV[:,0], ZV[:,1], kind='linear', axis=- 1, copy=True, bounds_error=None, fill_value='extrapolate', assume_sorted=True)
+        f=interp1d(zv[:,0], zv[:,1], kind='linear', axis=- 1, copy=True, bounds_error=None, fill_value='extrapolate', assume_sorted=True)
         _v_int=f(_z_int) 
-    elif  n_ZV==1:
+    elif  n_zv==1:
         # Only one row of data, copy value if within distance (max_z_copy_single_value)
-        dist=_z_int-ZV[0,0]
-        _v_int[dist<=max_z_copy_single_value]=ZV[0,1]
+        dist=_z_int-zv[0,0]
+        _v_int[dist<=max_z_copy_single_value]=zv[0,1]
            
     v_int[ind]=_v_int
             
