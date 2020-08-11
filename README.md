@@ -11,7 +11,7 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the Oce
 ```bash
 pip install odp_sdk
 ```
-*Note: Utility functions available in CastFunctions.py is not included in the pip install package and has to be downloaded separately*
+*Note: Utility functions available in CastFunctions.py are not included in the pip install package and has to be downloaded separately*
 
 
 ## Usage
