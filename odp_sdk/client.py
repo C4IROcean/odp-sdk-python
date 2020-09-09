@@ -78,9 +78,7 @@ class ODPClient(CogniteClient):
         
         data['datetime']=pd.to_datetime(data['date'],format='%Y%m%d') #Adding a column with datetime
 
-        if include_flagged_data:
-            continue
-        else:
+        if not include_flagged_data:
             for var in data.columns:
                 if var+'_WODflag' in df.columns:
                     mask = data[var+'_WODflag'] != 0
