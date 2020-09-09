@@ -36,7 +36,7 @@ class ODPClient(CogniteClient):
 
        
         
-    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=1):
+    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=1, include_flagged_data = True):
         
         '''
         
@@ -76,8 +76,16 @@ class ODPClient(CogniteClient):
             return None
         
         data['datetime']=pd.to_datetime(data['date'],format='%Y%m%d') #Adding a column with datetime
-        
-        print('-> {} data rows downloaded in {:.2f}s'.format(len(data),time.time()-t0))
+
+        if include_flagged_data:
+            print('-> {} data rows downloaded in {:.2f}s'.format(len(data),time.time()-t0))
+        else:
+            for var in data.columns:
+                if var+'_WODflag' in df.columns:
+                    mask = data[var+'_WODflag'] != 0
+                    data.loc[mask, var] = None
+                else:
+                    continue
         
         return data
     
