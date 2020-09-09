@@ -36,7 +36,7 @@ class ODPClient(CogniteClient):
 
        
         
-    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=1):
+    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=1, include_flagged_data = True):
         
         '''
         
@@ -47,6 +47,7 @@ class ODPClient(CogniteClient):
         longitude: list of min and max logitude, i.e [-10,35]
         latitude : list of min and max latitude, i.e [50,80]
         timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+        inclue_flagged_data : Boolean, whether flagged data should be included or not
         
         Return:
         
@@ -76,8 +77,14 @@ class ODPClient(CogniteClient):
             return None
         
         data['datetime']=pd.to_datetime(data['date'],format='%Y%m%d') #Adding a column with datetime
-        
-        print('-> {} data rows downloaded in {:.2f}s'.format(len(data),time.time()-t0))
+
+        if include_flagged_data:
+            print('-> {} data rows downloaded in {:.2f}s'.format(len(data),time.time()-t0))
+        else:
+            for var in data.columns:
+                if var+'_WODflag' in df.columns:
+                    mask = data[var+'_WODflag'] != 0
+                    data.loc[mask, var] = None
         
         return data
     
