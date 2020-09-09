@@ -47,6 +47,7 @@ class ODPClient(CogniteClient):
         longitude: list of min and max logitude, i.e [-10,35]
         latitude : list of min and max latitude, i.e [50,80]
         timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+        inclue_flagged_data : Boolean, whether flagged data should be included or not
         
         Return:
         
@@ -84,8 +85,6 @@ class ODPClient(CogniteClient):
                 if var+'_WODflag' in df.columns:
                     mask = data[var+'_WODflag'] != 0
                     data.loc[mask, var] = None
-                else:
-                    continue
         
         return data
     
