@@ -24,8 +24,7 @@ from odp_sdk import ODPClient
 ```
 Connect to the platform
 ```python
-client = ODPClient(api_key='your_personal_api_key_from_ODP',
-                       project="odp", client_name="odp")
+client = ODPClient(api_key='your_personal_api_key_from_ODP')
 ```
 Get dataframe of ocean data samples (casts) within search criteria
 
