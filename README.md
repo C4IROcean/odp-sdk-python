@@ -54,3 +54,5 @@ Oxygen|	        µmol/kg
 Temperature|	    C
 Salinity|	      1e-3
 Nitrate|	        µmol/kg
+Chlorophyll|    µgram/l
+Pressure|dbar
