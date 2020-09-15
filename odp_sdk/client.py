@@ -1,5 +1,6 @@
 
 import time
+import itertools
 import pandas as pd
 from cognite.client import CogniteClient
 from multiprocessing.dummy import Pool as ThreadPool
@@ -12,6 +13,8 @@ class ODPClient(CogniteClient):
     Main entrypoint into the Ocean Data Platform SDK. 
     All services are made available through this object.
     
+    Download cast data, containing ocean measurements through the water column around the globe.
+    
     Example:
     
     from client import ODPClient
@@ -21,8 +24,7 @@ class ODPClient(CogniteClient):
                        
     df=client.casts(longitude=[-10,35],
                     latitude=[50,80],
-                    timespan=['2018-03-01','2018-09-01'],
-                    depth=[0,100]) 
+                    timespan=['2018-03-01','2018-09-01']) 
     
     '''
     def __init__(self, api_key=None, project='odp', client_name='ODPPythonSDK', base_url=None, max_workers=None, headers=None, timeout=None, token=None, disable_pypi_version_check=None, debug=False):
@@ -36,7 +38,7 @@ class ODPClient(CogniteClient):
 
        
         
-    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=1, include_flagged_data = True):
+    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=1, include_flagged_data = True, parameters=None):
         
         '''
         
@@ -48,6 +50,7 @@ class ODPClient(CogniteClient):
         latitude : list of min and max latitude, i.e [50,80]
         timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
         inclue_flagged_data : Boolean, whether flagged data should be included or not
+        parameters: List of parameters to be included in dataframe. If None all column are included. I.e. parameters=['date','lon','lat','Temperature','Oxygen']
         
         Return:
         
@@ -56,7 +59,10 @@ class ODPClient(CogniteClient):
         
         '''
         
-        # Time string to datetome          
+        n_threads_max=35
+        if n_threads>n_threads_max:
+            print('Maximum allowable number of threads is {}'.format(n_threads_max))
+            n_threads=n_threads_max        
         
         t0=time.time()
         print('Locating available casts..')
@@ -67,17 +73,25 @@ class ODPClient(CogniteClient):
         
         if cast_names_filtered==[]:
             print('No casts found in search')
-            return None   
+            return None  
         
+        # Including flag columns to remove flagged data points
+        if not include_flagged_data:
+            parameters_with_flags=['z','Oxygen','Temperature','Salinity','Chlorophyll','Nitrate','pH']
+            for p in parameters.copy():
+                if p in parameters_with_flags:
+                    parameters+=p+'_WODflag'
+                
         print('Downloading data from casts..')
-        data=self.download_data_from_casts(cast_names_filtered,n_threads)
+        data=self.download_data_from_casts(cast_names_filtered,n_threads,parameters)
         
         if data.empty:
-            print('No data found in casts')
+            print('No available data found in casts')
             return None
         
         data['datetime']=pd.to_datetime(data['date'],format='%Y%m%d') #Adding a column with datetime
-
+        
+        # Setting flagged measurements to None if not include_flagged_data
         if not include_flagged_data:
             for var in data.columns:
                 if var+'_WODflag' in df.columns:
@@ -163,11 +177,13 @@ class ODPClient(CogniteClient):
         
         flag=0
         for yr in range(year_start,year_end+1):
+            print('Retrieving available casts for year {}'.format(yr))
             try:
                 _df=self.raw_table_call(yr).to_pandas()
             except:
                 print('No RAW table for year {}'.format(yr))
                 continue
+            
             
             if flag==0:
                 df=_df
@@ -186,23 +202,38 @@ class ODPClient(CogniteClient):
         return self.raw.rows.list("WOD", "cast_{}".format(year), limit=-1)#.to_pandas()
     
             
-    def level3_data_retrieve(self,cast_name):
+    def level3_data_retrieve(self,args):
         '''
         Download data from level_3 sequence by external_id
+        
+        Input: 
+        args - tuple of cast_name and parameters. I.e args=('cast_wod_3_2018_82_18864723',None)
+        
         '''
+        
+        cast_name,parameters=args
+        
         try:
-            _df = self.sequences.data.retrieve(start=0,end=None,external_id=cast_name).to_pandas()
+            _df = self.sequences.data.retrieve(start=0,end=None,external_id=cast_name,column_external_ids=parameters).to_pandas()
             _df['externalId'] = cast_name
             return _df
         except:
-            print('Failed retrieveing {}'.format(cast_name))
+            
+            
+            print('Failed retrieveing {} parameter_filter {}'.format(cast_name,parameters))
             
     
-    def download_data_from_casts(self,cast_names,n_threads=1):
+
+    def download_data_from_casts(self,cast_names,n_threads=1,parameters=None):
         
         '''
         
         Rettrieving data from list of level 3 casts
+        
+        Input:
+        cast_names - The externalId of the cast
+        n_threads  - Number of threads to be used for retrieving each cast
+        parameters - List of parameters to be downloaded
         
         Return:
         
@@ -212,30 +243,14 @@ class ODPClient(CogniteClient):
         if n_threads>1:
             
             pool = ThreadPool(n_threads)
-            results = pool.map(self.level3_data_retrieve, cast_names)
+            results = pool.map(self.level3_data_retrieve, zip(cast_names,itertools.repeat(parameters)))
             
         else:
             results=[]
             for cast_name in cast_names:
-                #print(cast_name)
-                results.append(self.level3_data_retrieve(cast_name))
+                results.append(self.level3_data_retrieve((cast_name,parameters)))
                 
         return pd.concat(results)
      
 
 
-
-
-                
-            
-            
-        
-            
-    
-
-        
-        
-
-    
-
-        
