@@ -38,7 +38,7 @@ class ODPClient(CogniteClient):
 
        
         
-    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=1, include_flagged_data = True, parameters=None):
+    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=10, include_flagged_data = True, parameters=None):
         
         '''
         
@@ -66,7 +66,7 @@ class ODPClient(CogniteClient):
         
         t0=time.time()
         print('Locating available casts..')
-        casts=self.get_filtered_casts(longitude, latitude, timespan)
+        casts=self.get_filtered_casts(longitude, latitude, timespan,n_threads)
         cast_names_filtered=casts['extId'].tolist()
         print('-> {} casts found'.format(len(cast_names_filtered)))        
         
@@ -125,10 +125,10 @@ class ODPClient(CogniteClient):
     
         casts=casts[(casts.lat>latitude[0]) & (casts.lat<latitude[1]) &
                    (casts.lon>longitude[0]) & (casts.lon<longitude[1]) &
-                   (casts.datetime>timespan[0]) & (casts.datetime<timespan[1])]#.values  
+                   (casts.datetime>timespan[0]) & (casts.datetime<timespan[1])]
         return casts
         
-    def get_filtered_casts(self,longitude,latitude,timespan):
+    def get_filtered_casts(self,longitude,latitude,timespan,n_threads=10):
         
         '''
         
@@ -149,15 +149,16 @@ class ODPClient(CogniteClient):
         timespan=[pd.to_datetime(timespan[0]),
                   pd.to_datetime(timespan[1])]         
         
-        casts=self.get_available_casts(timespan[0].year,timespan[1].year)
-        filtered_casts=self.filter_casts(casts, longitude, latitude, timespan)
+        casts=self.get_available_casts(timespan[0].year,timespan[1].year,n_threads=n_threads)
+        
+        casts=self.filter_casts(casts, longitude, latitude, timespan)
         
               
-        return filtered_casts
+        return casts
     
 
     
-    def get_available_casts(self,year_start,year_end):
+    def get_available_casts(self,year_start,year_end,n_threads=10):
         
         '''
         
@@ -173,33 +174,28 @@ class ODPClient(CogniteClient):
         
         '''
         
-        
-        
-        flag=0
-        for yr in range(year_start,year_end+1):
-            print('Retrieving available casts for year {}'.format(yr))
-            try:
-                _df=self.raw_table_call(yr).to_pandas()
-            except:
-                print('No RAW table for year {}'.format(yr))
-                continue
+        if n_threads>1:
+            pool = ThreadPool(n_threads)
+            results = pool.map(self.raw_table_call,range(year_start,year_end+1))
             
-            
-            if flag==0:
-                df=_df
-                flag=1
-            else:
-                df=pd.concat((df,_df))
+        else:
+            results=[]
+            for year in range(year_start,year_end+1):
+                results.append(self.raw_table_call(year))
+                
+        return pd.concat(results)        
         
-        return df
             
     
     def raw_table_call(self,year):
         '''
         Retrieve RAW table for given year
         '''
-        
-        return self.raw.rows.list("WOD", "cast_{}".format(year), limit=-1)#.to_pandas()
+        print('Retrieving available casts for year {}. '.format(year))
+        try:
+            return self.raw.rows.list("WOD", "cast_{}".format(year), limit=-1).to_pandas()
+        except:
+            print('No RAW table for year {}'.format(year))        
     
             
     def level3_data_retrieve(self,args):
@@ -224,7 +220,7 @@ class ODPClient(CogniteClient):
             
     
 
-    def download_data_from_casts(self,cast_names,n_threads=1,parameters=None):
+    def download_data_from_casts(self,cast_names,n_threads=10,parameters=None):
         
         '''
         
@@ -253,4 +249,17 @@ class ODPClient(CogniteClient):
         return pd.concat(results)
      
 
-
+    def get_metadata(self,cast_names):  
+        '''
+        
+        Returns the metadata associated with the particular cast
+        
+        Input:
+        
+        cast_names - List of cast names (externalId in ODP)
+        
+        '''
+        return self.sequences.retrieve_multiple(external_ids=cast_names).to_pandas()
+        
+    
+    
