@@ -46,10 +46,11 @@ Example notebooks is found in the Example folder, which includes:
 ## Data Description
 The data available through the Ocean Data Platform are oceanographic measurements of physical and chemical ocean parameters (temperature, salinity, oxygen, nitrate, ph and chlorophyll), and is based on the data available through NOAA's World Ocean Database. Each cast has a sepcified latitude, longitude and time (lat, lon and datetime), and a depth profile, where each depth has measured phisical and chemical parameters. Not all casts have all the the different ocan parameters, missing measurements are populated with nans. Each measurements has a WODflag parameter (i.e Nitrate_WODflag). If flag value is zero, there are no known issues with the measured value. 
 
-Parameter	      unit
-lon/lat         deg
-Z               m             
-Oxygen	        µmol/kg 
-Temperature	    C
-Salinity	      1e-3
-Nitrate	        µmol/kg
+Parameter|	      Unit
+--- | --- 
+lon/lat |        deg
+Z|               m             
+Oxygen|	        µmol/kg 
+Temperature|	    C
+Salinity|	      1e-3
+Nitrate|	        µmol/kg
