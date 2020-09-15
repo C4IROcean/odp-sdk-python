@@ -32,8 +32,7 @@ Get dataframe of ocean data samples (casts) within search criteria
 ```python
 df=client.casts(longitude=[-10,35],
                 latitude=[50,80],
-                timespan=['2015-01-01','2019-12-01'],
-                n_threads=10) 
+                timespan=['2019-06-01','2019-06-07']) 
 ```
 
 CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
