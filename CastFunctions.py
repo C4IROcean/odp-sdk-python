@@ -229,8 +229,16 @@ def plot_grid(int_lon,int_lat,g,cmap='viridis',vrange=None):
     plt.ylim(int_lat.min(),int_lat.max())    
     
     
-
-   
+def get_units():
+    units_dict = {'z': 'm', 
+     'Oxygen':'umol/kg',
+     'Temperature':'degree_C',
+     'Chlorophyll':'ugram/l',
+     'Pressure':'dbar',
+     'Nitrate': 'umol/kg',
+     'Latitude':'degrees_north',
+     'Longitude':'degrees_east'}
+    return(units_dict)   
 
 def plot_casts(variable,df,cmap='viridis',vrange=None):
     
@@ -247,7 +255,7 @@ def plot_casts(variable,df,cmap='viridis',vrange=None):
     '''
     
     plt.figure(figsize=(16,10))
-    plt.title(variable)    
+    plt.title(variable, fontsize=16)    
     
     m = Basemap(resolution='l')
     m.drawcoastlines()
@@ -266,5 +274,7 @@ def plot_casts(variable,df,cmap='viridis',vrange=None):
     plt.xlim(df.lon.min(),df.lon.max()) 
     plt.ylim(df.lat.min(),df.lat.max())
 
-    m.colorbar(sc,location='bottom',pad= "5%") 
+    m.colorbar(sc,location='bottom',pad= "5%").set_label('{} ({})'.format(variable, get_units()[variable]), fontsize=14) 
+
+
     
