@@ -69,4 +69,4 @@ DRB| Drifting buoy data
 UOR| Undulating Oceanographic Recorder data
 GLD| Glider data
 
-See WORLD OCEAN DATABASE 2018 User’s Manual for more infrmation about the dataset ([link](https://rda.ucar.edu/datasets/ds285.0/docs/WOD18-UsersManual_final.pdf)
+See WORLD OCEAN DATABASE 2018 User’s Manual for more infrmation about the dataset [link](https://rda.ucar.edu/datasets/ds285.0/docs/WOD18-UsersManual_final.pdf )
