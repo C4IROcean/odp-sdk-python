@@ -54,3 +54,19 @@ Salinity|	      1e-3
 Nitrate|	        µmol/kg
 Chlorophyll|    µgram/l
 Pressure|dbar
+
+Dataset code | Dataset include
+--- | --- 
+OSD| Ocean Station Data, Low-resolution CTD/XCTD, Plankton data
+CTD| High-resolution Conductivity-Temperature-Depth / XCTD data
+MBT| Mechanical / Digital / Micro Bathythermograph data
+XBT| Expendable Bathythermograph data
+SUR| Surface-only data
+APB| Autonomous Pinniped data
+MRB| Moored buoy data
+PFL| Profiling float data
+DRB| Drifting buoy data
+UOR| Undulating Oceanographic Recorder data
+GLD| Glider data
+
+See [WORLD OCEAN DATABASE 2018 User’s Manual](https://rda.ucar.edu/datasets/ds285.0/docs/WOD18-UsersManual_final.pdf) for more infrmation about the datasets
