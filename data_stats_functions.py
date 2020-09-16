@@ -1,8 +1,6 @@
 import seaborn as sns
 import os
 from datetime import datetime, timedelta
-from datetime import datetime
-from getpass import getpass
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,14 +15,12 @@ from matplotlib.ticker import MaxNLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import scipy
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-import geopandas as gpd
 from matplotlib.lines import Line2D
 import data_stats
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 sns.set_palette(sns.color_palette("hls", 47))
-from tqdm import notebook
-from shapely.geometry import Polygon
+
 
 
 def geo_map(ax):
