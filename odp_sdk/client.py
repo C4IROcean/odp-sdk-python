@@ -19,14 +19,14 @@ class ODPClient(CogniteClient):
     
     from client import ODPClient
     
-    client = ODPClient(api_key='....................',
-                       project="odp", client_name="odp")
+    client = ODPClient(api_key='....................')
                        
     df=client.casts(longitude=[-10,35],
                     latitude=[50,80],
                     timespan=['2018-03-01','2018-09-01']) 
     
     '''
+    
     def __init__(self, api_key=None, project='odp', client_name='ODPPythonSDK', base_url=None, max_workers=None, headers=None, timeout=None, token=None, disable_pypi_version_check=None, debug=False):
         '''
         
@@ -35,8 +35,14 @@ class ODPClient(CogniteClient):
         '''
 
         super().__init__(api_key, project, client_name, base_url, max_workers, headers, timeout, token, disable_pypi_version_check, debug)   
-
-       
+        
+        if self.login.status().logged_in==False:
+            print('Connection attempt failed')
+        else:
+            print('Connection successful')
+        
+            
+            
         
     def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=10, include_flagged_data = True, parameters=None):
         
@@ -76,11 +82,12 @@ class ODPClient(CogniteClient):
             return None  
         
         # Including flag columns to remove flagged data points
-        if not include_flagged_data:
+        if not include_flagged_data and (parameters is not None):
             parameters_with_flags=['z','Oxygen','Temperature','Salinity','Chlorophyll','Nitrate','pH']
-            for p in parameters.copy():
+            parameters_org=parameters.copy()
+            for p in parameters_org:
                 if p in parameters_with_flags:
-                    parameters+=p+'_WODflag'
+                    parameters+=[p+'_WODflag']
                 
         print('Downloading data from casts..')
         data=self.download_data_from_casts(cast_names_filtered,n_threads,parameters)
@@ -94,9 +101,11 @@ class ODPClient(CogniteClient):
         # Setting flagged measurements to None if not include_flagged_data
         if not include_flagged_data:
             for var in data.columns:
-                if var+'_WODflag' in df.columns:
+                if var+'_WODflag' in data.columns:
                     mask = data[var+'_WODflag'] != 0
                     data.loc[mask, var] = None
+            if parameters is not None:
+                data=data[parameters_org]
         
         print('-> {} data rows downloaded in {:.2f}s'.format(len(data),time.time()-t0))
 
@@ -191,11 +200,11 @@ class ODPClient(CogniteClient):
         '''
         Retrieve RAW table for given year
         '''
-        print('Retrieving available casts for year {}. '.format(year))
+
         try:
             return self.raw.rows.list("WOD", "cast_{}".format(year), limit=-1).to_pandas()
         except:
-            print('No RAW table for year {}'.format(year))        
+            print('No data for year {}'.format(year))        
     
             
     def level3_data_retrieve(self,args):
