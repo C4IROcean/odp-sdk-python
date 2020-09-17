@@ -16,7 +16,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import scipy
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from matplotlib.lines import Line2D
-import data_stats
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 sns.set_palette(sns.color_palette("hls", 47))
