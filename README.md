@@ -36,10 +36,13 @@ df=client.casts(longitude=[-10,35],
 
 CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
 
+DataStatsfunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
+
 ## Jupyter Notebook Examples 
 Example notebooks are found in the Example folder, which includes:
 - Download data, plot the casts and create a gridded map of surface temperatures 
 - Download avilable casts, explore them in an interactive map and plot the cast profile
+- Example Notebook Data Coverage shows how functions from DataStatsFunctions.py can help users understand the data they download from the odp_sdk. 
 
 ## Data Description
 The data available through the Ocean Data Platform are oceanographic measurements of physical and chemical ocean parameters (temperature, salinity, oxygen, nitrate, ph and chlorophyll), and is based on the data available through NOAA's World Ocean Database. Each cast has a sepcified latitude, longitude and time (lat, lon and datetime), and a depth profile, where each depth has measured physical and chemical parameters. Not all casts have all the the different ocean parameters, missing measurements are populated with nans. Each measurements has a WODflag parameter (i.e Nitrate_WODflag). If flag value is zero, there are no known issues with the measured value. 
