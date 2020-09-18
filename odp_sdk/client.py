@@ -1,6 +1,7 @@
 
 import time
 import itertools
+import math
 import pandas as pd
 from cognite.client import CogniteClient
 from multiprocessing.dummy import Pool as ThreadPool
@@ -73,6 +74,7 @@ class ODPClient(CogniteClient):
         t0=time.time()
         print('Locating available casts..')
         casts=self.get_filtered_casts(longitude, latitude, timespan,n_threads)
+
         cast_names_filtered=casts['extId'].tolist()
         print('-> {} casts found'.format(len(cast_names_filtered)))        
         
@@ -111,6 +113,31 @@ class ODPClient(CogniteClient):
 
         return data
             
+    
+    def get_available_casts(self,corners,n_threads,year_start,year_end):
+        
+        m=mapMath()
+        
+        ind=(m.latlongToGridCoordinate(corners[0][0],corners[0][1], res=1),
+             m.latlongToGridCoordinate(corners[1][0],corners[1][1], res=1))
+        
+        boxCoords,boxIndexes=m.cornerCoordinatesToAllCoordinates(1,ind[0],ind[1])  
+        
+        pool = ThreadPool(n_threads)
+        results=[]
+        for year in range(year_start,year_end+1):
+            results += pool.map(self.get_casts,zip(boxIndexes,itertools.repeat(year)))
+        
+        return pd.concat(results)        
+    
+    def get_casts(self,arg):
+        ind,year=arg
+        parameters=['extId','lat','lon','date']
+        try:
+            return self.sequences.data.retrieve(0,None,column_external_ids=parameters,external_id='cast_wod_2_%d_%d'%(year,ind)).to_pandas()
+        except:
+            return None    
+    
     def filter_casts(self,casts,longitude,latitude,timespan) :
         '''
         
@@ -158,16 +185,18 @@ class ODPClient(CogniteClient):
         timespan=[pd.to_datetime(timespan[0]),
                   pd.to_datetime(timespan[1])]         
         
-        casts=self.get_available_casts(timespan[0].year,timespan[1].year,n_threads=n_threads)
+        
+        
+        casts=self.get_available_casts(((min(latitude),min(longitude)),(max(latitude),max(longitude))),
+                                             n_threads,timespan[0].year,timespan[1].year)        
         
         casts=self.filter_casts(casts, longitude, latitude, timespan)
         
-              
         return casts
     
 
     
-    def get_available_casts(self,year_start,year_end,n_threads=10):
+    def get_available_casts_from_raw_table(self,year_start,year_end,n_threads=10):
         
         '''
         
@@ -272,3 +301,7 @@ class ODPClient(CogniteClient):
         
     
     
+
+
+    
+     
