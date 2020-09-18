@@ -114,12 +114,17 @@ class ODPClient(CogniteClient):
         return data
             
     
-    def get_available_casts(self,longitude,latitude,timespan,n_threads=10):
+    def get_available_casts(self,year_start,year_end,longitude=[-180,180],latitude=[-90,90],n_threads=10):
         '''
         
         Retrieveing table of avialable casts for given time period and boundary
         
         Input:
+        
+        longitude: list of min and max logitude, i.e [-10,35]
+        latitude : list of min and max latitude, i.e [50,80]
+        timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+        
 
         Output:
         
@@ -127,9 +132,8 @@ class ODPClient(CogniteClient):
         
         '''
         
-        corners=((min(latitude),min(longitude)),(max(latitude),max(longitude))),
-        year_start=timespan[0].year
-        year_end=timespan[1].year)         
+        corners=((min(latitude),min(longitude)),(max(latitude),max(longitude)))
+          
         
         m=mapMath()
         
@@ -141,15 +145,15 @@ class ODPClient(CogniteClient):
         pool = ThreadPool(n_threads)
         results=[]
         for year in range(year_start,year_end+1):
-            results += pool.map(self.get_casts,zip(boxIndexes,itertools.repeat(year)))
+            results += pool.map(self.level2_data_retrieve,zip(boxIndexes,itertools.repeat(year)))
         
         return pd.concat(results)        
     
-    def get_casts(self,arg):
+    def level2_data_retrieve(self,arg):
         ind,year=arg
         parameters=['extId','lat','lon','date']
         try:
-            return self.sequences.data.retrieve(0,None,column_external_ids=parameters,external_id='cast_wod_2_%d_%d'%(year,ind)).to_pandas()
+            return self.sequences.data.retrieve(0,None,column_external_ids=parameters,external_id='cast_wod_2_{:d}_{:d}'.format(year,ind)).to_pandas()
         except:
             return None    
     
@@ -201,8 +205,8 @@ class ODPClient(CogniteClient):
                   pd.to_datetime(timespan[1])]         
         
         
-        
-        casts=self.get_available_casts(longitude,latitude,timespan,n_threads)       
+        #casts=self.get_available_casts_from_raw_table(timespan[0].year,timespan[1].year,n_threads)
+        casts=self.get_available_casts(timespan[0].year,timespan[1].year,longitude,latitude,n_threads)       
         
         casts=self.filter_casts(casts, longitude, latitude, timespan)
         
@@ -242,6 +246,9 @@ class ODPClient(CogniteClient):
     def raw_table_call(self,year):
         '''
         Retrieve RAW table for given year
+        
+        Teturning list of avilable casts that year.
+        
         '''
 
         try:
