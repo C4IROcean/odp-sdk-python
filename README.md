@@ -44,8 +44,19 @@ Example notebooks are found in the Example folder, which includes:
 - Download avilable casts, explore them in an interactive map and plot the cast profile
 - Example Notebook Data Coverage shows how functions from DataStatsFunctions.py can help users understand the data they download from the odp_sdk. 
 
+## WOD
+The World Ocean Database is a National Centers for Environmental (NCEI) product and International Oceanographic Data and Information Exchange (IODE) project which provides a composite of publicly available ocean profile data, both historic and recent. It consists of over thousands of datasets consisting of millions of water temperatures, salinity, oxygen, and nutrient profiles (1,2).
+
+## Data Organization in WOD and definitions
+
+Cast: A set of one or more profiles taken concurrently or nearly concurrently. All casts from similar instruments with similar resolutions are grouped together. For example, all bathythermograph (BT) data are all part of the same data set (MBT), see below. 
+
+Profile: A set of measurements for a single variable (i.e. temperature salinity) along a specific path, which could be vertically in the water column, horizontally along the surface, or discrete areas based on placement of buoys. 
+
 ## Data Description
 The data available through the Ocean Data Platform are oceanographic measurements of physical and chemical ocean parameters (temperature, salinity, oxygen, nitrate, ph and chlorophyll), and is based on the data available through NOAA's World Ocean Database. Each cast has a sepcified latitude, longitude and time (lat, lon and datetime), and a depth profile, where each depth has measured physical and chemical parameters. Not all casts have all the the different ocean parameters, missing measurements are populated with nans. Each measurements has a WODflag parameter (i.e Nitrate_WODflag). If flag value is zero, there are no known issues with the measured value. 
+
+
 
 Parameter|	      Unit
 --- | --- 
@@ -73,3 +84,8 @@ UOR| Undulating Oceanographic Recorder data
 GLD| Glider data
 
 See [WORLD OCEAN DATABASE 2018 User’s Manual](https://rda.ucar.edu/datasets/ds285.0/docs/WOD18-UsersManual_final.pdf) for more information about the datasets
+
+References:
+1.	Boyer, T.P., O.K. Baranova, C. Coleman, H. E., Garcia, A. Grodsky, R.A. Locarnini, A. V., Mishonov, C.R. Paver, J.R. Reagan, D. S. & I.V. Smolyar, K.W. Weathers,  and M. M. Z. World Ocean Atlas 2018, Volume 1: Temperature. Tech. Ed. NOAA Atlas NESDIS 87 (2018).
+2.	Boyer, T. P. et al. World Ocean Database 2018. NOAA Atlas NESDIS 87 (2018).
+
