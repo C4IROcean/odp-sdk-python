@@ -66,7 +66,7 @@ def plot_missing(df, var_list=None):
     perct = np.round(info_nulls.values/len(info), decimals=4)*100 ##percentage missing
 
     plt.figure(figsize=(10,8));
-    ax = sns.barplot(y= variables, x = perct, palette="twilight_r");
+    ax = sns.barplot(y= variables, x = perct, color='cornflowerblue');
     ax.set_title('Percentage of Values Missing (Total Rows: {})'.format(len(df)), fontsize=20);
     ax.set_ylabel('Variables',size=15);
     ax.set_xlabel('Percent Missing',size=15);
