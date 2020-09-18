@@ -114,7 +114,22 @@ class ODPClient(CogniteClient):
         return data
             
     
-    def get_available_casts(self,corners,n_threads,year_start,year_end):
+    def get_available_casts(self,longitude,latitude,timespan,n_threads=10):
+        '''
+        
+        Retrieveing table of avialable casts for given time period and boundary
+        
+        Input:
+
+        Output:
+        
+        Dataframe with cast id, position and time
+        
+        '''
+        
+        corners=((min(latitude),min(longitude)),(max(latitude),max(longitude))),
+        year_start=timespan[0].year
+        year_end=timespan[1].year)         
         
         m=mapMath()
         
@@ -187,8 +202,7 @@ class ODPClient(CogniteClient):
         
         
         
-        casts=self.get_available_casts(((min(latitude),min(longitude)),(max(latitude),max(longitude))),
-                                             n_threads,timespan[0].year,timespan[1].year)        
+        casts=self.get_available_casts(longitude,latitude,timespan,n_threads)       
         
         casts=self.filter_casts(casts, longitude, latitude, timespan)
         
@@ -302,6 +316,9 @@ class ODPClient(CogniteClient):
     
     
     
+    
+class mapMath:
+
     """
     ODP specific map tools.
     
