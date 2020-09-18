@@ -1,6 +1,7 @@
 
 import time
 import itertools
+import math
 import pandas as pd
 from cognite.client import CogniteClient
 from multiprocessing.dummy import Pool as ThreadPool
@@ -73,6 +74,7 @@ class ODPClient(CogniteClient):
         t0=time.time()
         print('Locating available casts..')
         casts=self.get_filtered_casts(longitude, latitude, timespan,n_threads)
+
         cast_names_filtered=casts['extId'].tolist()
         print('-> {} casts found'.format(len(cast_names_filtered)))        
         
@@ -111,6 +113,50 @@ class ODPClient(CogniteClient):
 
         return data
             
+    
+    def get_available_casts(self,year_start,year_end,longitude=[-180,180],latitude=[-90,90],n_threads=10):
+        '''
+        
+        Retrieveing table of avialable casts for given time period and boundary
+        
+        Input:
+        
+        longitude: list of min and max logitude, i.e [-10,35]
+        latitude : list of min and max latitude, i.e [50,80]
+        timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+        
+
+        Output:
+        
+        Dataframe with cast id, position and time
+        
+        '''
+        
+        corners=((min(latitude),min(longitude)),(max(latitude),max(longitude)))
+          
+        
+        m=mapMath()
+        
+        ind=(m.latlongToGridCoordinate(corners[0][0],corners[0][1], res=1),
+             m.latlongToGridCoordinate(corners[1][0],corners[1][1], res=1))
+        
+        boxCoords,boxIndexes=m.cornerCoordinatesToAllCoordinates(1,ind[0],ind[1])  
+        
+        pool = ThreadPool(n_threads)
+        results=[]
+        for year in range(year_start,year_end+1):
+            results += pool.map(self.level2_data_retrieve,zip(boxIndexes,itertools.repeat(year)))
+        
+        return pd.concat(results)        
+    
+    def level2_data_retrieve(self,arg):
+        ind,year=arg
+        parameters=['extId','lat','lon','date']
+        try:
+            return self.sequences.data.retrieve(0,None,column_external_ids=parameters,external_id='cast_wod_2_{:d}_{:d}'.format(year,ind)).to_pandas()
+        except:
+            return None    
+    
     def filter_casts(self,casts,longitude,latitude,timespan) :
         '''
         
@@ -158,16 +204,17 @@ class ODPClient(CogniteClient):
         timespan=[pd.to_datetime(timespan[0]),
                   pd.to_datetime(timespan[1])]         
         
-        casts=self.get_available_casts(timespan[0].year,timespan[1].year,n_threads=n_threads)
+        
+        #casts=self.get_available_casts_from_raw_table(timespan[0].year,timespan[1].year,n_threads)
+        casts=self.get_available_casts(timespan[0].year,timespan[1].year,longitude,latitude,n_threads)       
         
         casts=self.filter_casts(casts, longitude, latitude, timespan)
         
-              
         return casts
     
 
     
-    def get_available_casts(self,year_start,year_end,n_threads=10):
+    def get_available_casts_from_raw_table(self,year_start,year_end,n_threads=10):
         
         '''
         
@@ -199,6 +246,9 @@ class ODPClient(CogniteClient):
     def raw_table_call(self,year):
         '''
         Retrieve RAW table for given year
+        
+        Teturning list of avilable casts that year.
+        
         '''
 
         try:
@@ -272,3 +322,119 @@ class ODPClient(CogniteClient):
         
     
     
+    
+    
+class mapMath:
+
+    """
+    ODP specific map tools.
+    
+    Get the grid index related to input long/lat and grid resolution
+
+    Parameters 
+        long = range -180 -> 180
+        lat  = range  -90 -> 90
+        res  = geo grid resolution where 1 x 1 degree is default, for half degree  grids use 0.5
+    
+     NOTE to get grid index related to geo coordinates ((-180,-90),(-179,-89)), input is in the range:
+       -179 >= long > -180
+       -89  >= lat  > -90
+    """
+    def latlongToIndex(self, lat, long, res=1):
+
+        #Correct for boarder line degrees
+        if lat == -90:
+            lat = -89
+
+        if long == -180:
+            long = -179
+    
+        x,y = self.latlongToGridCoordinate(lat, long, res)
+        return self.gridCoordinateToIndex(x,y, res)
+
+    """
+    Convert input longitude and latitude input to coordinates in the grid.
+    The grid is a matrix from representing the -180,-90 to 180,90 map. With 1 as resolution the matrix has 64800 cells
+    Starting with coordinates 1,1 
+
+   Parameters 
+        long = range -180 -> 180
+        lat  = range  -90 -> 90
+        res  = geo grid resolution where 1 x 1 degree is default, for half degree  grids use 0.5
+    """
+    def latlongToGridCoordinate(self, lat, long, res=1):
+        lat  = lat  + 90   # Adjust from range -90 -> 90   to 0 -> 180
+        long = long + 180  # Adjust from range -180 -> 180 to 0 -> 360
+
+        # round down to index number
+        roundlat  = float(res * math.ceil(lat / res ))
+        roundlong = float(res * math.ceil(long / res))
+
+        y = roundlat // res
+        x = roundlong // res
+        
+        return int(x), int(y)
+
+    """
+    Get the index of specific grid-coordinate, given resolution
+
+    Parameters 
+        x = long, range with res = 1, 1 -> 360
+        y = lat, range with res = 1, 1 -> 180
+        res  = geo grid resolution where 1 x 1 degree is default, for half degree  grids use 0.5
+
+    """
+    def gridCoordinateToIndex(self, x, y, res=1): 
+        return int((x-1) * 180/res + y)
+
+
+    """
+    Get cartesian grid coordinates, given index and resolution
+
+    Parameters 
+        index, with res = 1, 1 -> 64800
+        res  = geo grid resolution where 1 x 1 degree is default, for half degree  grids use 0.5
+
+    """
+    def indexToGridCoordinate(self,index,res=1): #returns cartesian grid coordinates, given index and resolution
+        lat_range  = res*180
+    
+        x_loc  = (index-1)//lat_range+1
+        y_loc   = (index-1)%lat_range+1
+
+        return x_loc,y_loc
+
+    """
+    Get longetude & latetude based on index
+
+    Parameters 
+        index, with res = 1, 1 -> 64800
+        res  = geo grid resolution where 1 x 1 degree is default, for half degree  grids use 0.5
+
+    """
+    def indexToMapCoordinate(self,index,res=1):              
+        x,y = self.indexToGridCoordinate(index,res)
+        longitude = -180 + x/res 
+        latitude  = -90 + y/res
+
+        return longitude, latitude
+
+    """
+    """
+    def cornerCoordinatesToAllCoordinates(self,res=1,*corners):  #tuple of tuples ->((x1,y1),(x2,y2)) or ((x1,x2))
+        x1,y1 = corners[0][0],corners[0][1]
+        if len(corners)==1:
+            x2,y2 = corners[0][0], corners[0][1]
+        else:
+            x2,y2 = corners[1][0],corners[1][1]
+        boxCoords  = [] #list of all coordinate tuples within the box
+        boxIndexes = [] #list of all indexes within the box
+        for x in range(min(x1,x2),max(x1,x2)+1):
+            for y in range(min(y1,y2),max(y1,y2)+1):
+                boxCoords.append((x,y))
+                boxIndexes.append(self.gridCoordinateToIndex(x,y,res))
+        return boxCoords,boxIndexes
+
+
+    
+     
