@@ -109,7 +109,7 @@ class ODPClient(CogniteClient):
                     mask = data[var+'_WODflag'] != 0
                     data.loc[mask, var] = None
             if parameters is not None:
-                data=data[['externalId']+parameters_org]
+                data=data[['externalId','datetime']+parameters_org]
         
         print('-> {} data rows downloaded in {:.2f}s'.format(len(data),time.time()-t0))
 
