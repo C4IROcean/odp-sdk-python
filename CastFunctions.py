@@ -42,7 +42,7 @@ def interpolate_casts_to_z(df,variable,z_int,max_z_extrapolation=3,max_z_copy_si
         data[i*nz:(i+1)*nz,4]=z_int
         data[i*nz:(i+1)*nz,5]=v_int
     
-    return pd.DataFrame(data,columns=['externalId','datetime','lon','lat','z',variable]).astype({'lon': float,'lat': float,'Temperature': float,'z':float})
+    return pd.DataFrame(data,columns=['externalId','datetime','lon','lat','z',variable]).astype({'lon': float,'lat': float, variable: float,'z':float})
   
 
 
