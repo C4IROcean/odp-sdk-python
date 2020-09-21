@@ -1,2 +1,3 @@
 
 odp_sdk/__pycache__/client.cpython-36.pyc
+*.pyc
