@@ -36,7 +36,7 @@ df=client.casts(longitude=[-10,35],
 ```
 
 Basic usage with more options (Specifying the parameters of interest and removing flagged data):
-```
+```python
 df=client.casts(longitude=[-25,35],
                 latitude=[50,80],
                 timespan=['2018-06-01','2018-08-31'],
@@ -45,7 +45,7 @@ df=client.casts(longitude=[-25,35],
                 include_flagged_data=False)
 ```
 
-```
+```python
 
 ```
 
