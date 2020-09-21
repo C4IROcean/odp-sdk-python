@@ -28,11 +28,27 @@ client = ODPClient(api_key='your_personal_api_key_from_ODP')
 ```
 Get dataframe of ocean data samples (casts) within search criteria
 
+Basic usage:
 ```python
 df=client.casts(longitude=[-10,35],
                 latitude=[50,80],
                 timespan=['2019-06-01','2019-06-07']) 
 ```
+
+Basic usage with more options (Specifying the parameters of interest and removing flagged data):
+```
+df=client.casts(longitude=[-25,35],
+                latitude=[50,80],
+                timespan=['2018-06-01','2018-08-31'],
+                parameters=['date','lon','lat','z','Temperature','Oxygen','Salinity'],
+                n_threads=35,
+                include_flagged_data=False)
+```
+
+```
+
+```
+
 
 CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
 
