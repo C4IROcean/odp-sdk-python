@@ -45,10 +45,6 @@ df=client.casts(longitude=[-25,35],
                 include_flagged_data=False)
 ```
 
-```python
-
-```
-
 
 CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
 
