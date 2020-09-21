@@ -45,7 +45,7 @@ class ODPClient(CogniteClient):
             
             
         
-    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=10, include_flagged_data = True, parameters=None):
+    def casts(self,longitude=[-180,180],latitude=[-90,90],timespan=['1700-01-01','2050-01-01'],n_threads=35, include_flagged_data = True, parameters=None):
         
         '''
         
@@ -74,7 +74,7 @@ class ODPClient(CogniteClient):
         t0=time.time()
         print('Locating available casts..')
         
-        casts=self.get_filtered_casts(longitude, latitude, timespan,n_threads,
+        casts=self.get_available_casts(longitude, latitude, timespan,n_threads,
                                       meta_parameters=['extId','lat','lon','date'])
 
         cast_names_filtered=casts['extId'].tolist()
@@ -116,7 +116,7 @@ class ODPClient(CogniteClient):
         return data
             
     
-    def get_available_casts(self,year_start,year_end,longitude=[-180,180],latitude=[-90,90],n_threads=10,meta_parameters=None):
+    def get_casts_from_level2(self,year_start,year_end,longitude=[-180,180],latitude=[-90,90],n_threads=35,meta_parameters=None):
         '''
         
         Retrieveing table of avialable casts for given time period and boundary
@@ -126,11 +126,12 @@ class ODPClient(CogniteClient):
         longitude: list of min and max logitude, i.e [-10,35]
         latitude : list of min and max latitude, i.e [50,80]
         timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
-        
+        n_threads: Number of threads to be used for retrieving each cast
+        parameters:List of metadata parameters to be downloaded
 
         Output:
         
-        Dataframe with cast id, position and time
+        Dataframe with a list of available casts with metadata
         
         '''
         
@@ -185,7 +186,7 @@ class ODPClient(CogniteClient):
                    (casts.datetime>timespan[0]) & (casts.datetime<timespan[1])]
         return casts
         
-    def get_filtered_casts(self,longitude,latitude,timespan,n_threads=10,meta_parameters=None):
+    def get_available_casts(self,longitude,latitude,timespan,n_threads=35,meta_parameters=None):
         
         '''
         
@@ -196,6 +197,7 @@ class ODPClient(CogniteClient):
         longitude: list of min and max logitude, i.e [-10,35]
         latitude : list of min and max latitude, i.e [50,80]
         timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+        meta_parameters: list of column names to be returned. None returns all. i.e meta_parameters=['extId','lat','lon','date']
         
         Output:
         
@@ -207,8 +209,8 @@ class ODPClient(CogniteClient):
                   pd.to_datetime(timespan[1])]         
         
         
-        #casts=self.get_available_casts_from_raw_table(timespan[0].year,timespan[1].year,n_threads)
-        casts=self.get_available_casts(timespan[0].year,timespan[1].year,longitude,latitude,n_threads,meta_parameters)       
+        #casts=self.get_casts_from_raw_table(timespan[0].year,timespan[1].year,n_threads)
+        casts=self.get_casts_from_level2(timespan[0].year,timespan[1].year,longitude,latitude,n_threads,meta_parameters)       
         
         casts=self.filter_casts(casts, longitude, latitude, timespan)
         
@@ -216,7 +218,7 @@ class ODPClient(CogniteClient):
     
 
     
-    def get_available_casts_from_raw_table(self,year_start,year_end,n_threads=10):
+    def get_casts_from_raw_table(self,year_start,year_end,n_threads=35):
         
         '''
         
@@ -281,7 +283,7 @@ class ODPClient(CogniteClient):
             
     
 
-    def download_data_from_casts(self,cast_names,n_threads=10,parameters=None):
+    def download_data_from_casts(self,cast_names,n_threads=35,parameters=None):
         
         '''
         
