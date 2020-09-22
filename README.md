@@ -49,7 +49,8 @@ CastFunctions.py include useful features for interpolating and plotting. This pa
 
 DataStatsfunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
 
-If you wish to download the necessary packaged to run these functions, in your environemen tof choice you can run:
+If you wish to download the necessary packaged to run these functions, in your environement of choice you can run:
+
 (remember to give full path to repo if necessary)
 
 ```bash
