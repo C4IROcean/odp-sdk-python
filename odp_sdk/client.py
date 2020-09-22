@@ -5,7 +5,7 @@ import pandas as pd
 from cognite.client import CogniteClient
 from multiprocessing.dummy import Pool as ThreadPool
 
-from .math.odp_geo import gcs_to_index, gcs_to_grid
+from .math.odp_geo import gcs_to_index, gcs_to_grid, index_rect_members
 
 
 class ODPClient(CogniteClient):
@@ -136,20 +136,22 @@ class ODPClient(CogniteClient):
         
         '''
         
-        corners=((min(latitude),min(longitude)),(max(latitude),max(longitude)))
-          
-        
-        ind = (
-            gcs_to_grid(corners[0][0], corners[0][1]),
-            gcs_to_grid(corners[1][0], corners[1][1])
-        )
+        lat = [min(latitude), max(latitude)]
+        lon = [min(longitude), max(longitude)]
 
-        boxCoords,boxIndexes=m.cornerCoordinatesToAllCoordinates(1,ind[0],ind[1])  
-        
+        i1, i2 = gcs_to_index(lat, lon)
+
+        box_indices = index_rect_members(i1, i2)
+
         pool = ThreadPool(n_threads)
-        results=[]
+        results = []
+
         for year in range(year_start,year_end+1):
-            results += pool.map(self.level2_data_retrieve,zip(boxIndexes,itertools.repeat(year),itertools.repeat(meta_parameters)))
+            results += pool.map(self.level2_data_retrieve, zip(
+                box_indices,
+                itertools.repeat(year),
+                itertools.repeat(meta_parameters)
+            ))
         
         return pd.concat(results).reset_index()        
     

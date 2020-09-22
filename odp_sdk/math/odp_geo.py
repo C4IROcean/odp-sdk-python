@@ -127,12 +127,16 @@ def index_to_gcs(index, res=1):
 def grid_rect_members(
         p1: Tuple[int, int],
         p2: Tuple[int, int],
+        compensate_dateline: bool = False
 ) -> np.array:
     """Fill a rectangle, defined by two corner grid-coordinates, with all grid-coordinates contained in it
 
     Args:
         p1: First corner of rectangle
         p2: Second corner of rectangle
+        compensate_dateline: Compensate for international dateline.
+            If true, then two points close to each other near the international dateline or south pole
+            will define a rectangle across the dateline, instead going all the way around the globe
 
     Returns:
         np.array: 2D-array of all grid-coordinates contained within the rectangle.
@@ -153,12 +157,12 @@ def grid_rect_members(
 
     # Swap around international date-line
 
-    if x1 - x2 + 360 < x2 - x1:
+    if compensate_dateline and (x1 - x2 + 360 < x2 - x1):
         x1, x2 = x2, x1 + 360
 
     # Swap around south-pole
 
-    if y1 - y2 + 180 < y2 - y1:
+    if compensate_dateline and (y1 - y2 + 180 < y2 - y1):
         y1, y2 = y2, y1 + 180
 
     w = x2 - x1 + 1
@@ -175,7 +179,8 @@ def grid_rect_members(
 def index_rect_members(
         p1: int,
         p2: int,
-        res: float = 1
+        res: float = 1,
+        compensate_dateline: bool = False
 ) -> np.array:
 
     x, y = index_to_grid([p1, p2])
@@ -183,6 +188,6 @@ def index_rect_members(
     pg1 = x[0], y[0]
     pg2 = x[1], y[1]
 
-    members = grid_rect_members(pg1, pg2)
+    members = grid_rect_members(pg1, pg2, compensate_dateline)
 
     return grid_to_index(members[:, 0], members[:, 1], res=res)

@@ -124,5 +124,5 @@ class TestOdpMath(unittest.TestCase):
             64674, 54
         ])
 
-        members = index_rect_members(p1, p2)
-        print(len(members), members)#np.testing.assert_array_equal(members, ref)
+        members = index_rect_members(p1, p2, compensate_dateline=True)
+        np.testing.assert_array_equal(members, ref)
