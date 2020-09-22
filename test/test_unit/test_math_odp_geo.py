@@ -14,7 +14,7 @@
 
 import unittest
 
-from odp_sdk.math import index_to_gcs, gcs_to_index
+from odp_sdk.math import index_to_gcs, gcs_to_index, grid_rect_members, index_rect_members
 import numpy as np
 
 
@@ -76,3 +76,53 @@ class TestOdpMath(unittest.TestCase):
 
             self.assertEqual(lat, ref_lat)
             self.assertEqual(lon, ref_lon)
+
+    def test_grid_rect_members(self):
+        p1 = (3, 6)
+        p2 = (6, 9)
+
+        ref = np.asarray([
+            (3, 6), (4, 6), (5, 6), (6, 6),
+            (3, 7), (4, 7), (5, 7), (6, 7),
+            (3, 8), (4, 8), (5, 8), (6, 8),
+            (3, 9), (4, 9), (5, 9), (6, 9),
+        ])
+
+        coords = grid_rect_members(p1, p2)
+
+        np.testing.assert_array_equal(coords, ref)
+
+    def test_index_rec_members_0(self):
+        p1 = 34174
+        p2 = 33993
+
+        ref = np.asarray([
+            33993, 34173,
+            33994, 34174
+        ])
+
+        members = index_rect_members(p1, p2)
+        np.testing.assert_array_equal(members, ref)
+
+    def test_index_rec_members_1(self):
+        p1 = 32184
+        p2 = 32544
+
+        ref = np.asarray([
+            32184, 32364, 32544
+        ])
+
+        members = index_rect_members(p1, p2)
+        np.testing.assert_array_equal(members, ref)
+
+    def test_index_rec_members_2(self):
+        p1 = 64673
+        p2 = 54
+
+        ref = np.asarray([
+            64673, 53,
+            64674, 54
+        ])
+
+        members = index_rect_members(p1, p2)
+        print(len(members), members)#np.testing.assert_array_equal(members, ref)
