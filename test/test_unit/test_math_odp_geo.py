@@ -14,7 +14,7 @@
 
 import unittest
 
-from odp_sdk.math import index_to_gcs, gcs_to_index, grid_rect_members, index_rect_members
+from odp_sdk.utils import index_to_gcs, gcs_to_index, grid_rect_members, index_rect_members
 import numpy as np
 
 

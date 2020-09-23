@@ -5,7 +5,7 @@ import pandas as pd
 from cognite.client import CogniteClient
 from multiprocessing.dummy import Pool as ThreadPool
 
-from .math.odp_geo import gcs_to_index, gcs_to_grid, index_rect_members
+from odp_sdk.utils.odp_geo import gcs_to_index, index_rect_members
 
 
 class ODPClient(CogniteClient):
