@@ -47,14 +47,12 @@ df=client.casts(longitude=[-25,35],
 
 CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
 
-DataStatsfunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
+DataStatsFunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
 
-If you wish to download the necessary packaged to run these functions, in your environement of choice you can run:
-
-(remember to give full path to repo if necessary)
+In order to use CastFunctions.py and DataStatsFunctions.py, certain packages are necessary. These requirements can be found in the Examples folder in the file requirments_func.txt. Wherever you set up your environment, you can run the line below with the proper path to install these packages. 
 
 ```bash
-pip3 install -r requirements.txt
+pip3 install -r requirements_func.txt
 ```
 
 ## Jupyter Notebook Examples 
