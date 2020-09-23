@@ -7,15 +7,17 @@ import numpy as np
 
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-
 GRID_X_WIDTH = 360
 GRID_Y_WIDTH = 180
 
 INDEX_COUNT = GRID_X_WIDTH * GRID_Y_WIDTH
 
 
-
-def gcs_to_index(lat, lon, res=1):
+def gcs_to_index(
+        lat: Union[float, List[float], np.ndarray],
+        lon: Union[float, List[float], np.ndarray],
+        res: float = 1.0
+) -> np.ndarray:
     """Convert lat/lon to ODP index
 
     Args:
@@ -36,7 +38,11 @@ def gcs_to_index(lat, lon, res=1):
     return grid_to_index(x, y, res)
 
 
-def gcs_to_grid(lat, lon, res=1):
+def gcs_to_grid(
+        lat: Union[float, List[float], np.ndarray],
+        lon: Union[float, List[float], np.ndarray],
+        res=1.0
+) -> Union[Tuple[int, int], np.ndarray]:
     """Convert lat/lon to grid
 
     Args:
@@ -61,7 +67,11 @@ def gcs_to_grid(lat, lon, res=1):
     return np.cast[np.int](x), np.cast[np.int](y)
 
 
-def grid_to_index(x, y, res: float = 1):
+def grid_to_index(
+        x: Union[int, float, List[Union[int, float]], np.ndarray],
+        y: Union[int, float, List[Union[int, float]], np.ndarray],
+        res: float = 1.0
+) -> Union[int, np.ndarray]:
     """Convert grid-coordinates to ODP-Index
 
     Args:
@@ -85,7 +95,10 @@ def grid_to_index(x, y, res: float = 1):
     return ret
 
 
-def index_to_grid(index, res=1):
+def index_to_grid(
+        index: Union[int, List[int], np.ndarray],
+        res: float = 1.0
+) -> Union[Tuple[int, int], np.ndarray]:
     """Convert ODP-index to grid-coordinates
 
     Args:
@@ -105,7 +118,10 @@ def index_to_grid(index, res=1):
     return xloc, yloc
 
 
-def index_to_gcs(index, res=1):
+def index_to_gcs(
+        index: Union[int, List[int], np.ndarray],
+        res: float = 1.0
+) -> Union[Tuple[float, float], np.ndarray]:
     """Convert ODP-index to lat/lon
 
     Args:
@@ -128,7 +144,7 @@ def grid_rect_members(
         p1: Tuple[int, int],
         p2: Tuple[int, int],
         compensate_dateline: bool = False
-) -> np.array:
+) -> np.ndarray:
     """Fill a rectangle, defined by two corner grid-coordinates, with all grid-coordinates contained in it
 
     Args:
