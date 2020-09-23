@@ -1,6 +1,6 @@
 # Example notebooks and extra functions
 
-## TO RUN THE EXAMPLE NOTEBOOKS YOU NEED TO MAKE SURE YOU HAVE ACCESS TO THE FUNCTIONs FILES AND INSTALLED THE REQUIRED PACKAGES
+## TO RUN THE EXAMPLE NOTEBOOKS YOU NEED TO MAKE SURE YOU HAVE ACCESS TO THE FUNCTION FILES AND INSTALLED THE REQUIRED PACKAGES
 
 Both CastFunctions.py and DataStatsFunctions.py live in this folder. Make sure you've cloned the repo and point to the proper path in the notebooks
 
