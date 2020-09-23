@@ -182,6 +182,24 @@ def index_rect_members(
         res: float = 1,
         compensate_dateline: bool = False
 ) -> np.array:
+    """Fill a rectangle, defined by two corner geo-indices, with all geo-indices contained in it
+
+    Args:
+        p1: Geo-Index of first corner of rectangle
+        p2: Geo-Index of second corner of rectangle
+        res: Resolution where 1x1 degress per index is default.
+            For half-degree grids, use 0.5
+        compensate_dateline: Compensate for international dateline.
+            If true, then two points close to each other near the international dateline or south pole
+            will define a rectangle across the dateline, instead going all the way around the globe
+
+    Returns:
+        np.array: 1D-array of all geo-indices contained within the rectangle.
+
+    Note:
+        The ends are included. For example - if p1 and p2 are equal, then the returned array is NOT empty,
+        but instead contains a single point - p1
+    """
 
     x, y = index_to_grid([p1, p2])
 
