@@ -11,8 +11,7 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the Oce
 ```bash
 pip3 install odp_sdk
 ```
-*Note: Utility functions available in CastFunctions.py are not included in the pip install package and has to be downloaded separately*
-
+*Note: Utility functions available in CastFunctions.py  and DataStatsFunctions.py are not included in the pip install package and has to be downloaded separately*
 
 ## Usage
 
@@ -50,11 +49,21 @@ CastFunctions.py include useful features for interpolating and plotting. This pa
 
 DataStatsfunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
 
+If you wish to download the necessary packaged to run these functions, in your environement of choice you can run:
+
+(remember to give full path to repo if necessary)
+
+```bash
+pip3 install -r requirements.txt
+```
+
 ## Jupyter Notebook Examples 
 Example notebooks are found in the Example folder, which includes:
 - Download data, plot the casts and create a gridded map of surface temperatures 
 - Download avilable casts, explore them in an interactive map and plot the cast profile
-- Example Notebook Data Coverage shows how functions from DataStatsFunctions.py can help users understand the data they download from the odp_sdk. 
+- Example Notebook Data Coverage shows how functions from DataStatsFunctions.py can help users understand the data they download from the odp_sdk
+- Example Notebook Data Exploration shows how users can explore the data they pull from the WOD (i.e. plot temperature over time)
+- Example Notebook Marine Regions shows how users can join Marine Regions data to the WOD data
 
 ## WOD
 The World Ocean Database is a National Centers for Environmental (NCEI) product and International Oceanographic Data and Information Exchange (IODE) project which provides a composite of publicly available ocean profile data, both historic and recent. It consists of over thousands of datasets consisting of millions of water temperatures, salinity, oxygen, and nutrient profiles (1,2).
