@@ -1,17 +1,1 @@
-basemap @ git+https://github.com/matplotlib/basemap.git@246dd6c7c4c2f585935a022f01c54ae0b4c7f164
-Cartopy===0.18.1.dev34-
-cmocean==2.0
-contours==0.0.2
-geojson==2.5.0
-geopandas==0.8.1
-importlib-metadata==1.7.0
-matplotlib==3.2.2
-MetPy==0.12.1
-numpy==1.19.0
-pandas==1.0.5
-plotly==4.8.2
-python-dateutil==2.8.1
-scipy==1.5.0
-seaborn==0.10.1
-Shapely==1.7.0
-tqdm==4.48.2
+
