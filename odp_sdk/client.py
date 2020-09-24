@@ -346,7 +346,8 @@ class ODPClient(CogniteClient):
             ).to_pandas()
             casts.lon = pd.to_numeric(casts.lon)
             casts.lat = pd.to_numeric(casts.lat)
-            casts['datetime'] = pd.to_datetime(casts.date, format='%Y%m%d')            
+            casts['datetime'] = pd.to_datetime(casts.date, format='%Y%m%d') 
+            return casts
         except:
             return None
 
