@@ -71,8 +71,9 @@ class ODPClient(CogniteClient):
         login_status = self.login.status()
         if not login_status.logged_in:
             raise ConnectionError("Failed to connect to ODP")
+        else:
+            print('Connected')
             
-        
         log.info(f"Logged in to '{login_status.project}' as use '{login_status.user}'")        
         
     def casts(
@@ -152,8 +153,7 @@ class ODPClient(CogniteClient):
             
     def _get_casts_from_level2(
             self,
-            year_start: int,
-            year_end: int,
+            timespan: Tuple[str,str]= ('1700-01-01', '2050-01-01'),
             longitude: Tuple[int, int] = (-180, 180),
             latitude: Tuple[int, int] = (-90, 90),
             n_threads: int = 35,
@@ -183,7 +183,7 @@ class ODPClient(CogniteClient):
         pool = ThreadPool(n_threads)
         results = []
 
-        for year in range(year_start,year_end+1):
+        for year in range(timespan[0].year, timespan[1].year+1):
             results += pool.starmap(self._level2_data_retrieve, zip(
                 itertools.repeat(year),
                 box_indices,
@@ -211,9 +211,7 @@ class ODPClient(CogniteClient):
             DataFrame of filtered cast
         """
 
-        casts.lon = pd.to_numeric(casts.lon)
-        casts.lat = pd.to_numeric(casts.lat)
-        casts.datetime = pd.to_datetime(casts.date, format='%Y%m%d')
+
     
         casts = casts[(casts.lat > latitude[0]) & (casts.lat < latitude[1]) &
                       (casts.lon > longitude[0]) & (casts.lon < longitude[1]) &
@@ -244,7 +242,7 @@ class ODPClient(CogniteClient):
 
         timespan = (pd.to_datetime(timespan[0]), pd.to_datetime(timespan[1]))
         
-        casts = self._get_casts_from_level2(timespan[0].year, timespan[1].year, longitude, latitude,
+        casts = self._get_casts_from_level2(timespan, longitude, latitude,
                                            n_threads, meta_parameters)
         
         casts = self.filter_casts(casts, longitude, latitude, timespan)
@@ -340,12 +338,15 @@ class ODPClient(CogniteClient):
                               parameters: List[str] ) -> Union[None, pd.DataFrame]     :                  
                               
         try:
-            return self.sequences.data.retrieve(
+            casts=self.sequences.data.retrieve(
                 external_id='cast_wod_2_{:d}_{:d}'.format(year, ind),
                 column_external_ids=parameters,
                 start=0,
                 end=None
             ).to_pandas()
+            casts.lon = pd.to_numeric(casts.lon)
+            casts.lat = pd.to_numeric(casts.lat)
+            casts['datetime'] = pd.to_datetime(casts.date, format='%Y%m%d')            
         except:
             return None
 
