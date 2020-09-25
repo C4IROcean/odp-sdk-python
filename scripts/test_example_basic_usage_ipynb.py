@@ -1,12 +1,14 @@
 import papermill as pm
-from os import getenv
+from os import getenv, path
+from tempfile import TemporaryDirectory
 
 
-pm.execute_notebook(
-    "Examples/Basic Usage.ipynb",
-    "bin/Basic Usage.ipynb",
-    parameters={
-        "ODP_API_KEY": getenv("ODP_API_KEY")
-    }
-)
+with TemporaryDirectory() as td:
+    pm.execute_notebook(
+        "Examples/Basic Usage.ipynb",
+        path.join(td, "Basic Usage.ipynb"),
+        parameters={
+            "ODP_API_KEY": getenv("ODP_API_KEY")
+        }
+    )
 
