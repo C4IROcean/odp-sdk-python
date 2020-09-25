@@ -8,7 +8,7 @@ from cognite.client import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
 from multiprocessing.dummy import Pool as ThreadPool
 
-from utils.odp_geo import gcs_to_index, index_rect_members
+from .utils.odp_geo import gcs_to_index, index_rect_members
 
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
