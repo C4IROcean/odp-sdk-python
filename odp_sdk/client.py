@@ -135,8 +135,7 @@ class ODPClient(CogniteClient):
             log.warning('No available data found in casts')
             return None
 
-        # Adding a column with datetime
-        data['datetime'] = pd.to_datetime(data['date'], format='%Y%m%d')
+
         
         # Setting flagged measurements to None if not include_flagged_data
         if not include_flagged_data:
@@ -342,9 +341,11 @@ class ODPClient(CogniteClient):
                 external_id='cast_wod_2_{:d}_{:d}'.format(year, ind),
                 column_external_ids=parameters,
                 start=0,
-                end=None
-            ).to_pandas()
+                end=None)
 
+            if casts is None:
+                return None            
+            casts=casts.to_pandas()
             casts.lon = pd.to_numeric(casts.lon)
             casts.lat = pd.to_numeric(casts.lat)
             casts['datetime'] = pd.to_datetime(casts.date, format='%Y%m%d')
@@ -371,6 +372,7 @@ class ODPClient(CogniteClient):
                 return None
             df = seqs.to_pandas()
             df["externalId"] = cast_name
+            df['datetime'] = pd.to_datetime(df.date, format='%Y%m%d') 
             return df
         except CogniteAPIError as e:
             log.error(f"Failed to retrieve cast '{cast_name}' with parameters {parameters}: {e.message}")
