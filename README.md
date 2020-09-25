@@ -57,8 +57,9 @@ pip3 install -r requirements_func.txt
 
 ## Jupyter Notebook Examples 
 Example notebooks are found in the Example folder, which includes:
+- Basic data retrieaval from ODP
 - Download data, plot the casts and create a gridded map of surface temperatures 
-- Download avilable casts, explore them in an interactive map and plot the cast profile
+- Analyzing temperature trends
 - Example Notebook Data Coverage shows how functions from DataStatsFunctions.py can help users understand the data they download from the odp_sdk
 - Example Notebook Data Exploration shows how users can explore the data they pull from the WOD (i.e. plot temperature over time)
 - Example Notebook Marine Regions shows how users can join Marine Regions data to the WOD data
