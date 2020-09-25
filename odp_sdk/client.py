@@ -12,6 +12,7 @@ from utils.odp_geo import gcs_to_index, index_rect_members
 
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
+
 log = logging.getLogger("odp-sdk")
 
 
@@ -72,7 +73,7 @@ class ODPClient(CogniteClient):
         if not login_status.logged_in:
             raise ConnectionError("Failed to connect to ODP")
         else:
-            print('Connected')
+            log.info('Connected')
             
         log.info(f"Logged in to '{login_status.project}' as use '{login_status.user}'")        
         
@@ -100,26 +101,25 @@ class ODPClient(CogniteClient):
             Pandas DataFrame with cast data
         """
 
-        
         if n_threads > self.MAX_THREADS:
-            print('Maximum allowable number of threads is {}'.format(self.MAX_THREADS))
+            log.warning('Maximum allowable number of threads is {}'.format(self.MAX_THREADS))
             n_threads = self.MAX_THREADS
         
         t0 = time.time()
-        print('Locating available casts..')
+        log.info('Locating available casts..')
         
         casts = self.get_available_casts(longitude, latitude, timespan, n_threads,
                                          meta_parameters=['extId', 'lat', 'lon', 'date'])
 
         cast_names_filtered = casts['extId'].tolist()
-        print('-> {} casts found'.format(len(cast_names_filtered)))        
+        log.info('-> {} casts found'.format(len(cast_names_filtered)))
 
         if not cast_names_filtered:
-            print('No casts found in search')
+            log.warning('No casts found in search')
             return None  
         
         # Including flag columns to remove flagged data points
-        if not include_flagged_data and (parameters is not None):
+        if not include_flagged_data and parameters is not None:
             parameters_with_flags = ['z', 'Oxygen', 'Temperature', 'Salinity', 'Chlorophyll', 'Nitrate', 'pH']
             parameters_org = parameters.copy()
             for p in parameters_org:
@@ -128,11 +128,11 @@ class ODPClient(CogniteClient):
         else:
             parameters_org = []
                 
-        print('Downloading data from casts..')
+        log.info('Downloading data from casts..')
         data = self.download_data_from_casts(cast_names_filtered, n_threads, parameters)
         
         if data.empty:
-            print('No available data found in casts')
+            log.warning('No available data found in casts')
             return None
 
         # Adding a column with datetime
@@ -147,7 +147,7 @@ class ODPClient(CogniteClient):
             if parameters is not None:
                 data = data[['externalId', 'datetime'] + parameters_org]
         
-        print('-> {} data rows downloaded in {:.2f}s'.format(len(data), time.time()-t0))
+        log.info('-> {} data rows downloaded in {:.2f}s'.format(len(data), time.time()-t0))
 
         return data
             
@@ -290,7 +290,7 @@ class ODPClient(CogniteClient):
         try:
             return self.raw.rows.list("WOD", "cast_{}".format(year), limit=-1).to_pandas()
         except:
-            print('No data for year {}'.format(year))        
+            log.warning('No data for year {}'.format(year))
 
     def download_data_from_casts(
             self,
