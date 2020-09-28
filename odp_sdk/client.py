@@ -8,9 +8,10 @@ from cognite.client import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
 from multiprocessing.dummy import Pool as ThreadPool
 
-from utils.odp_geo import gcs_to_index, index_rect_members
+from .utils.odp_geo import gcs_to_index, index_rect_members
 
 from typing import Callable, Dict, List, Optional, Tuple, Union
+
 
 log = logging.getLogger("odp-sdk")
 
@@ -63,16 +64,16 @@ class ODPClient(CogniteClient):
             disable_pypi_version_check: Don't check for newer versions of the SDK on client creation
             debug: Configures logger to log extra request details to stderr.
         """
-        self.MAX_THREADS=50
+        self.MAX_THREADS = 50
         
-        
-        super().__init__(api_key, project, client_name, base_url, max_workers, headers, timeout, token, disable_pypi_version_check, debug)
+        super().__init__(api_key, project, client_name, base_url, max_workers,
+                         headers, timeout, token, disable_pypi_version_check, debug)
         
         login_status = self.login.status()
         if not login_status.logged_in:
             raise ConnectionError("Failed to connect to ODP")
         else:
-            print('Connected')
+            log.info('Connected')
             
         log.info(f"Logged in to '{login_status.project}' as use '{login_status.user}'")        
         
@@ -100,26 +101,25 @@ class ODPClient(CogniteClient):
             Pandas DataFrame with cast data
         """
 
-        
         if n_threads > self.MAX_THREADS:
-            print('Maximum allowable number of threads is {}'.format(self.MAX_THREADS))
+            log.warning('Maximum allowable number of threads is {}'.format(self.MAX_THREADS))
             n_threads = self.MAX_THREADS
         
         t0 = time.time()
-        print('Locating available casts..')
+        log.info('Locating available casts..')
         
         casts = self.get_available_casts(longitude, latitude, timespan, n_threads,
                                          meta_parameters=['extId', 'lat', 'lon', 'date'])
 
         cast_names_filtered = casts['extId'].tolist()
-        print('-> {} casts found'.format(len(cast_names_filtered)))        
+        log.info('-> {} casts found'.format(len(cast_names_filtered)))
 
         if not cast_names_filtered:
-            print('No casts found in search')
+            log.warning('No casts found in search')
             return None  
         
         # Including flag columns to remove flagged data points
-        if not include_flagged_data and (parameters is not None):
+        if not include_flagged_data and parameters is not None:
             parameters_with_flags = ['z', 'Oxygen', 'Temperature', 'Salinity', 'Chlorophyll', 'Nitrate', 'pH']
             parameters_org = parameters.copy()
             for p in parameters_org:
@@ -128,11 +128,11 @@ class ODPClient(CogniteClient):
         else:
             parameters_org = []
                 
-        print('Downloading data from casts..')
+        log.info('Downloading data from casts..')
         data = self.download_data_from_casts(cast_names_filtered, n_threads, parameters)
         
         if data.empty:
-            print('No available data found in casts')
+            log.warning('No available data found in casts')
             return None
 
 
@@ -146,12 +146,13 @@ class ODPClient(CogniteClient):
             if parameters is not None:
                 data = data[['externalId', 'datetime'] + parameters_org]
         
-        print('-> {} data rows downloaded in {:.2f}s'.format(len(data), time.time()-t0))
+        log.info('-> {} data rows downloaded in {:.2f}s'.format(len(data), time.time()-t0))
 
         return data
             
     def _get_casts_from_level2(
             self,
+
             timespan: Tuple[pd.Timestamp,pd.Timestamp],
             longitude: Tuple[int, int] ,
             latitude: Tuple[int, int] ,
@@ -209,8 +210,6 @@ class ODPClient(CogniteClient):
             DataFrame of filtered cast
         """
 
-
-    
         casts = casts[(casts.lat > latitude[0]) & (casts.lat < latitude[1]) &
                       (casts.lon > longitude[0]) & (casts.lon < longitude[1]) &
                       (casts.datetime > timespan[0]) & (casts.datetime < timespan[1])]
@@ -241,7 +240,7 @@ class ODPClient(CogniteClient):
         timespan = (pd.to_datetime(timespan[0]), pd.to_datetime(timespan[1]))
         
         casts = self._get_casts_from_level2(timespan, longitude, latitude,
-                                           n_threads, meta_parameters)
+                                            n_threads, meta_parameters)
         
         casts = self.filter_casts(casts, longitude, latitude, timespan)
         
@@ -252,8 +251,9 @@ class ODPClient(CogniteClient):
             self,
             cast_names: List[str],
             n_threads: int = 35,
-            parameters: List[str] = None) -> pd.DataFrame :
-        """Rettrieving data from list of level 3 casts
+            parameters: List[str] = None
+    ) -> pd.DataFrame:
+        """Retrieving data from list of level 3 casts
 
         Args:
             cast_names: The externalId of the cast
@@ -272,7 +272,7 @@ class ODPClient(CogniteClient):
         else:
             results = []
             for cast_name in cast_names:
-                results.append(self._level3_data_retrieve((cast_name, parameters)))
+                results.append(self._level3_data_retrieve(cast_name, parameters))
                 
         return pd.concat(results)
 
@@ -288,29 +288,32 @@ class ODPClient(CogniteClient):
 
         return self.sequences.retrieve_multiple(external_ids=cast_names).to_pandas()
 
-    def _level2_data_retrieve(self,
-                              year: int,
-                              ind: int ,
-                              parameters: List[str] ) -> Union[None, pd.DataFrame]     :                  
+    def _level2_data_retrieve(
+            self,
+            year: int,
+            ind: int,
+            parameters: List[str]
+    ) -> Union[None, pd.DataFrame]:
                               
         try:
-            casts=self.sequences.data.retrieve(
+            casts = self.sequences.data.retrieve(
                 external_id='cast_wod_2_{:d}_{:d}'.format(year, ind),
                 column_external_ids=parameters,
                 start=0,
-                end=None
-            )
+                end=None)
+
             if casts is None:
                 return None            
             casts=casts.to_pandas()
             casts.lon = pd.to_numeric(casts.lon)
             casts.lat = pd.to_numeric(casts.lat)
-            casts['datetime'] = pd.to_datetime(casts.date, format='%Y%m%d') 
+            casts['datetime'] = pd.to_datetime(casts.date, format='%Y%m%d')
+
             return casts
         except:
             return None
 
-    def _level3_data_retrieve(self, cast_name : str, parameters : List[str]) -> pd.DataFrame:
+    def _level3_data_retrieve(self, cast_name: str, parameters: List[str]) -> Union[None, pd.DataFrame]:
         """Download data from level_3 sequence by external_id
 
         Args:
@@ -322,7 +325,8 @@ class ODPClient(CogniteClient):
         """
 
         try:
-            seqs = self.sequences.data.retrieve(external_id=cast_name, column_external_ids=parameters, start=0, end=None)
+            seqs = self.sequences.data.retrieve(external_id=cast_name,
+                                                column_external_ids=parameters, start=0, end=None)
             if seqs is None:
                 return None
             df = seqs.to_pandas()
