@@ -13,7 +13,7 @@ from .utils.odp_geo import gcs_to_index, index_rect_members
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 
-log = logging.getLogger("odp-sdk")
+log = logging.getLogger("odp-sdk.log")
 
 
 class ODPClient(CogniteClient):
@@ -46,7 +46,8 @@ class ODPClient(CogniteClient):
             token: Union[str, Callable[[], str], None] = None,
             disable_pypi_version_check: Optional[bool] = None,
             debug: bool = False,
-            
+            info_odp: bool = True
+        
     ):
         """Constructor. ODP client inherits all properties and functions from CogniteClient
 
@@ -62,12 +63,16 @@ class ODPClient(CogniteClient):
             token: A jwt or method which takes no arguments and returns a jwt to use for authentication.
                 This will override any api-key set.
             disable_pypi_version_check: Don't check for newer versions of the SDK on client creation
-            debug: Configures logger to log extra request details to stderr.
+            debug: Configures Cognite logger to log extra request details to stderr.
+            info_odp: Logger info for odp-sdk
         """
         self.MAX_THREADS = 50
         
         super().__init__(api_key, project, client_name, base_url, max_workers,
                          headers, timeout, token, disable_pypi_version_check, debug)
+        if info_odp:
+            log.setLevel(logging.INFO)
+            logging.basicConfig(level=logging.INFO)
         
         login_status = self.login.status()
         if not login_status.logged_in:
@@ -75,7 +80,7 @@ class ODPClient(CogniteClient):
         else:
             log.info('Connected')
             
-        log.info(f"Logged in to '{login_status.project}' as use '{login_status.user}'")        
+        log.info(f"Logged in to '{login_status.project}' as user '{login_status.user}'")        
         
     def casts(
             self,
