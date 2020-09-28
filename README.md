@@ -47,20 +47,19 @@ df=client.casts(longitude=[-25,35],
 
 CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
 
-DataStatsfunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
+DataStatsFunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
 
-If you wish to download the necessary packaged to run these functions, in your environement of choice you can run:
-
-(remember to give full path to repo if necessary)
+In order to use CastFunctions.py and DataStatsFunctions.py, certain packages are necessary. These requirements can be found in the Examples folder in the file requirments_func.txt. Wherever you set up your environment, you can run the line below with the proper path to install these packages. 
 
 ```bash
-pip3 install -r requirements.txt
+pip3 install -r requirements_func.txt
 ```
 
 ## Jupyter Notebook Examples 
 Example notebooks are found in the Example folder, which includes:
+- Basic data retrieaval from ODP
 - Download data, plot the casts and create a gridded map of surface temperatures 
-- Download avilable casts, explore them in an interactive map and plot the cast profile
+- Analyzing temperature trends
 - Example Notebook Data Coverage shows how functions from DataStatsFunctions.py can help users understand the data they download from the odp_sdk
 - Example Notebook Data Exploration shows how users can explore the data they pull from the WOD (i.e. plot temperature over time)
 - Example Notebook Marine Regions shows how users can join Marine Regions data to the WOD data
