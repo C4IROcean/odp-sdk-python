@@ -152,17 +152,16 @@ class ODPClient(CogniteClient):
             
     def _get_casts_from_level2(
             self,
-            timespan: Tuple[str,str]= ('1700-01-01', '2050-01-01'),
-            longitude: Tuple[int, int] = (-180, 180),
-            latitude: Tuple[int, int] = (-90, 90),
+            timespan: Tuple[pd.Timestamp,pd.Timestamp],
+            longitude: Tuple[int, int] ,
+            latitude: Tuple[int, int] ,
             n_threads: int = 35,
             meta_parameters: List[str] = None
     ) -> pd.DataFrame:
         """Retrieving table of available casts for given time period and boundary
 
         Args:
-            year_start: Timeframe start year
-            year_end: Timeframe last year
+            timespan: Tuple of to and from timestamps
             longitude: Tuple of min and max logitude, i.e [-10,35]
             latitude : Tuple of min and max latitude, i.e [50,80]
             n_threads: Number of threads to be used for retrieving each cast
@@ -196,7 +195,7 @@ class ODPClient(CogniteClient):
             casts: pd.DataFrame,
             longitude: Tuple[int, int],
             latitude: Tuple[int, int],
-            timespan: Tuple[str, str]
+            timespan: Tuple[pd.Timestamp,pd.Timestamp]
     ) -> Union[None, pd.DataFrame]:
         """Filtering a DataFrame of casts based on longitude, latitude and time
 
@@ -204,7 +203,7 @@ class ODPClient(CogniteClient):
             casts: DataFrame containing at least cast id, longitude, latitude and time
             longitude: Tuple of min and max longitude, i.e (-10,35)
             latitude: Tuple of min and max latitude, i.e (50,80)
-            timespan: list of min and max datetime string ['YYYY-MM-DD'] i.e ('2018-03-01','2018-09-01')
+            timespan: Tuple of min and max pd.Timestamp 
 
         Returns:
             DataFrame of filtered cast
@@ -248,48 +247,6 @@ class ODPClient(CogniteClient):
         
         return casts
 
-    def get_casts_from_raw_table(
-            self,
-            year_start: int,
-            year_end: int,
-            n_threads: int = 35
-    ) -> pd.DataFrame:
-        """Retrieving RAW table of available casts for given years
-
-        Args:
-            year_start: casts from this year
-            year_end: casts to this year
-            n_threads:
-
-        Returns:
-            DataFrame with cast id, position and time
-        """
-
-        if n_threads > 1:
-            pool = ThreadPool(n_threads)
-            results = pool.map(self.raw_table_call, range(year_start, year_end + 1))
-            
-        else:
-            results = []
-            for year in range(year_start, year_end + 1):
-                results.append(self.raw_table_call(year))
-                
-        return pd.concat(results)        
-
-    def raw_table_call(self, year: int) -> Union[None, pd.DataFrame]:
-        """Retrieve RAW table for given year
-
-        Args:
-            year: Year to retrieve casts for
-
-        Returns:
-            List of available casts that year.
-        """
-
-        try:
-            return self.raw.rows.list("WOD", "cast_{}".format(year), limit=-1).to_pandas()
-        except:
-            print('No data for year {}'.format(year))        
 
     def download_data_from_casts(
             self,
