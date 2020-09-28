@@ -29,15 +29,15 @@ Get dataframe of ocean data samples (casts) within search criteria
 
 Basic usage:
 ```python
-df=client.casts(longitude=[-10,35],
-                latitude=[50,80],
+df=client.casts(longitude=[8,12],
+                latitude=[56,60],
                 timespan=['2019-06-01','2019-06-07']) 
 ```
 
 Basic usage with more options (Specifying the parameters of interest and removing flagged data):
 ```python
-df=client.casts(longitude=[-25,35],
-                latitude=[50,80],
+df=client.casts(longitude=[8,12],
+                latitude=[56,60],
                 timespan=['2018-06-01','2018-08-31'],
                 parameters=['date','lon','lat','z','Temperature','Oxygen','Salinity'],
                 n_threads=35,
