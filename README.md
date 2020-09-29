@@ -11,8 +11,7 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the Oce
 ```bash
 pip3 install odp_sdk
 ```
-*Note: Utility functions available in CastFunctions.py  and DataStatsFunctions.py are not included in the pip install package and has to be downloaded separately*
-
+ 
 ## Usage
 
 *Note: Accessing the Ocean Data Platform requires a personal api-key. Contact ODP to require one.*
@@ -45,9 +44,12 @@ df=client.casts(longitude=[8,12],
 ```
 
 
-CastFunctions.py include useful features for interpolating and plotting. This package is not a part of the odp_sdk package
+## Utility Functions
+Utility functions available in the Example folder are not included in the pip install package and has to be downloaded separately
 
-DataStatsFunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
+Examples/CastFunctions.py include useful features for interpolating and plotting. 
+
+Examples/DataStatsFunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
 
 In order to use CastFunctions.py and DataStatsFunctions.py, certain packages are necessary. These requirements can be found in the Examples folder in the file requirments_func.txt. Wherever you set up your environment, you can run the line below with the proper path to install these packages. 
 
@@ -65,7 +67,7 @@ Example notebooks are found in the Example folder, which includes:
 - Example Notebook Marine Regions shows how users can join Marine Regions data to the WOD data
 
 ## WOD
-The World Ocean Database is a National Centers for Environmental (NCEI) product and International Oceanographic Data and Information Exchange (IODE) project which provides a composite of publicly available ocean profile data, both historic and recent. It consists of over thousands of datasets consisting of millions of water temperatures, salinity, oxygen, and nutrient profiles (1,2).
+The data available through the Python SDK is gathered from the World Ocean Database. The World Ocean Database which is a National Centers for Environmental (NCEI) product and International Oceanographic Data and Information Exchange (IODE) project which provides a composite of publicly available ocean profile data, both historic and recent. It consists of over thousands of datasets consisting of millions of water temperatures, salinity, oxygen, and nutrient profiles (1,2).
 
 ## Data Organization in WOD and definitions
 
