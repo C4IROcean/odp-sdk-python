@@ -2,7 +2,7 @@
 
 ## TO RUN THE EXAMPLE NOTEBOOKS YOU NEED TO MAKE SURE YOU HAVE ACCESS TO THE FUNCTION FILES AND INSTALLED THE REQUIRED PACKAGES
 
-Both CastFunctions.py and DataStatsFunctions.py live in this folder. Make sure you've cloned the repo and point to the proper path in the notebooks
+CastFunctions.py, DataStatsFunctions.py and DataMaps.py live in this folder. Make sure you've cloned the repo and point to the proper path in the notebooks
 
 In order to use CastFunctions.py and DataStatsFunctions.py, certain packages are necessary. To install these packages, you can run the line below with the proper path to install these packages. 
 
@@ -10,3 +10,23 @@ In order to use CastFunctions.py and DataStatsFunctions.py, certain packages are
 pip3 install -r requirements_func.txt
 ```
 
+In order to use DataMaps.py you need to install Cartopy
+If using Conda you can run:
+
+```bash
+conda install -c conda-forge cartopy
+```
+
+If using pip, first you need to install Homebrew, https://brew.sh/
+
+Then run: 
+
+```bash
+brew install proj geos
+```
+
+And finally:
+
+```bash
+pip3 install cartopy
+```
