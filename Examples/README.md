@@ -11,12 +11,12 @@ pip3 install -r requirements_func.txt
 ```
 
 In order to use DataMaps.py you need to install Cartopy
-If using Conda you can run:
-
+## Conda Install
 ```bash
 conda install -c conda-forge cartopy
 ```
 
+## Pip Install
 If using pip, first you need to install Homebrew, https://brew.sh/
 
 Then run: 
