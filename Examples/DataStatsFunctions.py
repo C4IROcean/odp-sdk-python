@@ -90,7 +90,7 @@ def missing_values(df, var_list):
     Input:
     df: Pandas dataframe from ODP
     var_list: list of variables (column names) that user is interested in
-    default list is all the columns
+    default list is all the columns. Variables are strings. 
 
     Return: Dataframe percentage of values missing at each measuremtn (lat, lon, depth)
 
@@ -131,7 +131,9 @@ def plot_meta_stats(df, variable):
     Get bar graph of percentage of data belonging to a specific variable subset in the metadata
 
     input: pandas dataframe with extId present
-    returns: bar graph with percentage of data belonging to variable subset (i.e. data belonging to different modes of data collection ('dataset'))
+    input: variable that is present in the dataframe (i.e. country, dataset_code)
+    returns: bar graph with percentage of data belonging to variable subset (
+    i.e. data belonging to different modes of data collection ('dataset'_code))
 
     '''
     colors = sns.color_palette('bright') + sns.color_palette('deep') + sns.color_palette('Set3')
