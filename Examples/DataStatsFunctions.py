@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpl_toolkits
-from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cartopy.feature as cfeature
@@ -150,7 +149,7 @@ def geo_map(ax):
 
 
 
- def plot_meta_stats(df, variable):
+def plot_meta_stats(df, variable):
     '''
     Get bar graph of percentage of data belonging to a specific variable subset in the metadata
 
