@@ -1,4 +1,3 @@
-
 import time
 import itertools
 import logging
@@ -23,15 +22,15 @@ class ODPClient(CogniteClient):
 
     Download cast data, containing ocean measurements through the water column around the globe.
 
-    Example:
+    Example::
 
-        from client import ODPClient
+        from odp_sdk import ODPClient
 
         client = ODPClient(api_key=MY_API_KEY)
 
-        df=client.casts(longitude=[-10,35],
-                        latitude=[50,80],
-                        timespan=['2018-03-01','2018-09-01'])
+        df = client.casts(longitude=[-10,35],
+                          latitude=[50,80],
+                          timespan=['2018-03-01','2018-09-01'])
     """
 
     def __init__(
@@ -90,7 +89,7 @@ class ODPClient(CogniteClient):
             n_threads: int = 35,
             include_flagged_data: bool = True,
             parameters: List[str] = None
-    ) -> Union[None, pd.DataFrame]:
+    ) -> Optional[pd.DataFrame]:
         """Download cast data within search criteria
 
         Args:
@@ -140,8 +139,6 @@ class ODPClient(CogniteClient):
             log.warning('No available data found in casts')
             return None
 
-
-        
         # Setting flagged measurements to None if not include_flagged_data
         if not include_flagged_data:
             for var in data.columns:
@@ -154,47 +151,6 @@ class ODPClient(CogniteClient):
         log.info('-> {} data rows downloaded in {:.2f}s'.format(len(data), time.time()-t0))
 
         return data
-            
-    def _get_casts_from_level2(
-            self,
-
-            timespan: Tuple[pd.Timestamp,pd.Timestamp],
-            longitude: Tuple[int, int] ,
-            latitude: Tuple[int, int] ,
-            n_threads: int = 35,
-            meta_parameters: List[str] = None
-    ) -> pd.DataFrame:
-        """Retrieving table of available casts for given time period and boundary
-
-        Args:
-            timespan: Tuple of to and from timestamps
-            longitude: Tuple of min and max logitude, i.e [-10,35]
-            latitude : Tuple of min and max latitude, i.e [50,80]
-            n_threads: Number of threads to be used for retrieving each cast
-            meta_parameters: List of metadata parameters to be downloaded
-
-        Returns:
-            DataFrame with a list of available casts with metadata
-        """
-
-        lat = [min(latitude), max(latitude)]
-        lon = [min(longitude), max(longitude)]
-
-        i1, i2 = gcs_to_index(lat, lon)
-
-        box_indices = index_rect_members(i1, i2)
-
-        pool = ThreadPool(n_threads)
-        results = []
-
-        for year in range(timespan[0].year, timespan[1].year+1):
-            results += pool.starmap(self._level2_data_retrieve, zip(
-                itertools.repeat(year),
-                box_indices,
-                itertools.repeat(meta_parameters)
-            ))
-        
-        return pd.concat(results).reset_index()        
 
     def filter_casts(
             self,
@@ -202,7 +158,7 @@ class ODPClient(CogniteClient):
             longitude: Tuple[int, int],
             latitude: Tuple[int, int],
             timespan: Tuple[pd.Timestamp,pd.Timestamp]
-    ) -> Union[None, pd.DataFrame]:
+    ) -> Optional[pd.DataFrame]:
         """Filtering a DataFrame of casts based on longitude, latitude and time
 
         Args:
@@ -251,7 +207,6 @@ class ODPClient(CogniteClient):
         
         return casts
 
-
     def download_data_from_casts(
             self,
             cast_names: List[str],
@@ -292,6 +247,46 @@ class ODPClient(CogniteClient):
         """
 
         return self.sequences.retrieve_multiple(external_ids=cast_names).to_pandas()
+
+    def _get_casts_from_level2(
+            self,
+            timespan: Tuple[pd.Timestamp, pd.Timestamp],
+            longitude: Tuple[int, int],
+            latitude: Tuple[int, int],
+            n_threads: int = 35,
+            meta_parameters: List[str] = None
+    ) -> pd.DataFrame:
+        """Retrieving table of available casts for given time period and boundary
+
+        Args:
+            timespan: Tuple of to and from timestamps
+            longitude: Tuple of min and max logitude, i.e [-10,35]
+            latitude : Tuple of min and max latitude, i.e [50,80]
+            n_threads: Number of threads to be used for retrieving each cast
+            meta_parameters: List of metadata parameters to be downloaded
+
+        Returns:
+            DataFrame with a list of available casts with metadata
+        """
+
+        lat = [min(latitude), max(latitude)]
+        lon = [min(longitude), max(longitude)]
+
+        i1, i2 = gcs_to_index(lat, lon)
+
+        box_indices = index_rect_members(i1, i2)
+
+        pool = ThreadPool(n_threads)
+        results = []
+
+        for year in range(timespan[0].year, timespan[1].year + 1):
+            results += pool.starmap(self._level2_data_retrieve, zip(
+                itertools.repeat(year),
+                box_indices,
+                itertools.repeat(meta_parameters)
+            ))
+
+        return pd.concat(results).reset_index()
 
     def _level2_data_retrieve(
             self,
