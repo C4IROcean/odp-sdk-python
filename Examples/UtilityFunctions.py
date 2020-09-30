@@ -213,7 +213,7 @@ def plot_casts(variable,df,cmap='viridis',vrange=[None,None],crs_latlon=ccrs.Pla
     ax.set_extent((df.lon.min(), df.lon.max(), df.lat.min(), df.lat.max()), crs=crs_latlon)
 
     cs = plt.scatter(df.lon, df.lat, c=df[variable], cmap=cmap,vmin=vrange[0],vmax=vrange[1])
-    cb=fig.colorbar(cs, ax=ax, orientation='horizontal',ticklocation='auto')
+    cb=fig.colorbar(cs, ax=ax, orientation='horizontal',ticklocation='auto',pad=0.04)
     cb.ax.set_title('{} ({})'.format(variable, get_units()[variable]), fontsize=14)
     
 def plot_grid(int_lon,int_lat,g,cmap='viridis',vrange=[None,None],crs_latlon=ccrs.PlateCarree(),variable_name=''):
