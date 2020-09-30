@@ -2,6 +2,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import cmocean
 import cartopy
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
@@ -213,7 +214,7 @@ def plot_casts(variable,df,cmap='viridis',vrange=[None,None],crs_latlon=ccrs.Pla
 
     cs = plt.scatter(df.lon, df.lat, c=df[variable], cmap=cmap,vmin=vrange[0],vmax=vrange[1])
     cb=fig.colorbar(cs, ax=ax, orientation='horizontal',ticklocation='auto')
-    cb.ax.set_title(variable)
+    cb.ax.set_title('{} ({})'.format(variable, get_units()[variable]), fontsize=14)
     
 def plot_grid(int_lon,int_lat,g,cmap='viridis',vrange=[None,None],crs_latlon=ccrs.PlateCarree(),variable_name=''):
     '''
@@ -415,7 +416,7 @@ def plot_datasets(df, variable, latitude=None, longitude=None):
     variable_list = list(df[[variable, 'extId']].groupby(variable).count().reset_index(0).sort_values(by='extId', ascending=False)[variable])
     colors = sns.color_palette('bright') + sns.color_palette('deep') + sns.color_palette('Set3')
 
-    fig = plt.figure(figsize=(15, 15))
+    fig = plt.figure(figsize=(12, 12))
     color_plot =colors [0:len(df[variable].unique())]
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
     legend_elements = []
