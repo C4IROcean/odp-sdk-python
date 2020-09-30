@@ -17,7 +17,7 @@ conda install -c conda-forge cartopy
 ###  Pip Install 
 Alternative cartopy insatllation through pip install
 ```bash
-pip install cartopy
+pip3 install cartopy
 ```
 
 If you are using a Mac, and have issues pip installing cartopy, see fix below:
