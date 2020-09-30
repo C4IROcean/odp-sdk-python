@@ -1,5 +1,4 @@
-
-Cartopy>=0.18.1
+Cartopy
 cmocean>=2.0
 geojson>=2.5.0
 geopandas>=0.8.1
@@ -7,8 +6,8 @@ matplotlib>=3.2.2
 MetPy>=0.12.1
 numpy>=1.19.0
 pandas>=1.0.5
-plotly>=4.8.2
 python-dateutil>=2.8.1
 scipy>=1.5.0
 seaborn>=0.10.1
-Shapely>=1.7.0
+tqdm>=4.49.0
+
