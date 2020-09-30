@@ -10,13 +10,13 @@ In order to use CastFunctions.py and DataStatsFunctions.py, certain packages are
 pip3 install -r requirements_func.txt
 ```
 
-##In order to use DataMaps.py you need to install Cartopy
-######  Conda Install
+## In order to use DataMaps.py you need to install Cartopy
+###  Conda Install
 ```bash
 conda install -c conda-forge cartopy
 ```
 
-######  Pip Install
+###  Pip Install
 If using pip, first you need to install Homebrew, https://brew.sh/
 
 Then run: 
