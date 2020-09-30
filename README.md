@@ -1,5 +1,5 @@
 <a href="https://cognite.com/">
-    <img src="https://https://github.com/C4IROcean/odp-sdk-python/tree/master/docs/source/img/odp-favicon-rgb-blueandwhite.png" alt="ODP logo" title="ODP" align="right" height="80" />
+    <img src="https://github.com/C4IROcean/odp-sdk-python/tree/master/docs/source/img/odp-favicon-rgb-blueandwhite.png" alt="ODP logo" title="ODP" align="right" height="80" />
 </a>
 
 # Python SDK for The Ocean Data Platform (ODP)
