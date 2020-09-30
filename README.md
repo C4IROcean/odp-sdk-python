@@ -4,6 +4,10 @@ Connect to the Ocean Data Platform with Python through the Python SDK. Download 
 
 This is an extensions package to the Cognite Python SDK.
 
+## Documentation
+
+[ODP Python SDK Documentation](https://odp-sdk-python.readthedocs.io/en/master/)
+
 ## Installation
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the Ocean Data Platform Python SDK.
