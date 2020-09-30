@@ -9,12 +9,20 @@ In order to use UtilityFunctions.py, certain packages are necessary.
 ## In order to use UtilityFunctions.py you need to install Cartopy
 
 ###  Conda Install
+If you are using Anaconda, we recommend installing cartopy through conda install
 ```bash
 conda install -c conda-forge cartopy
 ```
 
-###  Pip Install
-If using pip, first you need to install Homebrew, https://brew.sh/
+###  Pip Install 
+Alternative cartopy insatllation through pip install
+```bash
+pip install cartopy
+```
+
+If you are using a Mac, and have issues pip installing cartopy, see fix below:
+
+Install Homebrew, https://brew.sh/
 
 Then run: 
 
