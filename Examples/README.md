@@ -2,7 +2,7 @@
 
 ## TO RUN THE EXAMPLE NOTEBOOKS YOU NEED TO MAKE SURE YOU HAVE ACCESS TO THE FUNCTION FILES AND INSTALLED THE REQUIRED PACKAGES
 
-### Make sure you've cloned the repo and point to the proper path in the notebooks
+### Make sure you've cloned the repo
 
 In order to use UtilityFunctions.py, certain packages are necessary. To install these packages, you can run the line below with the proper path to install these packages. 
 
