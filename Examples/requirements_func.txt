@@ -1,4 +1,4 @@
-basemap @ git+https://github.com/matplotlib/basemap.git@246dd6c7c4c2f585935a022f01c54ae0b4c7f164
+
 Cartopy>=0.18.1
 cmocean>=2.0
 geojson>=2.5.0
