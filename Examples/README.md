@@ -1,6 +1,7 @@
 # Example notebooks and extra functions
 
 ## TO RUN THE EXAMPLE NOTEBOOKS YOU NEED TO MAKE SURE YOU HAVE ACCESS TO THE FUNCTION FILES AND INSTALLED THE REQUIRED PACKAGES
+## We recommend you create a new environment, install odp_sdk, and proceed with the following setup:
 
 ### Make sure you've cloned the repo
 
