@@ -5,16 +5,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpl_toolkits
-from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
-import cartopy.crs as ccrs
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-import cartopy.feature as cfeature
 import cmocean
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import scipy
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from matplotlib.lines import Line2D
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
