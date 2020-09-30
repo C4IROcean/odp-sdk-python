@@ -1,4 +1,8 @@
-# Python SDK for Ocean Data Platform (ODP)
+<a href="https://cognite.com/">
+    <img src="https://github.com/C4IROcean/odp-sdk-python/docs/source/img/odp-favicon-rgb-blueandwhite.png" alt="ODP logo" title="ODP" align="right" height="80" />
+</a>
+
+# Python SDK for The Ocean Data Platform (ODP)
 
 Connect to the Ocean Data Platform with Python through the Python SDK. Download queried ocean data easily and efficiently into data frames, for easy exploring and further processing in your data science project.
 
