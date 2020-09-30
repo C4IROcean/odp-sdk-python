@@ -64,7 +64,7 @@ Example notebooks are found in the Example folder, which includes:
 - Example Notebook Data Exploration shows how users can explore the data they pull from the WOD (i.e. plot temperature over time)
 - Example Notebook Marine Regions shows how users can join Marine Regions data to the WOD data
 
-## WOD
+## World Ocean Databse
 The data available through the Python SDK is gathered from the World Ocean Database. The World Ocean Database which is a National Centers for Environmental (NCEI) product and International Oceanographic Data and Information Exchange (IODE) project which provides a composite of publicly available ocean profile data, both historic and recent. It consists of over thousands of datasets consisting of millions of water temperatures, salinity, oxygen, and nutrient profiles (1,2).
 
 ## Data Organization in WOD and definitions
@@ -104,6 +104,10 @@ UOR| Undulating Oceanographic Recorder data
 GLD| Glider data
 
 See [WORLD OCEAN DATABASE 2018 User’s Manual](https://rda.ucar.edu/datasets/ds285.0/docs/WOD18-UsersManual_final.pdf) for more information about the datasets
+
+## Data Quality Flag Descriptions
+
+https://www.nodc.noaa.gov/OC5/WOD/CODES/Definition_of_Quality_Flags.html
 
 References:
 1.	Boyer, T.P., O.K. Baranova, C. Coleman, H. E., Garcia, A. Grodsky, R.A. Locarnini, A. V., Mishonov, C.R. Paver, J.R. Reagan, D. S. & I.V. Smolyar, K.W. Weathers,  and M. M. Z. World Ocean Atlas 2018, Volume 1: Temperature. Tech. Ed. NOAA Atlas NESDIS 87 (2018).
