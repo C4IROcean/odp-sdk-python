@@ -68,7 +68,7 @@ Example notebooks are found in the Example folder, which includes:
 - Example Notebook Data Exploration shows how users can explore the data they pull from the WOD (i.e. plot temperature over time)
 - Example Notebook Marine Regions shows how users can join Marine Regions data to the WOD data
 
-## World Ocean Databse
+## World Ocean Database
 The data available through the Python SDK is gathered from the World Ocean Database. The World Ocean Database which is a National Centers for Environmental (NCEI) product and International Oceanographic Data and Information Exchange (IODE) project which provides a composite of publicly available ocean profile data, both historic and recent. It consists of over thousands of datasets consisting of millions of water temperatures, salinity, oxygen, and nutrient profiles (1,2).
 
 ## Data Organization in WOD and definitions
