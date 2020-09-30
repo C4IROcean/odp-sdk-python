@@ -45,13 +45,11 @@ df=client.casts(longitude=[8,12],
 
 
 ## Utility Functions
-Utility functions available in the Example folder are not included in the pip install package and has to be downloaded separately
+Utility functions available in the Example folder are not included in the pip install package and has to be downloaded separately.
 
-Examples/CastFunctions.py include useful features for interpolating and plotting. 
+Examples/UtilityFunctions.py include useful features for interpolating and plotting, and also include functions for plotting aspects of  data coverage, distributions, cast breakdowns. 
 
-Examples/DataStatsFunctions.py include functions for plotting aspects of  data coverage, distributions, cast breakdowns. This package is not a part of the odp_sdk package. 
-
-In order to use CastFunctions.py and DataStatsFunctions.py, certain packages are necessary. These requirements can be found in the Examples folder in the file requirments_func.txt. Wherever you set up your environment, you can run the line below with the proper path to install these packages. 
+In order to use UtilityFunctions.py, certain packages are necessary. These requirements can be found in the Examples folder in the file requirments_func.txt. Wherever you set up your environment, you can run the line below with the proper path to install these packages. 
 
 ```bash
 pip3 install -r requirements_func.txt
