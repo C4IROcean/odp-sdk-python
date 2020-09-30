@@ -239,13 +239,10 @@ def plot_grid(int_lon,int_lat,g,cmap='viridis',vrange=[None,None],crs_latlon=ccr
     cf=plt.contourf(int_lon,int_lat,g, 60,
                  transform=ccrs.PlateCarree(),
                  cmap=cmap,vmin=vrange[0],vmax=vrange[1])
-    cb=fig.colorbar(cf, ax=ax, orientation='horizontal',ticklocation='auto')
+    cb=fig.colorbar(cf, ax=ax, orientation='horizontal',ticklocation='auto',pad=0.04)
     cb.ax.set_title(variable_name)
     
 
-    
-    
-    
 
 
 def get_units():
