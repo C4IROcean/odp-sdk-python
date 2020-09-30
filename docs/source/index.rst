@@ -13,7 +13,19 @@ Welcome to ODP Python SDK documentation
 Installation
 ^^^^^^^^^^^^
 
-TODO
+To install this package:
+
+.. code:: bash
+
+   $ pip install odp_sdk
+
+To upgrade this package:
+
+.. code:: bash
+
+   $ pip install -U odp_sdk
+
+*Note*: Utility functions available in CastFunctions.py  and DataStatsFunctions.py are not included in the pip install package and has to be downloaded separately
 
 Contents
 ^^^^^^^^
@@ -21,10 +33,3 @@ Contents
 .. toctree::
    odp
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
