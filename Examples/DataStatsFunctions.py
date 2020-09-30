@@ -1,3 +1,4 @@
+
 import seaborn as sns
 import os
 from datetime import datetime, timedelta
@@ -5,7 +6,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import mpl_toolkits
-from mpl_toolkits.basemap import Basemap, addcyclic, shiftgrid
 import cartopy.crs as ccrs
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import cartopy.feature as cfeature
@@ -20,20 +20,6 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 sns.set_palette(sns.color_palette("hls", 47))
 
-
-
-def geo_map(ax):
-    '''
-    helper function for mapping
-    '''
-    ax.yaxis.set_major_formatter(LatitudeFormatter())
-    ax.tick_params(axis="x", labelsize=6)
-    ax.tick_params(axis="y", labelsize=6)
-    # add land and coastline
-    ax.add_feature(cfeature.LAND, facecolor='whitesmoke', zorder=1, edgecolor='black')
-    ax.add_feature(cfeature.COASTLINE, linewidth=0.25, zorder=1)
-    ax.add_feature(cfeature.BORDERS, linewidth=0.25, zorder=1)
-    ax.add_feature(cfeature.OCEAN)
 
 def plot_missing(df, var_list=None):
     ''' 
@@ -90,7 +76,7 @@ def missing_values(df, var_list):
     Input:
     df: Pandas dataframe from ODP
     var_list: list of variables (column names) that user is interested in
-    default list is all the columns
+    default list is all the columns. Variables are strings. 
 
     Return: Dataframe percentage of values missing at each measuremtn (lat, lon, depth)
 
@@ -126,27 +112,7 @@ def missing_values(df, var_list):
 #     md_df = pd.concat(metadata)
 #     return md_df
 
-def plot_meta_stats(df, variable):
-    '''
-    Get bar graph of percentage of data belonging to a specific variable subset in the metadata
 
-    input: pandas dataframe with extId present
-    returns: bar graph with percentage of data belonging to variable subset (i.e. data belonging to different modes of data collection ('dataset'))
-
-    '''
-    colors = sns.color_palette('bright') + sns.color_palette('deep') + sns.color_palette('Set3')
-    df2 = df[[variable, 'extId']].groupby(variable).count().sort_values(by='extId', ascending=False).reset_index(0)
-    plt.figure(figsize=(10,6));
-    ax = sns.barplot(y= df2[variable], x = df2['extId']/df2['extId'].sum()*100, palette=colors)
-    ax.set_ylabel(variable,size=15);
-    ax.set_xlabel('Percentage of casts',size=15);
-    ax.tick_params(axis='both', which='major', labelsize=12);
-
-    for p in ax.patches:
-        _x = p.get_x() + p.get_width()
-        _y = p.get_y() + p.get_height() - 0.3
-        value = p.get_width().round(3)
-        ax.text(_x, _y, str(value) + '%', ha="left", fontsize=10);
 
 def plot_distributions(df, var_list):
     '''
@@ -167,6 +133,45 @@ def plot_distributions(df, var_list):
         ax.set_ylabel('Count',size=15);
         ax.set_xlabel(variable + ' value',size=15);
         ax.tick_params(axis='both', which='major', labelsize=12);
+
+def geo_map(ax):
+    '''
+    helper function for mapping
+    '''
+    ax.yaxis.set_major_formatter(LatitudeFormatter())
+    ax.tick_params(axis="x", labelsize=6)
+    ax.tick_params(axis="y", labelsize=6)
+    # add land and coastline
+    ax.add_feature(cfeature.LAND, facecolor='whitesmoke', zorder=1, edgecolor='black')
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.25, zorder=1)
+    ax.add_feature(cfeature.BORDERS, linewidth=0.25, zorder=1)
+    ax.add_feature(cfeature.OCEAN)
+
+
+
+def plot_meta_stats(df, variable):
+    '''
+    Get bar graph of percentage of data belonging to a specific variable subset in the metadata
+
+    input: pandas dataframe with extId present
+    input: variable that is present in the dataframe (i.e. country, dataset_code)
+    returns: bar graph with percentage of data belonging to variable subset (
+    i.e. data belonging to different modes of data collection ('dataset'_code))
+
+    '''
+    colors = sns.color_palette('bright') + sns.color_palette('deep') + sns.color_palette('Set3')
+    df2 = df[[variable, 'extId']].groupby(variable).count().sort_values(by='extId', ascending=False).reset_index(0)
+    plt.figure(figsize=(10,6));
+    ax = sns.barplot(y= df2[variable], x = df2['extId']/df2['extId'].sum()*100, palette=colors)
+    ax.set_ylabel(variable,size=15);
+    ax.set_xlabel('Percentage of casts',size=15);
+    ax.tick_params(axis='both', which='major', labelsize=12);
+
+    for p in ax.patches:
+        _x = p.get_x() + p.get_width()
+        _y = p.get_y() + p.get_height() - 0.3
+        value = p.get_width().round(3)
+        ax.text(_x, _y, str(value) + '%', ha="left", fontsize=10);
 
 
 def plot_datasets(df, variable, latitude=None, longitude=None):
@@ -200,3 +205,4 @@ def plot_datasets(df, variable, latitude=None, longitude=None):
     ax.legend(handles=legend_elements, loc='lower center',
                ncol=4, borderaxespad=-7., prop={'size': 12});
     geo_map(ax), plot_meta_stats(df, variable)
+
