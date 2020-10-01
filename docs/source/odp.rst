@@ -110,7 +110,7 @@ Get Units
 
 Plot percentage of nulls for each variable in variable list
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.plot_missing
+.. automethod:: UtilityFunctions.plot_nulls
 
 Plot metadata-statistics
 ^^^^^^^^^^^^^^^^^^^^^^^^
