@@ -319,6 +319,55 @@ def plot_missing(df, var_list=None):
 
     return ax
 
+def plot_nulls(df, var_list=None):
+    ''' 
+    Plot percentage of nulls for each variable in variable list.
+
+    Takes a dataframe from ODP and a list of variables and plots the percentage of missing values
+
+    Input:
+    df: Pandas dataframe from ODP
+    var_list: list of variables (column names) that user is interested in
+    default list is all the columns
+
+    Return: Plot of percentage of values missing at each measuremtn (lat, lon, depth)
+
+    '''
+    
+    if var_list:
+        if isinstance(var_list, list) == False:
+            var_list = [var_list]
+        if all(elem in df.columns for elem in var_list):
+            info = df[var_list]
+        else:
+            print('Variable not in dataframe')
+    else:
+        info=df
+    
+
+    info_nulls = info.isnull().sum(axis = 0).sort_values()
+    variables = info_nulls.index ## variables we want to plot
+    perct = np.round(info_nulls.values/len(info), decimals=4)*100 ##percentage missing
+
+    plt.figure(figsize=(10,8));
+    ax = sns.barplot(y= variables, x = perct, color='cornflowerblue');
+    ax.set_title('Percentage of Values Missing (Total Rows: {})'.format(len(df)), fontsize=20);
+    ax.set_ylabel('Variables',size=15);
+    ax.set_xlabel('Percent Missing',size=15);
+    ax.tick_params(axis='both', which='major', labelsize=12);
+
+    ## add values next to bar
+    for p in ax.patches:
+        _x = p.get_x() + p.get_width() + 0.03;
+        _y = p.get_y() + p.get_height() - 0.3;
+        value = p.get_width().round(3);
+        ax.text(_x, _y, str(value) + '%', ha="left", fontsize=10);
+
+    return ax
+
+
+
+
 def missing_values(df, var_list):
     ''' 
     Get dataframe of nulls for each variable in variable list.
