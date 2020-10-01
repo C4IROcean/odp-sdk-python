@@ -3,14 +3,14 @@
 ## TO RUN THE EXAMPLE NOTEBOOKS YOU NEED TO MAKE SURE YOU HAVE ACCESS TO THE FUNCTION FILES AND INSTALLED THE REQUIRED PACKAGES
 ## We recommend you create a new environment, install odp_sdk, and proceed with the following setup:
 
-## Make sure you've cloned the repo
+## 1) Make sure you've cloned the repo
 
-## In order to use UtilityFunctions.py you need to install Cartopy
+## 2) In order to use UtilityFunctions.py you need to install Cartopy
 
 ###  Conda Install
 If you are using Anaconda, we recommend installing cartopy through conda install
 ```bash
-conda install -c conda-forge cartopy
+conda install cartopy
 ```
 
 ###  Pip Install 
@@ -28,13 +28,12 @@ Then run:
 ```bash
 brew install proj geos
 ```
-
 And finally:
 
 ```bash
 pip3 install cartopy
 ```
-## In order to use UtilityFunctions.py you need to packages in requirements_func.txt
+## 3) In order to use UtilityFunctions.py you need to install packages in requirements_func.txt
 
 To install these packages, you can run the line below with the proper path to install these packages. 
 
