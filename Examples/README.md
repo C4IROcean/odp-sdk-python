@@ -33,7 +33,7 @@ And finally:
 ```bash
 pip3 install cartopy
 ```
-## 3) In order to use UtilityFunctions.py you need to packages in requirements_func.txt
+## 3) In order to use UtilityFunctions.py you need to install packages in requirements_func.txt
 
 To install these packages, you can run the line below with the proper path to install these packages. 
 
