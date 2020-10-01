@@ -76,10 +76,82 @@ ODPClient
     :member-order: bysource
 
 Utilities
----------
+=========
+
+Advanced Helper Functions
+-------------------------
+
+.. py:currentmodule:: Examples
+
+Interpolate Casts to Z
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. automethod:: UtilityFunctions.interpolate_casts_to_z
+
+Interpolate Casts to grid
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: UtilityFunctions.interpolate_to_grid
+
+Interpolate profile
+^^^^^^^^^^^^^^^^^^^
+.. automethod:: UtilityFunctions.interpolate_profile
+
+Plot Casts
+^^^^^^^^^^
+.. automethod:: UtilityFunctions.plot_casts
+
+Plot Grid
+^^^^^^^^^
+.. automethod:: UtilityFunctions.plot_grid
+
+Get Units
+^^^^^^^^^
+.. automethod:: UtilityFunctions.get_units
+
+Plot percentage of nulls for each variable in variable list
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: UtilityFunctions.plot_missing
+
+Plot metadata-statistics
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: UtilityFunctions.plot_meta_stats
+
+Plot distribution of values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: UtilityFunctions.plot_distributions
+
+Plot casts belonging to specific dataset
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: UtilityFunctions.plot_datasets
+
+Internal Helper Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. automethod:: UtilityFunctions.geo_map
+.. automethod:: UtilityFunctions.missing_values
+
+Geographic Utilities
+--------------------
+
+Convert Latitude and Longitude to Geo-Index
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: odp_sdk.utils.gcs_to_index
+
+Convert Latitude and Longitude to grid-coordinates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: odp_sdk.utils.gcs_to_grid
+
+Convert Geo-Index to grid-coordinates
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: odp_sdk.utils.index_to_grid
+
+Convert Geo-Index to Latitude and Longitude
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: odp_sdk.utils.index_to_gcs
+
+Get all grid-coordinates within a rectangle
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: odp_sdk.utils.grid_rect_members
+
+Get all Geo-Indices within a rectangle
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: odp_sdk.utils.index_rect_members
