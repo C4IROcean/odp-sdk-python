@@ -53,15 +53,11 @@ df=client.casts(longitude=[8,12],
 
 
 ## Utility Functions
-Utility functions available in the Example folder are not included in the pip install package and has to be downloaded separately.
+Utility functions available in the Example folder are not included in the pip install package and have to be downloaded separately.
 
-Examples/UtilityFunctions.py include useful features for interpolating and plotting, and also include functions for plotting aspects of  data coverage, distributions, cast breakdowns. 
+Examples/UtilityFunctions.py include useful features for interpolating and plotting, and also include functions for plotting aspects of data coverage, distributions, cast breakdowns. 
 
-In order to use UtilityFunctions.py, certain packages are necessary. These requirements can be found in the Examples folder in the file requirments_func.txt. Wherever you set up your environment, you can run the line below with the proper path to install these packages. 
-
-```bash
-pip3 install -r requirements_func.txt
-```
+In order to use UtilityFunctions.py, certain packages are necessary. Please see the README in the Examples folder for instructions.
 
 ## Jupyter Notebook Examples 
 Example notebooks are found in the Example folder, which includes:
