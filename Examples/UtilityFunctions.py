@@ -278,7 +278,7 @@ def geo_map(ax):
     ax.add_feature(cfeature.OCEAN)
 
 
-def plot_missing(df, var_list=None):
+def plot_nulls(df, var_list=None):
     """Plot percentage of nulls for each variable in variable list.
 
     Takes a dataframe from ODP and a list of variables and plots the percentage of missing values
@@ -292,7 +292,7 @@ def plot_missing(df, var_list=None):
     """
 
     if var_list:
-        if not isinstance(var_list, list):
+        if isinstance(var_list, list) == False:
             var_list = [var_list]
         if all(elem in df.columns for elem in var_list):
             info = df[var_list]
@@ -300,14 +300,14 @@ def plot_missing(df, var_list=None):
             print('Variable not in dataframe')
     else:
         info = df
-
+    
     info_nulls = info.isnull().sum(axis = 0).sort_values()
 
     # Variables we want to plot
     variables = info_nulls.index
 
     # Percentage missing
-    perct = np.round(info_nulls.values/len(info), decimals=4)*100
+    perct = np.round(info_nulls.values / len(info), decimals=4) * 100
 
     plt.figure(figsize=(10, 8))
 
@@ -316,19 +316,17 @@ def plot_missing(df, var_list=None):
         x=perct,
         color='cornflowerblue'
     )
-
     ax.set_title('Percentage of Values Missing (Total Rows: {})'.format(len(df)), fontsize=20)
     ax.set_ylabel('Variables', size=15)
     ax.set_xlabel('Percent Missing', size=15)
     ax.tick_params(axis='both', which='major', labelsize=12)
 
     # Add values next to bar
-
     for p in ax.patches:
         _x = p.get_x() + p.get_width() + 0.03
         _y = p.get_y() + p.get_height() - 0.3
         value = p.get_width().round(3)
-        ax.text(_x, _y, str(value) + '%', ha="left", fontsize=10)
+        ax.text(_x, _y, str(value) + '%', ha="left", fontsize=10);
 
     return ax
 
