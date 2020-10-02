@@ -2,7 +2,7 @@ recursive-include odp_sdk *.py
 recursive-include scripts *.py
 recursive-include test *.py
 
-recursive-include Examples *.ipynb
+include Examples/*.ipynb
 
 include setup.py
 include requirements*.txt
