@@ -40,6 +40,10 @@ extensions = [
     "sphinx_rtd_theme"
 ]
 
+autodoc_mock_imports = [
+    "cartopy"
+]
+
 autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.

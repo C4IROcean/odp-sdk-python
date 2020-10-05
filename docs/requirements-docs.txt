@@ -12,4 +12,3 @@ seaborn>=0.10.1
 tqdm>=4.49.0
 pygeos>=0.8
 descartes>=1.1.0
-cartopy
