@@ -21,7 +21,7 @@ def read_reqs(fname):
 
 
 core_reqs = read_reqs("requirements.txt")
-util_reqs = read_reqs("Examples/requirements_func.txt")
+util_reqs = read_reqs("requirements-utils.txt")
 test_reqs = read_reqs("requirements-test.txt")
 all_reqs = core_reqs + util_reqs + test_reqs
 
