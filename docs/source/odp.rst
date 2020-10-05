@@ -81,53 +81,52 @@ Utilities
 Advanced Helper Functions
 -------------------------
 
-.. py:currentmodule:: Examples
-
 Interpolate Casts to Z
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. automethod:: UtilityFunctions.interpolate_casts_to_z
+.. automethod:: odp_sdk.utils.numeric.casts.interpolate_casts_to_z
 
 Interpolate Casts to grid
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.interpolate_to_grid
+.. automethod:: odp_sdk.utils.numeric.interpolate_to_grid
 
 Interpolate profile
 ^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.interpolate_profile
+.. automethod:: odp_sdk.utils.numeric.interpolate_profile
 
 Plot Casts
 ^^^^^^^^^^
-.. automethod:: UtilityFunctions.plot_casts
+.. automethod:: odp_sdk.utils.visual.plot_casts
 
 Plot Grid
 ^^^^^^^^^
-.. automethod:: UtilityFunctions.plot_grid
+.. automethod:: odp_sdk.utils.visual.plot_grid
 
 Get Units
 ^^^^^^^^^
-.. automethod:: UtilityFunctions.get_units
+.. automethod:: odp_sdk.utils.visual.get_units
 
 Plot percentage of nulls for each variable in variable list
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.plot_nulls
+.. py:currentmodule:: odp_sdk.utils.visual
+.. automethod:: odp_sdk.utils.visual.plot_nulls
 
 Plot metadata-statistics
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.plot_meta_stats
+.. automethod:: odp_sdk.utils.visual.plot_meta_stats
 
 Plot distribution of values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.plot_distributions
+.. automethod:: odp_sdk.utils.visual.plot_distributions
 
 Plot casts belonging to specific dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.plot_datasets
+.. automethod:: odp_sdk.utils.visual.plot_datasets
 
 Internal Helper Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: UtilityFunctions.geo_map
-.. automethod:: UtilityFunctions.missing_values
+.. automethod:: odp_sdk.utils.visual.geo_map
+.. automethod:: odp_sdk.utils.visual.missing_values
 
 Geographic Utilities
 --------------------

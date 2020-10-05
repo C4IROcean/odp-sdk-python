@@ -33,12 +33,18 @@ And finally:
 ```bash
 pip3 install cartopy
 ```
-## 3) In order to use UtilityFunctions.py you need to install packages in requirements_func.txt
+## 3) In order to use the numeric and visual utility-functions you need to install the full distribution of the ODP SDK
 
-To install these packages, you can run the line below with the proper path to install these packages. 
+To install this distribution, you can run the line below:
 
 ```bash
-pip3 install -r requirements_func.txt
+pip3 install -U odp_sdk[all]
+```
+
+Alternatively, you can install the requirements specified by `reruirements-utils.txt`
+
+```bash
+pip3 install -r requirements-utils.txt
 ```
 
 

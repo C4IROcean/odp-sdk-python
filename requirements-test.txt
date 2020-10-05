@@ -1,0 +1,3 @@
+ipykernel>=5.3.4
+papermill>=2.2.0
+tox>=3.20.0
