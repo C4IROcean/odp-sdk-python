@@ -178,8 +178,8 @@ class ODPClient(CogniteClient):
         
     def get_available_casts(
             self,
-            longitude: Tuple[int, int],
-            latitude: Tuple[int, int],
+            longitude: Tuple[float, float],
+            latitude: Tuple[float, float],
             timespan: Tuple[str, str],
             n_threads: int = 35,
             meta_parameters: List[str] = None
@@ -187,7 +187,7 @@ class ODPClient(CogniteClient):
         """Retrieves the available casts within search criteria
 
         Args:
-            longitude: Tuple of min and max longitude, i.e (-10,35)
+            longitude: Tuple of min and max longitude, i.e (-10.11,35.33)
             latitude: Tuple of min and max latitude, i.e (50,80)
             timespan: Tuple of min and max datetime string ['YYYY-MM-DD'] i.e ('2018-03-01','2018-09-01')
             n_threads:
@@ -251,8 +251,8 @@ class ODPClient(CogniteClient):
     def _get_casts_from_level2(
             self,
             timespan: Tuple[pd.Timestamp, pd.Timestamp],
-            longitude: Tuple[int, int],
-            latitude: Tuple[int, int],
+            longitude: Tuple[float, float],
+            latitude: Tuple[float, float],
             n_threads: int = 35,
             meta_parameters: List[str] = None
     ) -> pd.DataFrame:
@@ -260,7 +260,7 @@ class ODPClient(CogniteClient):
 
         Args:
             timespan: Tuple of to and from timestamps
-            longitude: Tuple of min and max logitude, i.e [-10,35]
+            longitude: Tuple of min and max logitude, i.e [-10.11,35.33]
             latitude : Tuple of min and max latitude, i.e [50,80]
             n_threads: Number of threads to be used for retrieving each cast
             meta_parameters: List of metadata parameters to be downloaded
