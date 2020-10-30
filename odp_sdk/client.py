@@ -83,8 +83,8 @@ class ODPClient(CogniteClient):
         
     def casts(
             self,
-            longitude: Tuple[int, int] = (-180, 180),
-            latitude: Tuple[int, int] = (-90, 90),
+            longitude: Tuple[float, float] = (-180., 180.),
+            latitude: Tuple[float, float] = (-90., 90.),
             timespan: Tuple[str, str] = ('1700-01-01', '2050-01-01'),
             n_threads: int = 35,
             include_flagged_data: bool = True,
