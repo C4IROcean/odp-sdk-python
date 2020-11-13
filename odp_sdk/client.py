@@ -192,7 +192,7 @@ class ODPClient(CogniteClient):
             timespan: Tuple of min and max datetime string ['YYYY-MM-DD'] i.e ('2018-03-01','2018-09-01')
             n_threads:
             meta_parameters: List of column names to be returned.
-                None returns all. i.e meta_parameters=['extId','lat','lon','date']
+                None returns all. i.e meta_parameters=['extId','lat','lon','date', 'country', 'equpment', 'Platform']
 
         Returns:
             DataFrame of filtered cast
@@ -216,9 +216,10 @@ class ODPClient(CogniteClient):
         """Retrieving data from list of level 3 casts
 
         Args:
-            cast_names: The externalId of the cast
+            cast_names: The externalId of the cast ('extId')
             n_threads: Number of threads to be used for retrieving each cast
             parameters: List of parameters to be downloaded
+                If None all column are included. I.e. parameters=['date','lon','lat','Temperature','Oxygen']
 
         Returns:
             Pandas data frame with cast data
@@ -243,7 +244,7 @@ class ODPClient(CogniteClient):
             cast_names: List of cast names (externalId in ODP)
 
         Returns:
-            DataFrame of casts
+            DataFrame of casts with metadata
         """
 
         return self.sequences.retrieve_multiple(external_ids=cast_names).to_pandas()
