@@ -91,6 +91,7 @@ class ODPClient(CogniteClient):
             timespan: Tuple[str, str] = None,#('1700-01-01', '2050-01-01'),
             data_source: str = None,
             search_polygon: List[Tuple[float, float] ] = None,
+            search_area_type: str='Polygon',
             search_metadata: Dict[str, Any]=None,
             data_set_ids: List[Dict[str,Any]] = None,
             limit: int = 1000
@@ -125,7 +126,7 @@ class ODPClient(CogniteClient):
                           "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
             
             
-        geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter('Polygon', search_area))
+        geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter(search_area_type, search_area))
         
         res = self.files.search(filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,
                                                                              metadata=search_metadata,
