@@ -2,14 +2,18 @@ import time
 import itertools
 import logging
 
+
 import pandas as pd
+from datetime import datetime
 from cognite.client import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
+import cognite.client.data_classes as data_classes
 from multiprocessing.dummy import Pool as ThreadPool
 
-from .utils.odp_geo import gcs_to_index, index_rect_members
+print('Commented out utils!!!!')
+#from .utils.odp_geo import gcs_to_index, index_rect_members
 
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union,Any
 
 
 log = logging.getLogger("odp-sdk.log")
@@ -80,7 +84,72 @@ class ODPClient(CogniteClient):
             log.info('Connected')
             
         log.info(f"Logged in to '{login_status.project}' as user '{login_status.user}'")        
+       
+    def files_search(self,
+            longitude: Tuple[float, float] = (-180., 180.),
+            latitude: Tuple[float, float] = (-90., 90.),
+            timespan: Tuple[str, str] = ('1700-01-01', '2050-01-01'),
+            data_source: str = None,
+            search_polygon: List[Tuple[float, float] ] = None,
+            search_metadata: Dict[str, Any]=None,
+            data_set_ids: List[Dict[str,Any]] = None,
+            limit: int = 1000
+            ) -> Optional[pd.DataFrame]:
+        '''
+        Search for files in the Ocean Data Platform
         
+        Args:
+            longitude: list of min and max longitude, i.e [-10,35]
+            latitude : list of min and max latitude, i.e [50,80]
+            timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+            data_source: the source of the data, i.e NOAA
+            search_polygon: Search polygon overwriting longitude and latitude bounding box. i.e [[[lon0,lat0],lon1,lat1],...,[lon0,lat0]]]
+            search_metadata: Dictionary search on metadata. i.e {'year':'2017'}
+            data_set_ids: Search only in certain datasets. i.e [123124124,564929034]
+            limit: Limit on the number of search results
+        
+        Returns:
+            Pandas dataframe with search results. Download of files to performed with files_download()
+    
+        
+        '''
+        
+        if search_polygon==None:
+            search_area=[[[longitude[0],latitude[0]],[longitude[0],latitude[1]],[longitude[1],latitude[1]],
+                         [longitude[1],latitude[0]],[longitude[0],latitude[0]]]]
+        else:
+            search_area=search_polygon
+            
+        
+        geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter('Polygon', search_area))
+    
+        res = self.files.search(filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,metadata=search_metadata,
+                                                                         source=data_source,data_set_ids=data_set_ids),limit=limit).to_pandas()                   
+        
+        if not res.empty:
+            res['geometry']=res.geoLocation.apply(lambda x: x.geometry['coordinates'])
+            res['datetime']=res.sourceCreatedTime.apply(lambda x: datetime.fromtimestamp(x / 1e3))  
+        
+        return res[(res['datetime']>=timespan[0]) & (res['datetime']<=timespan[1])]
+        
+    def files_download(self,
+                       ids: List[int], 
+                       directory: str
+                       ):
+        
+        '''
+        Download selected files to local directory
+        
+        Args:
+            ids: List of file ids to be downloaded
+            directory: local directory for placing the files
+        Returns:
+            None
+        '''
+        
+        self.files.download(directory=directory, id=ids) 
+    
+
     def casts(
             self,
             longitude: Tuple[float, float] = (-180., 180.),
