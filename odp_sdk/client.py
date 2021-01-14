@@ -11,7 +11,7 @@ import cognite.client.data_classes as data_classes
 from multiprocessing.dummy import Pool as ThreadPool
 
 
-from .utils.odp_geo import gcs_to_index, index_rect_members
+print('COMMENTED OUT IMPORT')#from .utils.odp_geo import gcs_to_index, index_rect_members
 
 from typing import Callable, Dict, List, Optional, Tuple, Union,Any
 
@@ -88,7 +88,7 @@ class ODPClient(CogniteClient):
     def files_search(self,
             longitude: Tuple[float, float] = (-180., 180.),
             latitude: Tuple[float, float] = (-90., 90.),
-            timespan: Tuple[str, str] = ('1700-01-01', '2050-01-01'),
+            timespan: Tuple[str, str] = None,#('1700-01-01', '2050-01-01'),
             data_source: str = None,
             search_polygon: List[Tuple[float, float] ] = None,
             search_metadata: Dict[str, Any]=None,
@@ -120,17 +120,29 @@ class ODPClient(CogniteClient):
         else:
             search_area=search_polygon
             
-        
+        if timespan is not None:
+            time_filter= {"min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
+                          "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
+            
+            
         geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter('Polygon', search_area))
-    
-        res = self.files.search(filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,metadata=search_metadata,
-                                                                         source=data_source,data_set_ids=data_set_ids),limit=limit).to_pandas()                   
+        
+        res = self.files.search(filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,
+                                                                             metadata=search_metadata,
+                                                                             source=data_source,
+                                                                             data_set_ids=data_set_ids,
+                                                                             source_created_time=time_filter,                                                                             ),
+                                limit=limit).to_pandas()                   
         
         if not res.empty:
             res['geometry']=res.geoLocation.apply(lambda x: x.geometry['coordinates'])
             res['datetime']=res.sourceCreatedTime.apply(lambda x: datetime.fromtimestamp(x / 1e3))  
         
-        return res[(res['datetime']>=timespan[0]) & (res['datetime']<=timespan[1])]
+        if len(res)==limit:
+            log.warning('Limit on number of files returned is reached, only {} files are returned. '
+                        'Try to apply more filters to reduce number of files in search'.format(limit))
+        
+        return res#[(res['datetime']>=timespan[0]) & (res['datetime']<=timespan[1])]
         
     def files_download(self,
                        ids: List[int], 
