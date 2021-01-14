@@ -90,8 +90,8 @@ class ODPClient(CogniteClient):
        
     def files_search(self,
             file_name: str=None,
-            longitude: Tuple[float, float] = (-180., 180.),
-            latitude: Tuple[float, float] = (-90., 90.),
+            longitude: Tuple[float, float] = None,#(-180., 180.),
+            latitude: Tuple[float, float] = None,#(-90., 90.),
             timespan: Tuple[str, str] = None,#('1700-01-01', '2050-01-01'),
             data_source: str = None,
             search_polygon = None,
@@ -118,13 +118,15 @@ class ODPClient(CogniteClient):
         
         '''
         
-        if search_polygon==None:
+        search_area=None
+        if (longitude is not None) and (latitude is not None):
             search_area=[[[longitude[0],latitude[0]],[longitude[0],latitude[1]],[longitude[1],latitude[1]],
                          [longitude[1],latitude[0]],[longitude[0],latitude[0]]]]
         elif type(search_polygon)==list:
             search_area=search_polygon
             search_area_type='Polygon'
-        else:
+            
+        elif search_polygon is not None:
             ls = search_polygon.to_wkt()
             ls_json = wkt.loads(ls)
             search_area=ls_json['coordinates'] 
@@ -136,7 +138,10 @@ class ODPClient(CogniteClient):
                        "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
             
             
-        geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter(search_area_type, search_area))
+        if search_area is not None:
+            geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter(search_area_type, search_area))
+        else:
+            geo_filter=None
         
         res = self.files.search(name=file_name,filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,
                                                                              metadata=search_metadata,
