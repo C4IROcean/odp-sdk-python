@@ -10,8 +10,8 @@ from cognite.client.exceptions import CogniteAPIError
 import cognite.client.data_classes as data_classes
 from multiprocessing.dummy import Pool as ThreadPool
 
-print('Commented out utils!!!!')
-#from .utils.odp_geo import gcs_to_index, index_rect_members
+
+from .utils.odp_geo import gcs_to_index, index_rect_members
 
 from typing import Callable, Dict, List, Optional, Tuple, Union,Any
 
