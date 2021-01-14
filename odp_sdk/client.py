@@ -89,6 +89,7 @@ class ODPClient(CogniteClient):
         log.info(f"Logged in to '{login_status.project}' as user '{login_status.user}'")        
        
     def files_search(self,
+            file_name: str=None,
             longitude: Tuple[float, float] = (-180., 180.),
             latitude: Tuple[float, float] = (-90., 90.),
             timespan: Tuple[str, str] = None,#('1700-01-01', '2050-01-01'),
@@ -132,12 +133,12 @@ class ODPClient(CogniteClient):
             
         if timespan is not None:
             timespan= {"min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
-                          "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
+                       "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
             
             
         geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter(search_area_type, search_area))
         
-        res = self.files.search(filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,
+        res = self.files.search(name=file_name,filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,
                                                                              metadata=search_metadata,
                                                                              source=data_source,
                                                                              data_set_ids=data_set_ids,
@@ -152,7 +153,7 @@ class ODPClient(CogniteClient):
             log.warning('Limit on number of files returned is reached, only {} files are returned. '
                         'Try to apply more filters to reduce number of files in search'.format(limit))
         
-        return res#[(res['datetime']>=timespan[0]) & (res['datetime']<=timespan[1])]
+        return res
         
     def files_download(self,
                        ids: List[int], 
