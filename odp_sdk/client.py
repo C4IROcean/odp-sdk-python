@@ -183,7 +183,7 @@ class ODPClient(CogniteClient):
     
     def files_open(self,file_dict):
         self.files.download('./', id=file_dict.id)
-        if file_dict.name.endswith('.zip'):
+        if file_dict['name'].endswith('.zip'):
             gdf=gpd.read_file('zip://./{}'.format(file_dict.name))
         else:
             gdf=gpd.read_file(file_dict.name)
