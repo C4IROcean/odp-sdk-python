@@ -2,11 +2,12 @@ import time
 import itertools
 import logging
 import json
-
+import os
 
 
 from geomet import wkt
 import pandas as pd
+import geopandas as gpd
 from datetime import datetime
 from cognite.client import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
@@ -180,6 +181,14 @@ class ODPClient(CogniteClient):
         
         self.files.download(directory=directory, id=ids) 
     
+    def files_open(self,file_dict):
+        self.files.download('./', id=file_dict.id)
+        if file_dict.name.endswith('.zip'):
+            gdf=gpd.read_file('zip://./{}'.format(file_dict.name))
+        else:
+            gdf=gpd.read_file(file_dict.name)
+        os.remove(file_dict.name) 
+        return gdf
 
     def casts(
             self,
