@@ -1,8 +1,11 @@
 import time
 import itertools
 import logging
+import json
 
 
+
+from geomet import wkt
 import pandas as pd
 from datetime import datetime
 from cognite.client import CogniteClient
@@ -90,8 +93,7 @@ class ODPClient(CogniteClient):
             latitude: Tuple[float, float] = (-90., 90.),
             timespan: Tuple[str, str] = None,#('1700-01-01', '2050-01-01'),
             data_source: str = None,
-            search_polygon: List[Tuple[float, float] ] = None,
-            search_area_type: str='Polygon',
+            search_polygon = None,
             search_metadata: Dict[str, Any]=None,
             data_set_ids: List[Dict[str,Any]] = None,
             limit: int = 1000
@@ -118,8 +120,15 @@ class ODPClient(CogniteClient):
         if search_polygon==None:
             search_area=[[[longitude[0],latitude[0]],[longitude[0],latitude[1]],[longitude[1],latitude[1]],
                          [longitude[1],latitude[0]],[longitude[0],latitude[0]]]]
-        else:
+        elif type(search_polygon)==list:
             search_area=search_polygon
+            search_area_type='Polygon'
+        else:
+            ls = search_polygon.to_wkt()
+            ls_json = wkt.loads(ls)
+            search_area=ls_json['coordinates'] 
+            search_area_type=search_polygon.type
+            
             
         if timespan is not None:
             timespan= {"min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
