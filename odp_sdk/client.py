@@ -151,9 +151,11 @@ class ODPClient(CogniteClient):
                                 limit=limit).to_pandas()                   
         
         if not res.empty:
-            if search_area is not None:
+            
+            if "geoLocation" in res.keys():
                 res['geometry']=res.geoLocation.apply(lambda x: x.geometry['coordinates'])
-            res['datetime']=res.sourceCreatedTime.apply(lambda x: datetime.fromtimestamp(x / 1e3))  
+            if "sourceCreatedTime" in res.keys():
+                res['datetime']=res.sourceCreatedTime.apply(lambda x: datetime.fromtimestamp(x / 1e3))  
         
         if len(res)==limit:
             log.warning('Limit on number of files returned is reached, only {} files are returned. '
