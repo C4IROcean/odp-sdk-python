@@ -11,7 +11,7 @@ import cognite.client.data_classes as data_classes
 from multiprocessing.dummy import Pool as ThreadPool
 
 
-print('COMMENTED OUT IMPORT')#from .utils.odp_geo import gcs_to_index, index_rect_members
+from .utils.odp_geo import gcs_to_index, index_rect_members
 
 from typing import Callable, Dict, List, Optional, Tuple, Union,Any
 
@@ -121,7 +121,7 @@ class ODPClient(CogniteClient):
             search_area=search_polygon
             
         if timespan is not None:
-            time_filter= {"min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
+            timespan= {"min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
                           "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
             
             
@@ -131,7 +131,7 @@ class ODPClient(CogniteClient):
                                                                              metadata=search_metadata,
                                                                              source=data_source,
                                                                              data_set_ids=data_set_ids,
-                                                                             source_created_time=time_filter,                                                                             ),
+                                                                             source_created_time=timespan,                                                                             ),
                                 limit=limit).to_pandas()                   
         
         if not res.empty:
