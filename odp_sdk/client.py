@@ -3,17 +3,19 @@ import itertools
 import logging
 import json
 import os
+import fiona
+import zipfile
+import io
 
-
-from geomet import wkt
 import pandas as pd
 import geopandas as gpd
+import cognite.client.data_classes as data_classes
+from geomet import wkt
 from datetime import datetime
 from cognite.client import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
-import cognite.client.data_classes as data_classes
 from multiprocessing.dummy import Pool as ThreadPool
-
+from zipfile import ZipFile
 
 from .utils.odp_geo import gcs_to_index, index_rect_members
 
@@ -98,7 +100,7 @@ class ODPClient(CogniteClient):
             search_polygon = None,
             search_metadata: Dict[str, Any]=None,
             data_set_ids: List[Dict[str,Any]] = None,
-            limit: int = 1000
+            limit: int = -1
             ) -> Optional[pd.DataFrame]:
         '''
         Search for files in the Ocean Data Platform
@@ -144,11 +146,13 @@ class ODPClient(CogniteClient):
         else:
             geo_filter=None
         
-        res = self.files.search(name=file_name,filter=data_classes.files.FileMetadataFilter(geo_location=geo_filter,
-                                                                             metadata=search_metadata,
-                                                                             source=data_source,
-                                                                             data_set_ids=data_set_ids,
-                                                                             source_created_time=timespan,                                                                             ),
+       
+        res = self.files.list(name=file_name,
+                                geo_location=geo_filter,
+                                metadata=search_metadata,
+                                source=data_source,
+                                data_set_ids=data_set_ids,
+                                source_created_time=timespan,
                                 limit=limit).to_pandas()                   
         
         if not res.empty:
@@ -164,6 +168,16 @@ class ODPClient(CogniteClient):
         
         return res
         
+    def files_open(self,file_dict):
+        self.files.download('./', id=file_dict.id)
+        if file_dict['name'].endswith('.zip'):
+            gdf=gpd.read_file('zip://./{}'.format(file_dict['name']))
+        else:
+            gdf=gpd.read_file(file_dict['name'])
+        os.remove(file_dict['name']) 
+        return gdf    
+    
+    
     def files_download(self,
                        ids: List[int], 
                        directory: str
@@ -181,14 +195,6 @@ class ODPClient(CogniteClient):
         
         self.files.download(directory=directory, id=ids) 
     
-    def files_open(self,file_dict):
-        self.files.download('./', id=file_dict.id)
-        if file_dict['name'].endswith('.zip'):
-            gdf=gpd.read_file('zip://./{}'.format(file_dict['name']))
-        else:
-            gdf=gpd.read_file(file_dict['name'])
-        os.remove(file_dict['name']) 
-        return gdf
 
     def casts(
             self,
