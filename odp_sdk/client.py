@@ -106,6 +106,7 @@ class ODPClient(CogniteClient):
         Search for files in the Ocean Data Platform
         
         Args:
+            file_name: The name of the file if you have that, i.e FAO.zip
             longitude: list of min and max longitude, i.e [-10,35]
             latitude : list of min and max latitude, i.e [50,80]
             timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
@@ -164,24 +165,16 @@ class ODPClient(CogniteClient):
         
         if len(res)==limit:
             log.warning('Limit on number of files returned is reached, only {} files are returned. '
-                        'Try to apply more filters to reduce number of files in search'.format(limit))
+                        'Try to apply more filters to reduce number of files in search or increase limit'.format(limit))
         
         return res
         
-    def files_open(self,file_dict):
-        self.files.download('./', id=file_dict.id)
-        if file_dict['name'].endswith('.zip'):
-            gdf=gpd.read_file('zip://./{}'.format(file_dict['name']))
-        else:
-            gdf=gpd.read_file(file_dict['name'])
-        os.remove(file_dict['name']) 
-        return gdf    
     
     
     def files_download(self,
                        ids: List[int], 
                        directory: str
-                       ):
+                       )-> None:
         
         '''
         Download selected files to local directory
