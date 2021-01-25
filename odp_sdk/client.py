@@ -3,19 +3,15 @@ import itertools
 import logging
 import json
 import os
-import fiona
-import zipfile
-import io
 
 import pandas as pd
-import geopandas as gpd
 import cognite.client.data_classes as data_classes
+
 from geomet import wkt
 from datetime import datetime
 from cognite.client import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
 from multiprocessing.dummy import Pool as ThreadPool
-from zipfile import ZipFile
 
 from .utils.odp_geo import gcs_to_index, index_rect_members
 
@@ -93,9 +89,9 @@ class ODPClient(CogniteClient):
        
     def files_search(self,
             file_name: str=None,
-            longitude: Tuple[float, float] = None,#(-180., 180.),
-            latitude: Tuple[float, float] = None,#(-90., 90.),
-            timespan: Tuple[str, str] = None,#('1700-01-01', '2050-01-01'),
+            longitude: Tuple[float, float] = None,
+            latitude: Tuple[float, float] = None,
+            timespan: Tuple[str, str] = None,
             data_source: str = None,
             search_polygon = None,
             search_metadata: Dict[str, Any]=None,
