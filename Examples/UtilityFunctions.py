@@ -187,36 +187,34 @@ def interpolate_profile(zv, z_int, max_z_extrapolation=10, max_z_copy_single_val
     return v_int
 
 
-def plot_casts(variable, df, cmap='viridis', vrange=[None, None], crs_latlon=ccrs.PlateCarree()):
+def plot_casts(variable, df, longitude, latitude, cmap='viridis', vrange=[None, None]):
     """Plot casts
-
     Args:
-        variable:
-        df:
-        cmap:
-        vrange:
-        crs_latlon:
-
+        variable: str of oceanographic vairable, i.e. 'Temperature'
+        df: Pandas DataFrame from ODP with lat, lon, and variable columns
+        longitude: List of min and max longitude, i.e [-10,35]
+        latitude: List of min and max latitude, i.e [50,80]
+        cmap: colormap specification
+        vrange: Ranges for variables to be showsn, i.e. [0,20]
     Returns:
-
+        Map with variable measurments plotted as points
     """
+    extent = [longitude[0], longitude[1],latitude[0], latitude[1]]
+    central_lon = np.mean(extent[:2])
+    central_lat = np.mean(extent[2:])
     
-    fig = plt.figure(figsize=(12, 12))
-
-    ax = plt.axes(projection=crs_latlon)
-    ax.set_global()       
+    fig = plt.figure(figsize=(12, 14))
+    ax = plt.axes(projection=ccrs.Mercator(central_lon))
     geo_map(ax)
-    ax.set_extent((df.lon.min(), df.lon.max(), df.lat.min(), df.lat.max()), crs=crs_latlon)
-
-    cs = plt.scatter(df.lon, df.lat, c=df[variable], cmap=cmap, vmin=vrange[0], vmax=vrange[1])
-    cb = fig.colorbar(cs, ax=ax, orientation='horizontal', ticklocation='auto', pad=0.04)
+    
+    cs = plt.scatter(df.lon, df.lat, c=df[variable], cmap=cmap, vmin=vrange[0], vmax=vrange[1],s=10, transform = ccrs.PlateCarree())
+    cb = fig.colorbar(cs, ax=ax, orientation='horizontal', ticklocation='auto', pad=0.05)
     cb.ax.set_title('{} ({})'.format(variable, get_units()[variable]), fontsize=14)
 
     
-def plot_grid(int_lon, int_lat, g, cmap='viridis', vrange=[None, None],
+def plot_grid(longitude, latitude, int_lon, int_lat, g, cmap='viridis', vrange=[None, None],
               crs_latlon=ccrs.PlateCarree(), variable_name=''):
     """Plot Grid
-
     Args:
         int_lon: (M,N) array of longitude grid
         int_lat: (M,N) array of latitude grid
@@ -225,19 +223,22 @@ def plot_grid(int_lon, int_lat, g, cmap='viridis', vrange=[None, None],
         vrange: Ranges for grid to be shown i.e [0,35]
         crs_latlon:
         variable_name:
+    Returns:
+        Map with interpolated values
     """
 
-    fig = plt.figure(figsize=(12, 12))
-    ax = plt.axes(projection=crs_latlon)
-    ax.set_global()    
+    fig = plt.figure(figsize=(12, 14))
+    extent = [longitude[0], longitude[1],latitude[0], latitude[1]]
+    central_lon = np.mean(extent[:2])
+    central_lat = np.mean(extent[2:])
     
-    ax.set_extent((int_lon.min(), int_lon.max(), int_lat.min(), int_lat.max()), crs=crs_latlon)
-    
+    ax = plt.axes(projection=ccrs.Mercator(central_lon))
+
     geo_map(ax)
-    cf = plt.contourf(int_lon, int_lat, g, 60,
+    cf = plt.contourf(int_lon, int_lat, g, 100,
                       transform=ccrs.PlateCarree(),
-                      cmap=cmap, vmin=vrange[0], vmax=vrange[1])
-    cb = fig.colorbar(cf, ax=ax, orientation='horizontal', ticklocation='auto', pad=0.04)
+                      cmap=cmap)
+    cb = fig.colorbar(cf, ax=ax, orientation='horizontal', ticklocation='auto', pad=0.05)
     cb.ax.set_title(variable_name)
 
 
@@ -262,21 +263,15 @@ def get_units():
 
 def geo_map(ax):
     """Helper function for mapping
-
     Args:
         ax: Matplotlib axis
     """
-
-    ax.yaxis.set_major_formatter(LatitudeFormatter())
-    ax.tick_params(axis="x", labelsize=6)
-    ax.tick_params(axis="y", labelsize=6)
-
     # add land and coastline
-    ax.add_feature(cfeature.LAND, facecolor='whitesmoke', zorder=1, edgecolor='black')
-    ax.add_feature(cfeature.COASTLINE, linewidth=0.25, zorder=1)
-    ax.add_feature(cfeature.BORDERS, linewidth=0.25, zorder=1)
-    ax.add_feature(cfeature.OCEAN)
-
+    ax.add_feature(cfeature.LAND, facecolor='#F9F6F1', zorder=1, edgecolor='#1B3278')
+    ax.add_feature(cfeature.COASTLINE, color='#1B3278', linewidth=0.5, zorder=1)
+    ax.add_feature(cfeature.BORDERS, color='#1B3278',linewidth=0.4, zorder=1)
+    ax.add_feature(cfeature.OCEAN, facecolor='#D2E0F5')
+    ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='gray', alpha=0.7, linestyle=':')
 
 def plot_nulls(df, var_list=None):
     """Plot percentage of nulls for each variable in variable list.
@@ -411,7 +406,7 @@ def plot_distributions(df, var_list):
         var_list: list of variables (column names) that should be plotted
 
     Returns:
-        Plots of distriubtions of values for each variable in variable list
+        Plots of distributions of values for each variable in variable list
     """
 
     if not isinstance(var_list, list):
@@ -426,7 +421,7 @@ def plot_distributions(df, var_list):
         ax.tick_params(axis='both', which='major', labelsize=12)
 
 
-def plot_datasets(df, variable, latitude=None, longitude=None):
+def plot_datasets(df, variable, latitude, longitude):
     """Plots on a map casts belonging to specific dataset (mode of data collection, i.e. ctd, xbt)
 
     Args:
@@ -439,12 +434,6 @@ def plot_datasets(df, variable, latitude=None, longitude=None):
         Map with color coded casts based on dataset_code
     """
 
-    if latitude and longitude:
-        df = df[(df.lat.between(latitude[0], latitude[1])) & (df.lon.between(longitude[0], longitude[1]))]
-    else:
-        df = df
-
-    variable = variable
     variable_list = list(
         df[[variable, 'extId']].groupby(variable)
                                .count()
@@ -456,8 +445,10 @@ def plot_datasets(df, variable, latitude=None, longitude=None):
     color_plot = colors[0:len(df[variable].unique())]
 
     fig = plt.figure(figsize=(12, 12))
-
-    ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
+    extent = [longitude[0], longitude[1],latitude[0], latitude[1]]
+    central_lon = np.mean(extent[:2])
+    central_lat = np.mean(extent[2:])
+    ax = fig.add_subplot(1, 1, 1, projection=ccrs.Mercator(central_lon))
 
     legend_elements = []
     for i, j in enumerate(variable_list):
@@ -469,18 +460,12 @@ def plot_datasets(df, variable, latitude=None, longitude=None):
             s=30,
             marker='o',
             edgecolor='white',
-            linewidths=0.05
+            linewidths=0.05, transform = ccrs.PlateCarree()
         )
         legend_elements.append(Line2D([0], [0], color=colors[i], lw=4, label=variable_list[i]))
 
-    if latitude and longitude:
-        ax.set_extent([longitude[0], longitude[1], latitude[0], latitude[1]], crs=ccrs.PlateCarree())
-
-    gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='gray', alpha=0.7, linestyle=':')
-    gl.xformatter = LONGITUDE_FORMATTER
-    gl.yformatter = LATITUDE_FORMATTER
 
     ax.legend(handles=legend_elements, loc='lower center',
-              ncol=4, borderaxespad=-7., prop={'size': 12})
+              ncol=4, borderaxespad=-10., prop={'size': 12})
     geo_map(ax), plot_meta_stats(df, variable)
 

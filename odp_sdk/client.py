@@ -1,15 +1,25 @@
 import time
 import itertools
 import logging
+import json
+import os
+import fiona
+import zipfile
+import io
 
 import pandas as pd
+import geopandas as gpd
+import cognite.client.data_classes as data_classes
+from geomet import wkt
+from datetime import datetime
 from cognite.client import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
 from multiprocessing.dummy import Pool as ThreadPool
+from zipfile import ZipFile
 
 from .utils.odp_geo import gcs_to_index, index_rect_members
 
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union,Any
 
 
 log = logging.getLogger("odp-sdk.log")
@@ -80,11 +90,109 @@ class ODPClient(CogniteClient):
             log.info('Connected')
             
         log.info(f"Logged in to '{login_status.project}' as user '{login_status.user}'")        
+       
+    def files_search(self,
+            file_name: str=None,
+            longitude: Tuple[float, float] = None,#(-180., 180.),
+            latitude: Tuple[float, float] = None,#(-90., 90.),
+            timespan: Tuple[str, str] = None,#('1700-01-01', '2050-01-01'),
+            data_source: str = None,
+            search_polygon = None,
+            search_metadata: Dict[str, Any]=None,
+            data_set_ids: List[Dict[str,Any]] = None,
+            limit: int = -1
+            ) -> Optional[pd.DataFrame]:
+        '''
+        Search for files in the Ocean Data Platform
         
+        Args:
+            file_name: The name of the file if you have that, i.e FAO.zip
+            longitude: list of min and max longitude, i.e [-10,35]
+            latitude : list of min and max latitude, i.e [50,80]
+            timespan : list of min and max datetime string ['YYYY-MM-DD'] i.e ['2018-03-01','2018-09-01']
+            data_source: the source of the data, i.e NOAA
+            search_polygon: Search polygon overwriting longitude and latitude bounding box. i.e [[[lon0,lat0],lon1,lat1],...,[lon0,lat0]]]
+            search_metadata: Dictionary search on metadata. i.e {'year':'2017'}
+            data_set_ids: Search only in certain datasets. i.e [123124124,564929034]
+            limit: Limit on the number of search results
+        
+        Returns:
+            Pandas dataframe with search results. Download of files to performed with files_download()
+    
+        
+        '''
+        
+        search_area=None
+        if (longitude is not None) and (latitude is not None):
+            search_area=[[[longitude[0],latitude[0]],[longitude[0],latitude[1]],[longitude[1],latitude[1]],
+                         [longitude[1],latitude[0]],[longitude[0],latitude[0]]]]
+        elif type(search_polygon)==list:
+            search_area=search_polygon
+            search_area_type='Polygon'
+            
+        elif search_polygon is not None:
+            ls = search_polygon.to_wkt()
+            ls_json = wkt.loads(ls)
+            search_area=ls_json['coordinates'] 
+            search_area_type=search_polygon.type
+            
+            
+        if timespan is not None:
+            timespan= {"min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
+                       "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
+            
+            
+        if search_area is not None:
+            geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter(search_area_type, search_area))
+        else:
+            geo_filter=None
+        
+       
+        res = self.files.list(name=file_name,
+                                geo_location=geo_filter,
+                                metadata=search_metadata,
+                                source=data_source,
+                                data_set_ids=data_set_ids,
+                                source_created_time=timespan,
+                                limit=limit).to_pandas()                   
+        
+        if not res.empty:
+            
+            if "geoLocation" in res.keys():
+                res['geometry']=res.geoLocation.apply(lambda x: x.geometry['coordinates'])
+            if "sourceCreatedTime" in res.keys():
+                res['datetime']=res.sourceCreatedTime.apply(lambda x: datetime.fromtimestamp(x / 1e3))  
+        
+        if len(res)==limit:
+            log.warning('Limit on number of files returned is reached, only {} files are returned. '
+                        'Try to apply more filters to reduce number of files in search or increase limit'.format(limit))
+        
+        return res
+        
+    
+    
+    def files_download(self,
+                       ids: List[int], 
+                       directory: str
+                       )-> None:
+        
+        '''
+        Download selected files to local directory
+        
+        Args:
+            ids: List of file ids to be downloaded
+            directory: local directory for placing the files
+        Returns:
+            None
+        '''
+        
+        self.files.download(directory=directory, id=ids) 
+    
+
     def casts(
             self,
-            longitude: Tuple[int, int] = (-180, 180),
-            latitude: Tuple[int, int] = (-90, 90),
+            longitude: Tuple[float, float] = (-180., 180.),
+            latitude: Tuple[float, float] = (-90., 90.),
             timespan: Tuple[str, str] = ('1700-01-01', '2050-01-01'),
             n_threads: int = 35,
             include_flagged_data: bool = True,
@@ -178,8 +286,8 @@ class ODPClient(CogniteClient):
         
     def get_available_casts(
             self,
-            longitude: Tuple[int, int],
-            latitude: Tuple[int, int],
+            longitude: Tuple[float, float],
+            latitude: Tuple[float, float],
             timespan: Tuple[str, str],
             n_threads: int = 35,
             meta_parameters: List[str] = None
@@ -187,12 +295,12 @@ class ODPClient(CogniteClient):
         """Retrieves the available casts within search criteria
 
         Args:
-            longitude: Tuple of min and max longitude, i.e (-10,35)
+            longitude: Tuple of min and max longitude, i.e (-10.11,35.33)
             latitude: Tuple of min and max latitude, i.e (50,80)
             timespan: Tuple of min and max datetime string ['YYYY-MM-DD'] i.e ('2018-03-01','2018-09-01')
             n_threads:
             meta_parameters: List of column names to be returned.
-                None returns all. i.e meta_parameters=['extId','lat','lon','date']
+                None returns all. i.e meta_parameters=['extId','lat','lon','date', 'country', 'equpment', 'Platform']
 
         Returns:
             DataFrame of filtered cast
@@ -216,9 +324,10 @@ class ODPClient(CogniteClient):
         """Retrieving data from list of level 3 casts
 
         Args:
-            cast_names: The externalId of the cast
+            cast_names: The externalId of the cast ('extId')
             n_threads: Number of threads to be used for retrieving each cast
             parameters: List of parameters to be downloaded
+                If None all column are included. I.e. parameters=['date','lon','lat','Temperature','Oxygen']
 
         Returns:
             Pandas data frame with cast data
@@ -243,7 +352,7 @@ class ODPClient(CogniteClient):
             cast_names: List of cast names (externalId in ODP)
 
         Returns:
-            DataFrame of casts
+            DataFrame of casts with metadata
         """
 
         return self.sequences.retrieve_multiple(external_ids=cast_names).to_pandas()
@@ -251,8 +360,8 @@ class ODPClient(CogniteClient):
     def _get_casts_from_level2(
             self,
             timespan: Tuple[pd.Timestamp, pd.Timestamp],
-            longitude: Tuple[int, int],
-            latitude: Tuple[int, int],
+            longitude: Tuple[float, float],
+            latitude: Tuple[float, float],
             n_threads: int = 35,
             meta_parameters: List[str] = None
     ) -> pd.DataFrame:
@@ -260,7 +369,7 @@ class ODPClient(CogniteClient):
 
         Args:
             timespan: Tuple of to and from timestamps
-            longitude: Tuple of min and max logitude, i.e [-10,35]
+            longitude: Tuple of min and max logitude, i.e [-10.11,35.33]
             latitude : Tuple of min and max latitude, i.e [50,80]
             n_threads: Number of threads to be used for retrieving each cast
             meta_parameters: List of metadata parameters to be downloaded
