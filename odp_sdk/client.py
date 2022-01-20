@@ -1,7 +1,8 @@
 import time
+from datetime import timedelta
 import itertools
+import requests
 import logging
-import json
 import os
 
 import pandas as pd
@@ -9,7 +10,7 @@ import cognite.client.data_classes as data_classes
 
 from geomet import wkt
 from datetime import datetime
-from cognite.client import CogniteClient
+from cognite.experimental import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -19,6 +20,105 @@ from typing import Callable, Dict, List, Optional, Tuple, Union,Any
 
 
 log = logging.getLogger("odp-sdk.log")
+
+
+def not_none(value: Any) -> Any:
+    if value is None:
+        raise ValueError("Value should not be None")
+    return value
+
+
+class TokenHandler:
+    """Automatically obtain CogniteClient bearer tokens, checks expiry"""
+
+    TOKEN_EXPIRY_BUFFER_PERIOD_DEFAULT_SECONDS = 60.
+    DEFAULT_CDF_CLUSTER = "westeurope-1"
+    DEFAULT_LOGIN_URL = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/B2C_1A_ROPC_Auth/oauth2/v2.0/token"
+    DEFAULT_SCOPES = [
+        "openid"
+    ]
+
+    def __init__(
+            self,
+            client_id: Optional[str] = None,
+            username: Optional[str] = None,
+            password: Optional[str] = None,
+            cdf_cluster: Optional[str] = None,
+            scopes: Optional[List[str]] = None,
+            login_url: str = DEFAULT_LOGIN_URL,
+            token_expiry_leeway: Optional[timedelta] = None
+    ):
+        """
+        Args:
+            client_id: Azure Client ID
+            username: Azure username
+            password: Azure password
+            cdf_cluster: CDF Cluster name. Example: "westeurope-1"
+            scopes: Auth-scopes
+            login_url: Azure AD login URL
+            token_expiry_leeway: How long before actual token expiry to actually renew token
+        """
+        self._client_id = not_none(client_id or os.getenv("FEDERATED_CDF_CLIENT_ID"))
+        self._username = not_none(username or os.getenv("FEDERATED_CDF_USERNAME"))
+        self._password = not_none(password or os.getenv("FEDERATED_CDF_PASSWORD"))
+        self.cluster = cdf_cluster or os.getenv("FEDERATED_CDF_CLUSTER") or self.DEFAULT_CDF_CLUSTER
+        self._login_url = login_url or os.getenv("FEDERATED_CDF_LOGIN_URL") or self.DEFAULT_LOGIN_URL
+
+        self._token = None
+        self._token_expiry = datetime.fromtimestamp(0)
+
+        if not token_expiry_leeway:
+            token_expiry_leeway = timedelta(
+                seconds=os.getenv(
+                    "FEDERATED_CDF_TOKEN_EXPIRY_BUFFER_PERIOD_SECONDS") or self.TOKEN_EXPIRY_BUFFER_PERIOD_DEFAULT_SECONDS)
+
+        self._token_expiry_leeway = token_expiry_leeway
+
+        if not scopes:
+            scopes = os.getenv("FEDERATED_CDF_SCOPES")
+            if scopes:
+                scopes = scopes.split(",")
+            else:
+                scopes = [
+                    f"https://{self.cluster}.cognitedata.com/user_impersonation", *self.DEFAULT_SCOPES
+                ]
+
+        self._scopes = scopes
+
+    def __call__(self) -> str:
+        """Check token expiry and renew if necessary
+
+        Returns:
+            Bearer token
+        """
+
+        if datetime.utcnow() + self._token_expiry_leeway > self._token_expiry:
+            self._renew_token()
+        return self._token
+
+    def _renew_token(self) -> None:
+        """Renew token"""
+
+        req = requests.post(
+            self._login_url,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            data={
+                "grant_type": "password",
+                "client_id": self._client_id,
+                "scope": ' '.join(self._scopes),
+                "username": self._username,
+                "password": self._password
+            }
+        )
+
+        req.raise_for_status()
+        creds = req.json()
+
+        # Update token and expiry date
+        self._token = creds["access_token"]
+        self._token_expiry = datetime.now() + timedelta(seconds=int(creds["expires_in"]))
 
 
 class ODPClient(CogniteClient):
@@ -49,8 +149,15 @@ class ODPClient(CogniteClient):
             headers: Dict[str, str] = None,
             timeout: int = None,
             token: Union[str, Callable[[], str], None] = None,
-            disable_pypi_version_check: Optional[bool] = None,
+            disable_pypi_version_check: bool = True,
             debug: bool = False,
+            server: Optional[str] = None,
+            token_client_id: Optional[str] = None,
+            token_username: Optional[str] = None,
+            token_password: Optional[str] = None,
+            token_scopes: Optional[List[str]] = None,
+            login_url: Optional[str] = None,
+            token_expiry_leeway: Optional[timedelta] = None,
             info_odp: bool = True
         
     ):
@@ -72,33 +179,71 @@ class ODPClient(CogniteClient):
             info_odp: Logger info for odp-sdk
         """
         self.MAX_THREADS = 50
-        
-        super().__init__(api_key, project, client_name, base_url, max_workers,
-                         headers, timeout, token, disable_pypi_version_check, debug)
+
         if info_odp:
             log.setLevel(logging.INFO)
             logging.basicConfig(level=logging.INFO)
-        
-        login_status = self.login.status()
-        if not login_status.logged_in:
-            raise ConnectionError("Failed to connect to ODP")
+
+        if api_key:
+            log.info("Using API key for authentication")
+            super().__init__(
+                api_key=api_key,
+                project=project,
+                client_name=client_name,
+                base_url=base_url,
+                max_workers=max_workers,
+                headers=headers,
+                timeout=timeout,
+                disable_pypi_version_check=disable_pypi_version_check,
+                token=token,
+                debug=debug,
+                server=server
+            )
+
+            login_status = self.login.status()
+            if not login_status.logged_in:
+                raise ConnectionError("Failed to connect to ODP")
+            else:
+                log.info('Connected')
+
+            log.info(f"Logged in to '{login_status.project}' as user '{login_status.user}'")
         else:
-            log.info('Connected')
-            
-        log.info(f"Logged in to '{login_status.project}' as user '{login_status.user}'")        
-       
-    def files_search(self,
-            file_name: str=None,
+            token_handler = TokenHandler(
+                client_id=token_client_id,
+                username=token_username,
+                password=token_password,
+                cdf_cluster=server,
+                scopes=token_scopes,
+                login_url=login_url,
+                token_expiry_leeway=token_expiry_leeway,
+            )
+            super().__init__(
+                api_key=api_key,
+                project=project,
+                client_name=client_name,
+                base_url=base_url,
+                max_workers=max_workers,
+                headers=headers,
+                timeout=timeout,
+                disable_pypi_version_check=disable_pypi_version_check,
+                debug=debug,
+                server=token_handler.cluster,
+                token=token_handler,
+            )
+
+    def files_search(
+            self,
+            file_name: str = None,
             longitude: Tuple[float, float] = None,
             latitude: Tuple[float, float] = None,
             timespan: Tuple[str, str] = None,
             data_source: str = None,
-            search_polygon = None,
-            search_metadata: Dict[str, Any]=None,
-            data_set_ids: List[Dict[str,Any]] = None,
+            search_polygon: List[List[float]] = None,
+            search_metadata: Dict[str, Any] = None,
+            data_set_ids: List[Dict[str, Any]] = None,
             limit: int = -1
             ) -> Optional[pd.DataFrame]:
-        '''
+        """
         Search for files in the Ocean Data Platform
         
         Args:
@@ -114,65 +259,66 @@ class ODPClient(CogniteClient):
         
         Returns:
             Pandas dataframe with search results. Download of files to performed with files_download()
-    
-        
-        '''
-        
-        search_area=None
+        """
+        search_area = None
         if (longitude is not None) and (latitude is not None):
-            search_area=[[[longitude[0],latitude[0]],[longitude[0],latitude[1]],[longitude[1],latitude[1]],
-                         [longitude[1],latitude[0]],[longitude[0],latitude[0]]]]
-        elif type(search_polygon)==list:
-            search_area=search_polygon
-            search_area_type='Polygon'
+            search_area = [[
+                [longitude[0], latitude[0]],
+                [longitude[0], latitude[1]],
+                [longitude[1], latitude[1]],
+                [longitude[1], latitude[0]],
+                [longitude[0], latitude[0]]
+            ]]
+        elif type(search_polygon) == list:
+            search_area = search_polygon
+            search_area_type = 'Polygon'
             
         elif search_polygon is not None:
             ls = search_polygon.to_wkt()
             ls_json = wkt.loads(ls)
-            search_area=ls_json['coordinates'] 
-            search_area_type=search_polygon.type
-            
+            search_area = ls_json['coordinates']
+            search_area_type = search_polygon.type
             
         if timespan is not None:
-            timespan= {"min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
-                       "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)}
-            
-            
+            timespan = {
+                "min": int(datetime.strptime(timespan[0], '%Y-%m-%d').timestamp() * 1000),
+                "max": int(datetime.strptime(timespan[1], '%Y-%m-%d').timestamp() * 1000)
+            }
+
         if search_area is not None:
-            geo_filter=data_classes.files.GeoLocationFilter('within',data_classes.files.GeometryFilter(search_area_type, search_area))
+            geo_filter = data_classes.files.GeoLocationFilter(
+                'within', data_classes.files.GeometryFilter(search_area_type, search_area))
         else:
-            geo_filter=None
+            geo_filter = None
         
-       
-        res = self.files.list(name=file_name,
-                                geo_location=geo_filter,
-                                metadata=search_metadata,
-                                source=data_source,
-                                data_set_ids=data_set_ids,
-                                source_created_time=timespan,
-                                limit=limit).to_pandas()                   
+        res = self.files.list(
+            name=file_name,
+            geo_location=geo_filter,
+            metadata=search_metadata,
+            source=data_source,
+            data_set_ids=data_set_ids,
+            source_created_time=timespan,
+            limit=limit
+        ).to_pandas()
         
         if not res.empty:
             
             if "geoLocation" in res.keys():
-                res['geometry']=res.geoLocation.apply(lambda x: x.geometry['coordinates'])
+                res['geometry'] = res.geoLocation.apply(lambda x: x.geometry['coordinates'])
             if "sourceCreatedTime" in res.keys():
-                res['datetime']=res.sourceCreatedTime.apply(lambda x: datetime.fromtimestamp(x / 1e3))  
+                res['datetime'] = res.sourceCreatedTime.apply(lambda x: datetime.fromtimestamp(x / 1e3))
         
-        if len(res)==limit:
+        if len(res) == limit:
             log.warning('Limit on number of files returned is reached, only {} files are returned. '
                         'Try to apply more filters to reduce number of files in search or increase limit'.format(limit))
         
         return res
-        
-    
-    
+
     def files_download(self,
                        ids: List[int], 
                        directory: str
                        )-> None:
-        
-        '''
+        """
         Download selected files to local directory
         
         Args:
@@ -180,10 +326,9 @@ class ODPClient(CogniteClient):
             directory: local directory for placing the files
         Returns:
             None
-        '''
+        """
         
         self.files.download(directory=directory, id=ids) 
-    
 
     def casts(
             self,
@@ -409,7 +554,7 @@ class ODPClient(CogniteClient):
 
             if casts is None:
                 return None            
-            casts=casts.to_pandas()
+            casts = casts.to_pandas()
             casts.lon = pd.to_numeric(casts.lon)
             casts.lat = pd.to_numeric(casts.lat)
             casts['datetime'] = pd.to_datetime(casts.date, format='%Y%m%d')
