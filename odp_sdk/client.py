@@ -14,6 +14,8 @@ from cognite.experimental import CogniteClient
 from cognite.client.exceptions import CogniteAPIError
 from multiprocessing.dummy import Pool as ThreadPool
 
+from msal import PublicClientApplication
+
 from .utils.odp_geo import gcs_to_index, index_rect_members
 
 from typing import Callable, Dict, List, Optional, Tuple, Union,Any
@@ -22,47 +24,40 @@ from typing import Callable, Dict, List, Optional, Tuple, Union,Any
 log = logging.getLogger("odp-sdk.log")
 
 
-def not_none(value: Any) -> Any:
-    if value is None:
-        raise ValueError("Value should not be None")
-    return value
-
-
 class TokenHandler:
     """Automatically obtain CogniteClient bearer tokens, checks expiry"""
 
     TOKEN_EXPIRY_BUFFER_PERIOD_DEFAULT_SECONDS = 60.
-    DEFAULT_CDF_CLUSTER = "westeurope-1"
-    DEFAULT_LOGIN_URL = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/B2C_1A_ROPC_Auth/oauth2/v2.0/token"
+    DEFAULT_AUTHORITY_URL = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/B2C_1A_signup_signin_custom"
+    DEFAULT_CLIENT_ID = "b2a2d339-e785-4213-a773-8b289abd2199"
+    DEFAULT_CLUSTER_NAME = "westeurope-1"
     DEFAULT_SCOPES = [
-        "openid"
+        "user_impersonation"
     ]
+
+    RECOGNIZED_SCOPES = {
+        "DATA.VIEW", "DATA.CHANGE", "COMPUTE.VIEW", "COMPUTE.CHANGE", "ADMIN", "user_impersonation", "IDENTITY"
+    }
 
     def __init__(
             self,
+            authority: Optional[str] = None,
             client_id: Optional[str] = None,
-            username: Optional[str] = None,
-            password: Optional[str] = None,
-            cdf_cluster: Optional[str] = None,
+            cluster_name: Optional[str] = None,
+            interactive_callback_port: Optional[int] = None,
             scopes: Optional[List[str]] = None,
-            login_url: str = DEFAULT_LOGIN_URL,
             token_expiry_leeway: Optional[timedelta] = None
     ):
         """
         Args:
             client_id: Azure Client ID
-            username: Azure username
-            password: Azure password
-            cdf_cluster: CDF Cluster name. Example: "westeurope-1"
             scopes: Auth-scopes
-            login_url: Azure AD login URL
             token_expiry_leeway: How long before actual token expiry to actually renew token
         """
-        self._client_id = not_none(client_id or os.getenv("FEDERATED_CDF_CLIENT_ID"))
-        self._username = not_none(username or os.getenv("FEDERATED_CDF_USERNAME"))
-        self._password = not_none(password or os.getenv("FEDERATED_CDF_PASSWORD"))
-        self.cluster = cdf_cluster or os.getenv("FEDERATED_CDF_CLUSTER") or self.DEFAULT_CDF_CLUSTER
-        self._login_url = login_url or os.getenv("FEDERATED_CDF_LOGIN_URL") or self.DEFAULT_LOGIN_URL
+        self._authority = authority or os.getenv("FEDERATED_AUTHORITY") or self.DEFAULT_AUTHORITY_URL
+        self._client_id = client_id or os.getenv("FEDERATED_CDF_CLIENT_ID") or self.DEFAULT_CLIENT_ID
+        self._cluster_name = cluster_name or os.getenv("FEDERATED_CDF_CLUSTER_NAME") or self.DEFAULT_CLUSTER_NAME
+        self._interactive_callback_port = int(interactive_callback_port or os.getenv("FEDERATED_INTERACTIVE_CALLBACK_PORT") or 53000)
 
         self._token = None
         self._token_expiry = datetime.fromtimestamp(0)
@@ -75,15 +70,16 @@ class TokenHandler:
         self._token_expiry_leeway = token_expiry_leeway
 
         if not scopes:
-            scopes = os.getenv("FEDERATED_CDF_SCOPES")
-            if scopes:
+            scopes = os.getenv("FEDERATED_CDF_SCOPES") or self.DEFAULT_SCOPES
+            if isinstance(scopes, str):
                 scopes = scopes.split(",")
-            else:
-                scopes = [
-                    f"https://{self.cluster}.cognitedata.com/user_impersonation", *self.DEFAULT_SCOPES
-                ]
 
         self._scopes = scopes
+
+        self._msal_client = PublicClientApplication(
+            client_id=self._client_id,
+            authority=self._authority
+        )
 
     def __call__(self) -> str:
         """Check token expiry and renew if necessary
@@ -96,29 +92,46 @@ class TokenHandler:
             self._renew_token()
         return self._token
 
+    def _prefix_scope(self, scope: str) -> str:
+        if scope in self.RECOGNIZED_SCOPES:
+            return f"https://{self._cluster_name}.cognitedata.com/{scope}"
+        return scope
+
+    def _translate_scopes(self, scopes: List[str]) -> List[str]:
+        return [
+            self._prefix_scope(scope) for scope in scopes
+        ]
+
     def _renew_token(self) -> None:
         """Renew token"""
-
-        req = requests.post(
-            self._login_url,
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            data={
-                "grant_type": "password",
-                "client_id": self._client_id,
-                "scope": ' '.join(self._scopes),
-                "username": self._username,
-                "password": self._password
-            }
-        )
-
-        req.raise_for_status()
-        creds = req.json()
+        creds = self._get_token()
 
         # Update token and expiry date
         self._token = creds["access_token"]
         self._token_expiry = datetime.now() + timedelta(seconds=int(creds["expires_in"]))
+
+    def _get_token(self) -> Dict[str, Any]:
+        """Get token
+
+        Will attempt to acquire a token silently, however if this fails execution will be blocked until
+        the user has completed an interactive login
+
+        Returns:
+            New token dict
+        """
+
+        scopes = self._translate_scopes(self._scopes)
+
+        accounts = self._msal_client.get_accounts()
+        if accounts:
+            log.debug("Authenticating silently")
+            return self._msal_client.acquire_token_silent(scopes=scopes, account=accounts[0])
+
+        return self._msal_client.acquire_token_interactive(scopes=scopes, port=self._interactive_callback_port)
+
+    @property
+    def cluster(self) -> str:
+        return self._cluster_name
 
 
 class ODPClient(CogniteClient):
@@ -142,7 +155,7 @@ class ODPClient(CogniteClient):
     def __init__(
             self,
             api_key: str = None,
-            project: str = 'odp',
+            project: str = 'oceandata',
             client_name: str = 'ODPPythonSDK',
             base_url: str = None,
             max_workers: int = None,
@@ -152,11 +165,10 @@ class ODPClient(CogniteClient):
             disable_pypi_version_check: bool = True,
             debug: bool = False,
             server: Optional[str] = None,
+            token_authority: Optional[str] = None,
             token_client_id: Optional[str] = None,
-            token_username: Optional[str] = None,
-            token_password: Optional[str] = None,
+            token_interactive_callback_port: Optional[int] = None,
             token_scopes: Optional[List[str]] = None,
-            login_url: Optional[str] = None,
             token_expiry_leeway: Optional[timedelta] = None,
             info_odp: bool = True
         
@@ -176,6 +188,7 @@ class ODPClient(CogniteClient):
                 This will override any api-key set.
             disable_pypi_version_check: Don't check for newer versions of the SDK on client creation
             debug: Configures Cognite logger to log extra request details to stderr.
+            server: Sets base_url to https://[server].cognitedata.com, e.g. server=greenfield.
             info_odp: Logger info for odp-sdk
         """
         self.MAX_THREADS = 50
@@ -209,12 +222,11 @@ class ODPClient(CogniteClient):
             log.info(f"Logged in to '{login_status.project}' as user '{login_status.user}'")
         else:
             token_handler = TokenHandler(
+                authority=token_authority,
                 client_id=token_client_id,
-                username=token_username,
-                password=token_password,
-                cdf_cluster=server,
+                cluster_name=server,
+                interactive_callback_port=token_interactive_callback_port,
                 scopes=token_scopes,
-                login_url=login_url,
                 token_expiry_leeway=token_expiry_leeway,
             )
             super().__init__(
@@ -227,7 +239,7 @@ class ODPClient(CogniteClient):
                 timeout=timeout,
                 disable_pypi_version_check=disable_pypi_version_check,
                 debug=debug,
-                server=token_handler.cluster,
+                server=server or token_handler.cluster,
                 token=token_handler,
             )
 
