@@ -5,9 +5,13 @@ class OdpError(Exception):
     """Base class for exceptions in this module."""
 
 
-class OdpUnauthorizedError(OdpError):
-    """Exception raised for unauthorized requests.
+class OdpAuthError(OdpError):
+    """Exception raised for authentication errors."""
 
-    Attributes:
-        message -- explanation of the error
-    """
+
+class OdpUnauthorizedError(OdpError):
+    """Exception raised for unauthorized requests."""
+
+
+class OdpTokenValidationError(OdpError):
+    """Exception raised for invalid tokens."""
