@@ -1,4 +1,0 @@
-numpy>=1.19
-pandas>=0.20
-cognite-sdk-experimental>=0.60.36
-geomet

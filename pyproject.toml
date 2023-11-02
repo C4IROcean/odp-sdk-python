@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "odp-sdk-python"
+version = "0.1.0"
+description = "ODP Python SDK"
+authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "odp_sdk_python"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
