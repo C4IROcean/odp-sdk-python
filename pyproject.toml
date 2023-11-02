@@ -13,7 +13,31 @@ python = "^3.10"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
+coverage = "^7.3.2"
+flake8-pyproject = "^1.2.2"
+responses = "^0.23.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+log_cli = "true"
+asyncio_mode = "auto"
+testpaths = [
+    "tests"
+]
+
+[tool.flake8]
+ignore = ["E203", "E731", "W503"]
+per-file-ignores = ["*/__init__.py:F401", "tests/*:F841"]
+max-line-length = 120
+count = true
+
+[tool.isort]
+line_length=120                # corresponds to -w  flag
+multi_line_output=3            # corresponds to -m  flag
+include_trailing_comma=true    # corresponds to -tc flag
+profile="black"
+known_local_folder="odp,tests"
