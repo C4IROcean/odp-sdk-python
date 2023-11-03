@@ -3,14 +3,14 @@ from contextlib import contextmanager
 from typing import Iterable, Literal, Optional
 
 import requests
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from .auth import TokenProvider, get_default_token_provider
+from .auth import TokenProvider
 
 
-class OdpHttpClient:
+class OdpHttpClient(BaseModel):
     base_url: str = "https://api.hubocean.earth"
-    token_provider: TokenProvider = Field(default_factory=get_default_token_provider)
+    token_provider: TokenProvider
 
     def get(
         self,
