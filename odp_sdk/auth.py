@@ -1,26 +1,26 @@
 """Authentication handling in the form of token-providers"""
-from abc import ABC, abstractmethod
 import base64
 import json
 import logging
 import os
-from pathlib import Path
 import re
 import sys
 import time
+from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import List, Optional
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
 import jwt
 import msal
 import msal_extensions
 import requests
-from pydantic import BaseModel, SecretStr, PrivateAttr
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
+from pydantic import BaseModel, PrivateAttr, SecretStr
 from requests.auth import AuthBase
 
-from .exc import OdpUnauthorizedError, OdpAuthError, OdpTokenValidationError
+from .exc import OdpAuthError
 
 LOG = logging.getLogger(__name__)
 
@@ -120,23 +120,7 @@ class JwtTokenProvider(TokenProvider, BaseModel, ABC):
         auth_response = self.authenticate()
         return self._parse_token(auth_response)
 
-    def _parse_token(self, token_response: dict[str, str]) -> str:
-        """Parse the token from the token response
-
-        Args:
-            The token response from the IDP
-
-        Returns:
-            str: The token
-        """
-        try:
-            access_token = token_response["access_token"]
-        except KeyError as e:
-            raise OdpAuthError("No access token in token response") from e
-
-        if not self.validate_token:
-            return access_token
-
+    def _parse_and_validate(self, access_token: str) -> str:
         token_components = [self._base64_decode(x) for x in access_token.split(".")]
         headers = json.loads(token_components[0])
 
@@ -147,9 +131,7 @@ class JwtTokenProvider(TokenProvider, BaseModel, ABC):
         jwk = self._get_jwk(kid)
 
         pem = (
-            RSAPublicNumbers(
-                n=self._decode_jwk_value(jwk["n"]), e=self._decode_jwk_value(jwk["e"])
-            )
+            RSAPublicNumbers(n=self._decode_jwk_value(jwk["n"]), e=self._decode_jwk_value(jwk["e"]))
             .public_key(default_backend())
             .public_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -170,6 +152,31 @@ class JwtTokenProvider(TokenProvider, BaseModel, ABC):
         self._expiry = self._claims["exp"]
 
         return access_token
+
+    def _parse_novalidate(self, access_token: str) -> str:
+        self._claims = jwt.decode(access_token, options={"verify_signature": False})
+        self._access_token = access_token
+        self._expiry = self._claims["exp"]
+
+        return access_token
+
+    def _parse_token(self, token_response: dict[str, str]) -> str:
+        """Parse the token from the token response
+
+        Args:
+            The token response from the IDP
+
+        Returns:
+            str: The token
+        """
+        try:
+            access_token = token_response["access_token"]
+        except KeyError as e:
+            raise OdpAuthError("No access token in token response") from e
+
+        if not self.validate_token:
+            return self._parse_novalidate(access_token)
+        return self._parse_and_validate(access_token)
 
     def _get_jwk(self, kid: str) -> dict:
         jwks = self._get_jwks()
@@ -200,7 +207,7 @@ class JwtTokenProvider(TokenProvider, BaseModel, ABC):
         else:
             # Add padding
             d += (-len(d) % 4) * b"="
-        decoded = base64.b64decode(data, altchars=altchars)
+        decoded = base64.b64decode(d, altchars=altchars)
         return decoded
 
     @staticmethod
@@ -227,10 +234,10 @@ class AzureTokenProvider(JwtTokenProvider):
     tenant_id: str = "755f6e58-74f0-4a07-a599-f7479b9669ab"
     """Azure AD tenant id"""
 
-    token_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/oauth2/v2.0/token"
+    token_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/oauth2/v2.0/token"  # noqa: E501
     """Token endpoint. Will default to 'https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token'"""
 
-    jwks_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/discovery/v2.0/keys"
+    jwks_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/discovery/v2.0/keys"  # noqa: E501
     """JWKS endpoint."""
 
     def get_jwks_uri(self) -> str:
@@ -268,7 +275,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
     scope: list[str] = []
     """IDP token scope"""
 
-    jwks_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/discovery/v2.0/keys"
+    jwks_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/discovery/v2.0/keys"  # noqa: E501
     """JWKS endpoint."""
 
     token_persistence_file: Path = Path(".token_cache.bin")
@@ -282,9 +289,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
     def __init__(self, **data):
         super().__init__(**data)
 
-        persistence = self._build_persistence(
-            self.token_persistence_file, self.token_persistence_plaintext_fallback
-        )
+        persistence = self._build_persistence(self.token_persistence_file, self.token_persistence_plaintext_fallback)
         cache = msal_extensions.PersistedTokenCache(persistence)
 
         self._app = msal.PublicClientApplication(
@@ -315,9 +320,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
                 scopes=self.scope,
             )
             if "error" in res:
-                raise OdpAuthError(
-                    "{}: {}".format(res["error"], res["error_description"])
-                )
+                raise OdpAuthError("{}: {}".format(res["error"], res["error_description"]))
 
             # Token acquired successfully, rerun the method to get the token
             return self.authenticate()
@@ -362,16 +365,11 @@ def get_default_token_provider(fallback: bool = False) -> TokenProvider:
     if os.getenv("JUPYTERHUB_API_TOKEN"):
         return OdpWorkspaceTokenProvider()
 
-    client_id = os.getenv("ODP_CLIENT_ID")
-    client_secret = os.getenv("ODP_CLIENT_SECRET")
-
-    client_id = os.getenv("ODP_CLIENT_ID", "xxxx")
+    client_id = os.getenv("ODP_CLIENT_ID", "f96fc4a5-195b-43cc-adb2-10506a82bb82")
     client_secret = os.getenv("ODP_CLIENT_SECRET")
 
     if client_secret:
-        return AzureTokenProvider(
-            client_id=SecretStr(client_id), client_secret=SecretStr(client_secret)
-        )
+        return AzureTokenProvider(client_id=SecretStr(client_id), client_secret=SecretStr(client_secret))
 
     if fallback:
         return InteractiveTokenProvider(client_id=SecretStr(client_id))
