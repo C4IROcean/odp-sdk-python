@@ -1,4 +1,5 @@
 from textwrap import dedent
+
 from odp_sdk.utils.ndjson import NdJsonParser
 
 
@@ -95,15 +96,6 @@ def test_parse_ndjson_embedded_json():
     assert isinstance(parsed_rows, list)
     assert len(parsed_rows) == 3
 
-    assert (
-        parsed_rows[0]["content"]
-        == 'Nested objects: {"key1": "value1", "key2": "value2"}'
-    )
-    assert (
-        parsed_rows[1]["config"]
-        == '{ "param1": [1, 2, 3], "param2": {"a": true, "b": false} }'
-    )
-    assert (
-        parsed_rows[2]["formula"]
-        == 'Mathematical expressions: {"equation": "x^2 + y^2 = r^2"}'
-    )
+    assert parsed_rows[0]["content"] == 'Nested objects: {"key1": "value1", "key2": "value2"}'
+    assert parsed_rows[1]["config"] == '{ "param1": [1, 2, 3], "param2": {"a": true, "b": false} }'
+    assert parsed_rows[2]["formula"] == 'Mathematical expressions: {"equation": "x^2 + y^2 = r^2"}'

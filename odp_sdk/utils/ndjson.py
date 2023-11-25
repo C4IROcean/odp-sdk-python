@@ -1,10 +1,10 @@
-from collections import deque
-from io import StringIO, BytesIO
 import json
-from typing import Optional, IO, Deque, Iterable, cast
+from collections import deque
+from io import BytesIO, StringIO
+from typing import IO, Deque, Iterable, Optional, cast
 from warnings import warn
 
-from .json import JsonType, JsonParser
+from .json import JsonParser, JsonType
 
 
 class NdJsonParser:
@@ -27,9 +27,7 @@ class NdJsonParser:
 
     def consume_line(self) -> JsonType:
         if self.delimiter_stack:
-            warn(
-                "Attempting to parse NDJSON line while the delimiter stack was non-empty"
-            )
+            warn("Attempting to parse NDJSON line while the delimiter stack was non-empty")
 
         obj = self.json_parser.loads(self.line)
         self.line = ""
@@ -52,9 +50,7 @@ class NdJsonParser:
             for c in s:
                 if isinstance(c, int):
                     c = chr(c)
-                last_delimiter = (
-                    self.delimiter_stack[-1] if self.delimiter_stack else None
-                )
+                last_delimiter = self.delimiter_stack[-1] if self.delimiter_stack else None
 
                 in_quote = last_delimiter in {"'", '"', "\\"}
 

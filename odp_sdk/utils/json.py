@@ -1,15 +1,4 @@
-from typing import (
-    Protocol,
-    Union,
-    List,
-    Dict,
-    Any,
-    IO,
-    Type,
-    Callable,
-    Optional,
-)
-
+from typing import IO, Any, Callable, Dict, List, Optional, Protocol, Type, Union
 
 JsonType = Union[None, int, str, bool, List["JsonType"], Dict[str, "JsonType"]]
 
