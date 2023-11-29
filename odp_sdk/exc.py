@@ -15,3 +15,15 @@ class OdpUnauthorizedError(OdpError):
 
 class OdpTokenValidationError(OdpError):
     """Exception raised for invalid tokens."""
+
+
+class OdpResourceNotFoundError(OdpError):
+    """Exception raised when a resource is not found."""
+
+
+class OdpResourceExistsError(OdpError):
+    """Exception raised when a resource already exists."""
+
+
+class OdpValidationError(OdpError):
+    """Exception raised when a resource is not found."""

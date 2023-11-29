@@ -12,6 +12,9 @@ class OdpHttpClient(BaseModel):
     base_url: str = "https://api.hubocean.earth"
     token_provider: TokenProvider
 
+    class Config:
+        arbitrary_types_allowed = True
+
     def get(
         self,
         url: str,
@@ -57,7 +60,13 @@ class OdpHttpClient(BaseModel):
             The response object
         """
         return self._request(
-            "POST", url, params=params, headers=headers, timeout=timeout, content=content, stream=stream
+            "POST",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            content=content,
+            stream=stream,
         )
 
     def patch(
@@ -83,7 +92,13 @@ class OdpHttpClient(BaseModel):
             The response object
         """
         return self._request(
-            "PATCH", url, params=params, headers=headers, timeout=timeout, content=content, stream=stream
+            "PATCH",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            content=content,
+            stream=stream,
         )
 
     def put(
@@ -109,7 +124,13 @@ class OdpHttpClient(BaseModel):
             The response object
         """
         return self._request(
-            "PUT", url, params=params, headers=headers, timeout=timeout, content=content, stream=stream
+            "PUT",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            content=content,
+            stream=stream,
         )
 
     def delete(
@@ -132,7 +153,14 @@ class OdpHttpClient(BaseModel):
         Returns:
             The response object
         """
-        return self._request("DELETE", url, params=params, headers=headers, timeout=timeout, stream=stream)
+        return self._request(
+            "DELETE",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            stream=stream,
+        )
 
     @contextmanager
     def _session(self) -> Iterable[requests.Session]:
