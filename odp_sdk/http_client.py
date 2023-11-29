@@ -12,9 +12,6 @@ class OdpHttpClient(BaseModel):
     base_url: str = "https://api.hubocean.earth"
     token_provider: TokenProvider
 
-    class Config:
-        arbitrary_types_allowed = True
-
     def get(
         self,
         url: str,

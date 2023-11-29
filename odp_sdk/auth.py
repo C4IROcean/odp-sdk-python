@@ -25,7 +25,7 @@ from .exc import OdpAuthError
 LOG = logging.getLogger(__name__)
 
 
-class TokenProvider(AuthBase, ABC):
+class TokenProvider(AuthBase, BaseModel, ABC):
     """Base class for token providers"""
 
     @abstractmethod
@@ -64,7 +64,7 @@ class HardcodedTokenProvider(TokenProvider):
         return self._token
 
 
-class JwtTokenProvider(TokenProvider, BaseModel, ABC):
+class JwtTokenProvider(TokenProvider, ABC):
     """Token provider for JWT tokens"""
 
     audience: Optional[str] = None
