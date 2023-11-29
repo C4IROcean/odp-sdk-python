@@ -1,8 +1,9 @@
+import re
 from typing import Iterable, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from .dto import ResourceDto
 from .exc import OdpResourceExistsError, OdpResourceNotFoundError, OdpUnauthorizedError, OdpValidationError
@@ -15,6 +16,15 @@ class OdpResourceClient(BaseModel):
     http_client: OdpHttpClient
     resource_endpoint: str
 
+    @field_validator("resource_endpoint")
+    @classmethod
+    def _validate_resource_endpoint(cls, v: str) -> str:
+        m = re.match(r"^\/[/.a-zA-Z0-9-]+$", v)
+        if not m:
+            raise ValueError(f"Invalid resource endpoint: {v}")
+
+        return v
+
     @property
     def resource_url(self) -> str:
         """The URL of the resource endpoint, including the base URL.
@@ -22,7 +32,7 @@ class OdpResourceClient(BaseModel):
         Returns:
             The resource URL
         """
-        return f"{self.http_client.base_url}/{self.resource_endpoint.lstrip('/')}"
+        return f"{self.http_client.base_url}{self.resource_endpoint}"
 
     def get(self, ref: UUID | str) -> ResourceDto:
         """Get a resource by reference.

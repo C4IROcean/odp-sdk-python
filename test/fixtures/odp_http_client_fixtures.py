@@ -22,7 +22,7 @@ def mock_token_provider() -> TokenProvider:
             pass
 
         def get_token(self) -> str:
-            return "mock_token"
+            return "Bearer abc"
 
     return MockTokenProvider()
 

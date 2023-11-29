@@ -1,9 +1,10 @@
 import json
+import re
 from contextlib import contextmanager
 from typing import Iterable, Literal, Optional
 
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from .auth import TokenProvider
 
@@ -11,6 +12,18 @@ from .auth import TokenProvider
 class OdpHttpClient(BaseModel):
     base_url: str = "https://api.hubocean.earth"
     token_provider: TokenProvider
+
+    @field_validator("base_url")
+    @classmethod
+    def _validate_url(cls, v: str) -> str:
+        m = re.match(
+            r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+            v,
+        )
+        if not m:
+            raise ValueError(f"Invalid base URL: {v}")
+
+        return v.rstrip("/")
 
     def get(
         self,
@@ -223,7 +236,9 @@ class OdpHttpClient(BaseModel):
         else:
             body = None
 
-        request_url = f"{base_url.rstrip('/')}/{url.lstrip('/')}"
+        request_url = f"{base_url}{url}"
+
+        print("---->", self.base_url, base_url, url, request_url)
 
         req = requests.Request(method, request_url, params=params, headers=headers, data=body)
 
