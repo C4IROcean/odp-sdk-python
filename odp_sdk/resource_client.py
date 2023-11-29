@@ -15,6 +15,15 @@ class OdpResourceClient(BaseModel):
     http_client: OdpHttpClient
     resource_endpoint: str
 
+    @property
+    def resource_url(self) -> str:
+        """The URL of the resource endpoint, including the base URL.
+
+        Returns:
+            The resource URL
+        """
+        return f"{self.http_client.base_url}/{self.resource_endpoint.lstrip('/')}"
+
     def get(self, ref: UUID | str) -> ResourceDto:
         """Get a resource by reference.
 

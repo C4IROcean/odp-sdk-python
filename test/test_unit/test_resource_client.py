@@ -18,7 +18,7 @@ def test_get_resource_by_uuid(http_client):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{client.http_client.base_url}{client.resource_endpoint}/{uuid}",
+            f"{client.resource_url}/{uuid}",
             body=ResourceDto(
                 kind=kind,
                 version=version,
@@ -54,7 +54,7 @@ def test_get_resource_by_qname(http_client):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{client.http_client.base_url}{client.resource_endpoint}/{kind}/{name}",
+            f"{client.resource_url}/{kind}/{name}",
             body=ResourceDto(
                 kind=kind,
                 version=version,
