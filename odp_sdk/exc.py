@@ -13,6 +13,10 @@ class OdpUnauthorizedError(OdpError):
     """Exception raised for unauthorized requests."""
 
 
+class OdpForbiddenError(OdpError):
+    """Exception raised for forbidden requests."""
+
+
 class OdpTokenValidationError(OdpError):
     """Exception raised for invalid tokens."""
 

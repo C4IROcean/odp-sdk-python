@@ -7,6 +7,7 @@ import requests
 from pydantic import BaseModel, field_validator
 
 from .auth import TokenProvider
+from .exc import OdpForbiddenError, OdpUnauthorizedError
 
 
 class OdpHttpClient(BaseModel):
@@ -212,6 +213,10 @@ class OdpHttpClient(BaseModel):
 
         Returns:
             The response object
+
+        Raises:
+            OdpUnauthorizedError: Unauthorized request
+            OdpForbiddenError: Forbidden request
         """
 
         if url.startswith("/"):
@@ -238,10 +243,15 @@ class OdpHttpClient(BaseModel):
 
         request_url = f"{base_url}{url}"
 
-        print("---->", self.base_url, base_url, url, request_url)
-
         req = requests.Request(method, request_url, params=params, headers=headers, data=body)
 
         with self._session() as s:
             prepped = s.prepare_request(req)
-            return s.send(prepped, timeout=timeout, stream=stream)
+            res = s.send(prepped, timeout=timeout, stream=stream)
+
+            if res.status_code == 401:
+                raise OdpUnauthorizedError("Unauthorized request")
+            elif res.status_code == 403:
+                raise OdpForbiddenError("Forbidden request")
+
+            return res

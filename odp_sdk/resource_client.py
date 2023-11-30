@@ -6,7 +6,7 @@ import requests
 from pydantic import BaseModel, field_validator
 
 from .dto import ResourceDto
-from .exc import OdpResourceExistsError, OdpResourceNotFoundError, OdpUnauthorizedError, OdpValidationError
+from .exc import OdpResourceExistsError, OdpResourceNotFoundError, OdpValidationError
 from .http_client import OdpHttpClient
 
 
@@ -56,8 +56,6 @@ class OdpResourceClient(BaseModel):
         except requests.HTTPError as e:
             if res.status_code == 400:
                 raise OdpValidationError("Invalid input") from e
-            if res.status_code == 401:
-                raise OdpUnauthorizedError("Unauthorized request") from e
             if res.status_code == 404:
                 raise OdpResourceNotFoundError(f"Resource not found: {ref}") from e
             raise  # Unhandled error
@@ -97,7 +95,6 @@ class OdpResourceClient(BaseModel):
             A page of resources
 
         Raises:
-            OdpUnauthorizedError: Unauthorized request
             OdpValidationError: Invalid input
         """
 
@@ -117,8 +114,6 @@ class OdpResourceClient(BaseModel):
             res.raise_for_status()
         except requests.HTTPError as e:
             if res.status_code == 401:
-                raise OdpUnauthorizedError("Unauthorized request") from e
-            if res.status_code == 404:
                 raise OdpValidationError("API argument error") from e
             raise  # Unhandled error
 
@@ -135,7 +130,6 @@ class OdpResourceClient(BaseModel):
             The manifest of the created resource, populated with uuid and status
 
         Raises:
-            OdpUnauthorizedError: Unauthorized request
             OdpValidationError: Invalid input
             OdpResourceExistsError: Resource already exists
         """
@@ -146,8 +140,6 @@ class OdpResourceClient(BaseModel):
         except requests.HTTPError as e:
             if res.status_code == 400:
                 raise OdpValidationError("Invalid input") from e
-            if res.status_code == 401:
-                raise OdpUnauthorizedError("Unauthorized request") from e
             if res.status_code == 409:
                 raise OdpResourceExistsError("Resource already exists") from e
             raise  # Unhandled error
@@ -165,7 +157,6 @@ class OdpResourceClient(BaseModel):
             The manifest of the updated resource, populated with the updated fields
 
         Raises:
-            OdpUnauthorizedError: Unauthorized request
             OdpValidationError: Invalid input
             OdpResourceNotFoundError: Resource not found
         """
@@ -184,8 +175,6 @@ class OdpResourceClient(BaseModel):
         except requests.HTTPError as e:
             if res.status_code == 400:
                 raise OdpValidationError("Invalid input") from e
-            if res.status_code == 401:
-                raise OdpUnauthorizedError("Unauthorized request") from e
             if res.status_code == 404:
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise  # Unhandled error
@@ -199,7 +188,6 @@ class OdpResourceClient(BaseModel):
             ref: Resource reference. If a `ResourceDto` is passed, the reference will be extracted from the metadata.
 
         Raises:
-            OdpUnauthorizedError: Unauthorized request
             OdpResourceNotFoundError: If the resource does not exist
         """
         if isinstance(ref, ResourceDto):
@@ -209,8 +197,6 @@ class OdpResourceClient(BaseModel):
         try:
             res.raise_for_status()
         except requests.HTTPError as e:
-            if res.status_code == 401:
-                raise OdpUnauthorizedError(f"Unauthorized request: DELETE {ref}") from e
             if res.status_code == 404:
                 raise OdpResourceNotFoundError(f"Resource not found: {ref}") from e
             raise  # Unhandled error
