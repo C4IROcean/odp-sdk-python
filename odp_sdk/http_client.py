@@ -1,16 +1,30 @@
 import json
+import re
 from contextlib import contextmanager
 from typing import Iterable, Literal, Optional
 
 import requests
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from .auth import TokenProvider
+from .exc import OdpForbiddenError, OdpUnauthorizedError
 
 
 class OdpHttpClient(BaseModel):
     base_url: str = "https://api.hubocean.earth"
     token_provider: TokenProvider
+
+    @field_validator("base_url")
+    @classmethod
+    def _validate_url(cls, v: str) -> str:
+        m = re.match(
+            r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+            v,
+        )
+        if not m:
+            raise ValueError(f"Invalid base URL: {v}")
+
+        return v.rstrip("/")
 
     def get(
         self,
@@ -57,7 +71,13 @@ class OdpHttpClient(BaseModel):
             The response object
         """
         return self._request(
-            "POST", url, params=params, headers=headers, timeout=timeout, content=content, stream=stream
+            "POST",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            content=content,
+            stream=stream,
         )
 
     def patch(
@@ -83,7 +103,13 @@ class OdpHttpClient(BaseModel):
             The response object
         """
         return self._request(
-            "PATCH", url, params=params, headers=headers, timeout=timeout, content=content, stream=stream
+            "PATCH",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            content=content,
+            stream=stream,
         )
 
     def put(
@@ -109,7 +135,13 @@ class OdpHttpClient(BaseModel):
             The response object
         """
         return self._request(
-            "PUT", url, params=params, headers=headers, timeout=timeout, content=content, stream=stream
+            "PUT",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            content=content,
+            stream=stream,
         )
 
     def delete(
@@ -132,7 +164,14 @@ class OdpHttpClient(BaseModel):
         Returns:
             The response object
         """
-        return self._request("DELETE", url, params=params, headers=headers, timeout=timeout, stream=stream)
+        return self._request(
+            "DELETE",
+            url,
+            params=params,
+            headers=headers,
+            timeout=timeout,
+            stream=stream,
+        )
 
     @contextmanager
     def _session(self) -> Iterable[requests.Session]:
@@ -174,6 +213,10 @@ class OdpHttpClient(BaseModel):
 
         Returns:
             The response object
+
+        Raises:
+            OdpUnauthorizedError: Unauthorized request
+            OdpForbiddenError: Forbidden request
         """
 
         if url.startswith("/"):
@@ -198,10 +241,17 @@ class OdpHttpClient(BaseModel):
         else:
             body = None
 
-        request_url = f"{base_url.rstrip('/')}/{url.lstrip('/')}"
+        request_url = f"{base_url}{url}"
 
         req = requests.Request(method, request_url, params=params, headers=headers, data=body)
 
         with self._session() as s:
             prepped = s.prepare_request(req)
-            return s.send(prepped, timeout=timeout, stream=stream)
+            res = s.send(prepped, timeout=timeout, stream=stream)
+
+            if res.status_code == 401:
+                raise OdpUnauthorizedError("Unauthorized request")
+            elif res.status_code == 403:
+                raise OdpForbiddenError("Forbidden request")
+
+            return res

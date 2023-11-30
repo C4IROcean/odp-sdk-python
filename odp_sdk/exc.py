@@ -13,5 +13,21 @@ class OdpUnauthorizedError(OdpError):
     """Exception raised for unauthorized requests."""
 
 
+class OdpForbiddenError(OdpError):
+    """Exception raised for forbidden requests."""
+
+
 class OdpTokenValidationError(OdpError):
     """Exception raised for invalid tokens."""
+
+
+class OdpResourceNotFoundError(OdpError):
+    """Exception raised when a resource is not found."""
+
+
+class OdpResourceExistsError(OdpError):
+    """Exception raised when a resource already exists."""
+
+
+class OdpValidationError(OdpError):
+    """Exception raised when a resource is not found."""
