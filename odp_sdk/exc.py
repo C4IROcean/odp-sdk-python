@@ -31,3 +31,7 @@ class OdpResourceExistsError(OdpError):
 
 class OdpValidationError(OdpError):
     """Exception raised when a resource is not found."""
+
+
+class OdpFileNotFoundError(OdpError):
+    """Exception raised when a file is not found."""
