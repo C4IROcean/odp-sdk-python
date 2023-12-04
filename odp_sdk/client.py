@@ -36,3 +36,8 @@ class OdpClient(BaseModel):
     def registry(self):
         # TODO: Implement registry/core controller
         raise NotImplementedError("Registry not implemented")
+
+    @property
+    def raw(self):
+        # TODO: Implement raw storage controller client
+        raise NotImplementedError("Raw not implemented")
