@@ -1,3 +1,4 @@
+from io import BytesIO
 from typing import Optional, Dict, List, Literal, Union
 from uuid import UUID
 
@@ -70,3 +71,21 @@ class OdpRawStorageClient(BaseModel):
 
         # Assuming the response returns JSON that matches the FileMetadata schema
         return FileMetadata(**response.json())
+
+    def list_files(self, dataset_dto: DatasetDto) -> List[FileMetadata]:
+        """
+        List all files in a dataset.
+
+        Args:
+            dataset_dto: DatasetDto
+
+        Returns:
+            List of files in the dataset
+        """
+        url = f"{self.raw_storage_url}/{dataset_dto.metadata.uuid}/list"
+
+        response = self.http_client.post(url)
+        response.raise_for_status()
+
+        return [FileMetadata(**file_metadata) for file_metadata in response.json()]
+
