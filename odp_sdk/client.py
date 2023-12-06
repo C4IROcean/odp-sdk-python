@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, PrivateAttr
 
 from .auth import TokenProvider, get_default_token_provider
 from .http_client import OdpHttpClient
+from .raw_storage_client import OdpRawStorageClient
 
 
 class OdpClient(BaseModel):
@@ -11,6 +12,7 @@ class OdpClient(BaseModel):
     token_provider: TokenProvider = Field(default_factory=get_default_token_provider)
 
     _http_client: OdpHttpClient = PrivateAttr()
+    _raw_storage_client: OdpRawStorageClient = PrivateAttr()
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -38,6 +40,5 @@ class OdpClient(BaseModel):
         raise NotImplementedError("Registry not implemented")
 
     @property
-    def raw(self):
-        # TODO: Implement raw storage controller client
-        raise NotImplementedError("Raw not implemented")
+    def raw(self) -> OdpRawStorageClient:
+        return self._raw_storage_client
