@@ -3,7 +3,7 @@ from typing import List
 import requests
 from pydantic import BaseModel
 
-from odp_sdk.dto.dataset_dto import DatasetDto
+from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
 from odp_sdk.exc import OdpFileNotFoundError
 from odp_sdk.http_client import OdpHttpClient
@@ -22,12 +22,12 @@ class OdpRawStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.raw_storage_endpoint}"
 
-    def get_file_metadata(self, dataset_dto: DatasetDto, file_ref: str) -> FileMetadataDto:
+    def get_file_metadata(self, resource_dto: ResourceDto, file_ref: str) -> FileMetadataDto:
         """
         Get file metadata by reference.
 
         Args:
-            dataset_dto: DatasetDto
+            resource_dto: ResourceDto
             file_ref: File reference
 
         Returns:
@@ -36,7 +36,7 @@ class OdpRawStorageClient(BaseModel):
         Raises:
             OdpFileNotFoundError: If the file does not exist
         """
-        url = f"{self.raw_storage_url}/{dataset_dto.metadata.uuid}/{file_ref}/metadata"
+        url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_ref}/metadata"
 
         response = self.http_client.get(url)
         try:
@@ -48,17 +48,17 @@ class OdpRawStorageClient(BaseModel):
         # Assuming the response returns JSON that matches the FileMetadata schema
         return FileMetadataDto(**response.json())
 
-    def list_files(self, dataset_dto: DatasetDto) -> List[FileMetadataDto]:
+    def list_files(self, resource_dto: ResourceDto) -> List[FileMetadataDto]:
         """
         List all files in a dataset.
 
         Args:
-            dataset_dto: DatasetDto
+            resource_dto: ResourceDto
 
         Returns:
             List of files in the dataset
         """
-        url = f"{self.raw_storage_url}/{dataset_dto.metadata.uuid}/list"
+        url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/list"
 
         response = self.http_client.post(url)
         response.raise_for_status()
