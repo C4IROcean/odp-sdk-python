@@ -1,6 +1,4 @@
-from io import BytesIO
-from typing import Optional, Dict, List, Literal, Union
-from uuid import UUID
+from typing import Dict, List, Optional
 
 import requests
 from pydantic import BaseModel
@@ -88,4 +86,3 @@ class OdpRawStorageClient(BaseModel):
         response.raise_for_status()
 
         return [FileMetadata(**file_metadata) for file_metadata in response.json()]
-

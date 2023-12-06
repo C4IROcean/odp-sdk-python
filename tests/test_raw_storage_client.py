@@ -1,13 +1,13 @@
 import json
+from uuid import uuid4
 
 import pytest
 import responses
-from uuid import uuid4
 
 from odp_sdk.dto.dataset_dto import DatasetDto, DatasetSpec
 from odp_sdk.dto.resource_dto import MetadataDto
 from odp_sdk.exc import OdpFileNotFoundError
-from odp_sdk.raw_storage_client import OdpRawStorageClient, FileMetadata
+from odp_sdk.raw_storage_client import FileMetadata, OdpRawStorageClient
 
 
 @pytest.fixture()
@@ -25,7 +25,7 @@ def test_get_file_metadata_success(raw_storage_client):
         storage_class="registry.hubocean.io/storageClass/raw",
         maintainer={"organization": "HUB Ocean"},
         documentation=["https://oceandata.earth"],
-        tags=["test", "hubocean"]
+        tags=["test", "hubocean"],
     )
 
     file_ref = "/home/hubocean/file.zip"
@@ -33,10 +33,12 @@ def test_get_file_metadata_success(raw_storage_client):
     file_metadata_name = "file.zip"
     file_metadata_mime_type = "application/zip"
 
-    dataset_dto = DatasetDto(spec=dataset_spec,
-                             kind=dataset_kind,
-                             version=dataset_version,
-                             metadata=MetadataDto(name=dataset_name, uuid=dataset_uuid))
+    dataset_dto = DatasetDto(
+        spec=dataset_spec,
+        kind=dataset_kind,
+        version=dataset_version,
+        metadata=MetadataDto(name=dataset_name, uuid=dataset_uuid),
+    )
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -63,23 +65,15 @@ def test_get_file_metadata_not_found(raw_storage_client):
     dataset_version = "v1alpha3"
     dataset_spec = {
         "storage_class": "registry.hubocean.io/storageClass/raw",
-        "maintainer": {
-            "contact": "HUB Ocean <info@oceandata.earth>",
-            "organisation": "HUB Ocean"
-        },
-        "documentation": [
-            "https://oceandata.earth"
-        ],
-        "tags": ["test", "hubocean"]
+        "maintainer": {"contact": "HUB Ocean <info@oceandata.earth>", "organisation": "HUB Ocean"},
+        "documentation": ["https://oceandata.earth"],
+        "tags": ["test", "hubocean"],
     }
 
     file_ref = "non_existent_file_ref"
     metadata = MetadataDto(name=dataset_name, uuid=dataset_uuid)
 
-    dataset_dto = DatasetDto(spec=dataset_spec,
-                             kind=dataset_kind,
-                             version=dataset_version,
-                             metadata=metadata)
+    dataset_dto = DatasetDto(spec=dataset_spec, kind=dataset_kind, version=dataset_version, metadata=metadata)
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -99,23 +93,14 @@ def test_list_files_success(raw_storage_client):
     dataset_version = "v1alpha3"
     dataset_spec = {
         "storage_class": "registry.hubocean.io/storageClass/raw",
-        "maintainer": {
-            "contact": "HUB Ocean",
-            "organisation": "HUB Ocean"
-        },
-        "documentation": [
-            "https://oceandata.earth"
-        ],
-        "tags": ["test", "hubocean"]
-
+        "maintainer": {"contact": "HUB Ocean", "organisation": "HUB Ocean"},
+        "documentation": ["https://oceandata.earth"],
+        "tags": ["test", "hubocean"],
     }
 
     metadata = MetadataDto(name=dataset_name, uuid=dataset_uuid)
 
-    dataset_dto = DatasetDto(spec=dataset_spec,
-                                kind=dataset_kind,
-                                version=dataset_version,
-                                metadata=metadata)
+    dataset_dto = DatasetDto(spec=dataset_spec, kind=dataset_kind, version=dataset_version, metadata=metadata)
 
     file_metadata_name = "file.zip"
     file_metadata_mime_type = "application/zip"
@@ -137,4 +122,3 @@ def test_list_files_success(raw_storage_client):
 
         assert result[0].name == file_metadata_name
         assert result[0].mime_type == file_metadata_mime_type
-

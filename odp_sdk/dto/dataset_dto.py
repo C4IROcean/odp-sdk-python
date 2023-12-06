@@ -1,5 +1,4 @@
-from dataclasses import Field
-from typing import Optional, List, Set
+from typing import List, Optional, Set
 
 from pydantic import BaseModel
 
