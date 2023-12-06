@@ -72,3 +72,33 @@ def test_list_files_success(raw_storage_client, common_resource_dto):
 
         assert result[0].name == file_metadata_name
         assert result[0].mime_type == file_metadata_mime_type
+
+
+def test_create_file_success(raw_storage_client, common_resource_dto):
+    file_name = "new_file.txt"
+    file_metadata = FileMetadataDto(
+        name=file_name,
+        mime_type="text/plain",
+    )
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.POST,
+            f"{raw_storage_client.raw_storage_url}/{common_resource_dto.metadata.uuid}/{file_name}",
+            status=200,
+            json=json.loads(file_metadata.model_dump_json()),
+            content_type="application/json",
+        )
+
+        rsps.add(
+            responses.GET,
+            f"{raw_storage_client.raw_storage_url}/{common_resource_dto.metadata.uuid}/{file_name}/metadata",
+            json=json.loads(file_metadata.model_dump_json()),
+            status=200,
+            content_type="application/json",
+        )
+
+        result = raw_storage_client.create_file(common_resource_dto, file_metadata, contents=None)
+
+        assert result.name == file_name
+        assert result.mime_type == "text/plain"
