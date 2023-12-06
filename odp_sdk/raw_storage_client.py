@@ -36,7 +36,11 @@ class OdpRawStorageClient(BaseModel):
         Raises:
             OdpFileNotFoundError: If the file does not exist
         """
-        url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_ref}/metadata"
+
+        if resource_dto.metadata.uuid:
+            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_ref}/metadata"
+        else:
+            url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_ref}/metadata"
 
         response = self.http_client.get(url)
         try:
@@ -58,7 +62,10 @@ class OdpRawStorageClient(BaseModel):
         Returns:
             List of files in the dataset
         """
-        url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/list"
+        if resource_dto.metadata.uuid:
+            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/list"
+        else:
+            url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
 
         response = self.http_client.post(url)
         response.raise_for_status()
