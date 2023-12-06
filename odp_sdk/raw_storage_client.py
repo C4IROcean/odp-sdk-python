@@ -11,7 +11,7 @@ from odp_sdk.http_client import OdpHttpClient
 
 class OdpRawStorageClient(BaseModel):
     http_client: OdpHttpClient
-    raw_storage_endpoint: str
+    raw_storage_endpoint: str = "/data"
 
     @property
     def raw_storage_url(self) -> str:
