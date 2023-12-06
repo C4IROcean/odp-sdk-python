@@ -1,34 +1,12 @@
-from typing import Dict, List, Optional
+from typing import List
 
 import requests
 from pydantic import BaseModel
 
 from odp_sdk.dto.dataset_dto import DatasetDto
+from odp_sdk.dto.file_dto import FileMetadataDto
 from odp_sdk.exc import OdpFileNotFoundError
 from odp_sdk.http_client import OdpHttpClient
-
-
-class FileMetadata(BaseModel):
-    """File Metadata Model."""
-
-    external_id: Optional[str] = None
-    name: Optional[str] = None
-    source: Optional[str] = None
-    mime_type: Optional[str] = None
-    metadata: Optional[Dict[str, str]] = None
-    directory: Optional[str] = None
-    asset_ids: Optional[List[int]] = None
-    data_set_id: Optional[int] = None
-    labels: Optional[List[str]] = None
-    geo_location: Optional[str] = None
-    source_created_time: Optional[int] = None
-    source_modified_time: Optional[int] = None
-    security_categories: Optional[List[int]] = None
-    id: Optional[int] = None
-    uploaded: Optional[bool] = None
-    uploaded_time: Optional[int] = None
-    created_time: Optional[int] = None
-    last_updated_time: Optional[int] = None
 
 
 class OdpRawStorageClient(BaseModel):
@@ -44,7 +22,7 @@ class OdpRawStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.raw_storage_endpoint}"
 
-    def get_file_metadata(self, dataset_dto: DatasetDto, file_ref: str) -> FileMetadata:
+    def get_file_metadata(self, dataset_dto: DatasetDto, file_ref: str) -> FileMetadataDto:
         """
         Get file metadata by reference.
 
@@ -68,9 +46,9 @@ class OdpRawStorageClient(BaseModel):
                 raise OdpFileNotFoundError(f"File not found: {file_ref}") from e
 
         # Assuming the response returns JSON that matches the FileMetadata schema
-        return FileMetadata(**response.json())
+        return FileMetadataDto(**response.json())
 
-    def list_files(self, dataset_dto: DatasetDto) -> List[FileMetadata]:
+    def list_files(self, dataset_dto: DatasetDto) -> List[FileMetadataDto]:
         """
         List all files in a dataset.
 
@@ -85,4 +63,4 @@ class OdpRawStorageClient(BaseModel):
         response = self.http_client.post(url)
         response.raise_for_status()
 
-        return [FileMetadata(**file_metadata) for file_metadata in response.json()]
+        return [FileMetadataDto(**file_metadata) for file_metadata in response.json()]
