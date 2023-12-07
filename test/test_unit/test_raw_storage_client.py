@@ -102,3 +102,25 @@ def test_create_file_success(raw_storage_client, common_resource_dto):
 
         assert result.name == file_name
         assert result.mime_type == "text/plain"
+
+
+def test_download_file_save(raw_storage_client, common_resource_dto, tmp_path):
+    file_data = b"Sample file content"
+    save_path = tmp_path / "downloaded_file.txt"
+
+    file_meta_data = FileMetadataDto(name="test_file.txt", mime_type="text/plain")
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.GET,
+            f"{raw_storage_client.raw_storage_url}/{common_resource_dto.metadata.uuid}/{file_meta_data.name}",
+            body=file_data,
+            status=200,
+        )
+
+        raw_storage_client.download_file(common_resource_dto, file_meta_data, save_path=str(save_path))
+
+        with open(save_path, "rb") as file:
+            saved_data = file.read()
+
+    assert saved_data == file_data
