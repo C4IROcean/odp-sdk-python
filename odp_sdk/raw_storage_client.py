@@ -24,13 +24,13 @@ class OdpRawStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.raw_storage_endpoint}"
 
-    def get_file_metadata(self, resource_dto: ResourceDto, file_name: str) -> FileMetadataDto:
+    def get_file_metadata(self, resource_dto: ResourceDto, filename: str) -> FileMetadataDto:
         """
         Get file metadata by reference.
 
         Args:
             resource_dto: Dataset manifest
-            file_name: File name in dataset to get metadata for
+            filename: File name in dataset to get metadata for
 
         Returns:
             The metadata of the file corresponding to the reference
@@ -38,20 +38,17 @@ class OdpRawStorageClient(BaseModel):
         Raises:
             OdpFileNotFoundError: If the file does not exist
         """
+        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{filename}/metadata"
 
         if resource_dto.metadata.uuid:
-            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_name}/metadata"
-        else:
-            url = (
-                f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_name}/metadata"
-            )
+            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{filename}/metadata"
 
         response = self.http_client.get(url)
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(f"File not found: {file_name}") from e
+                raise OdpFileNotFoundError(f"File not found: {filename}") from e
 
         return FileMetadataDto(**response.json())
 
@@ -66,10 +63,10 @@ class OdpRawStorageClient(BaseModel):
         Returns:
             List of files in the dataset
         """
+        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
+
         if resource_dto.metadata.uuid:
             url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/list"
-        else:
-            url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
 
         file_filter_body = FileMetadataDto(**kwargs)
 
@@ -92,10 +89,10 @@ class OdpRawStorageClient(BaseModel):
         Returns:
             The metadata of the uploaded file
         """
+        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_meta_dto.ref}"
+
         if resource_dto.metadata.uuid:
             url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_meta_dto.ref}"
-        else:
-            url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_meta_dto.ref}"
 
         if isinstance(contents, bytes):
             contents = BytesIO(contents)
@@ -130,12 +127,10 @@ class OdpRawStorageClient(BaseModel):
         Returns:
             The metadata of the newly created file
         """
+        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_meta_dto.name}"
+
         if resource_dto.metadata.uuid:
             url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_meta_dto.name}"
-        else:
-            url = (
-                f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_meta_dto.name}"
-            )
 
         response = self.http_client.post(url, content=file_meta_dto.model_dump_json())
         response.raise_for_status()
@@ -146,3 +141,31 @@ class OdpRawStorageClient(BaseModel):
             return self.update_file(file_meta, contents, overwrite)
 
         return self.get_file_metadata(resource_dto, file_meta_dto.name)
+
+    def download_file(self, resource_dto: ResourceDto, file: [FileMetadataDto, str], save_path: str = None):
+        """
+        Download a file.
+
+        Args:
+            resource_dto: Dataset manifest
+            file: File metadata or file name
+        """
+
+        filename = file.name
+
+        if isinstance(file, str):
+            filename = file
+
+        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{filename}"
+
+        if resource_dto.metadata.uuid:
+            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{filename}"
+
+        response = self.http_client.get(url)
+        response.raise_for_status()
+
+        if save_path:
+            with open(save_path, "wb") as file:
+                file.write(response.content)
+        else:
+            return response.content
