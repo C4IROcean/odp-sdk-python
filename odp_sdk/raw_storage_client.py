@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
+from odp_sdk.dto.pagination_dto import PaginationDto
 from odp_sdk.exc import OdpFileNotFoundError
 from odp_sdk.http_client import OdpHttpClient
 
@@ -75,9 +76,7 @@ class OdpRawStorageClient(BaseModel):
         response = self.http_client.post(url, content=file_filter_body)
         response.raise_for_status()
 
-        results = response.json()["results"]
-
-        return [FileMetadataDto(**file_metadata) for file_metadata in results]
+        return PaginationDto(**response.json()).results
 
     def upload_file(
         self, resource_dto: ResourceDto, file_meta_dto: FileMetadataDto, contents: bytes | BytesIO
