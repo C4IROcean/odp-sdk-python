@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List, Optional, Union, Literal
+from typing import List, Literal, Optional, Union
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel

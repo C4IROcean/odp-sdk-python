@@ -1,11 +1,11 @@
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
 from pydantic import BaseModel, PrivateAttr
 
 from odp_sdk.dto import ResourceDto
-from odp_sdk.dto.table_spec import TableSpec, StageDataPoints
+from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
 from odp_sdk.dto.tabular_store import TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
@@ -154,10 +154,7 @@ class OdpTabularStorageController(BaseModel):
 
         url = f"{self.tabular_storage_url}/{table_stage.stage_id}/stage"
 
-        stage_data = StageDataPoints(
-            action="commit",
-            stage_id=table_stage.stage_id
-        )
+        stage_data = StageDataPoints(action="commit", stage_id=table_stage.stage_id)
 
         response = self._http_client.post(url, content=stage_data)
         response.raise_for_status()

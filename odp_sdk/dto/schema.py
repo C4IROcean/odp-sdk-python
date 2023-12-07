@@ -1,7 +1,7 @@
-from typing import Dict, Iterable, Tuple, FrozenSet, Callable, Union
+from typing import Callable, Dict, FrozenSet, Iterable, Tuple, Union
 
 import pyarrow as pa
-from pydantic import BaseModel, PrivateAttr, Extra, Field, root_validator, validator
+from pydantic import BaseModel, Extra, Field, PrivateAttr, root_validator, validator
 
 _SIMPLE_DATATYPES = {
     "bool": pa.bool_,

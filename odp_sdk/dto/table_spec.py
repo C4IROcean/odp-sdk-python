@@ -1,4 +1,4 @@
-from typing import Optional, List, Literal
+from typing import List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, root_validator
