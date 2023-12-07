@@ -54,12 +54,13 @@ class OdpRawStorageClient(BaseModel):
 
         return FileMetadataDto(**response.json())
 
-    def list_files(self, resource_dto: ResourceDto) -> List[FileMetadataDto]:
+    def list_files(self, resource_dto: ResourceDto, **kwargs) -> List[FileMetadataDto]:
         """
         List all files in a dataset.
 
         Args:
             resource_dto: Dataset manifest
+            **kwargs: Keyword arguments for filtering
 
         Returns:
             List of files in the dataset
@@ -69,10 +70,14 @@ class OdpRawStorageClient(BaseModel):
         else:
             url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
 
-        response = self.http_client.post(url)
+        file_filter_body = FileMetadataDto(**kwargs)
+
+        response = self.http_client.post(url, content=file_filter_body)
         response.raise_for_status()
 
-        return [FileMetadataDto(**file_metadata) for file_metadata in response.json()]
+        results = response.json()["results"]
+
+        return [FileMetadataDto(**file_metadata) for file_metadata in results]
 
     def upload_file(
         self, resource_dto: ResourceDto, file_meta_dto: FileMetadataDto, contents: bytes | BytesIO
