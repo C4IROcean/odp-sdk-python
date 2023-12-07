@@ -164,6 +164,7 @@ class Column(BaseModel):
         """Get the arguments for an internal type."""
         return self._internal_type_args
 
+
 class Schema(BaseModel):
     """Schema class."""
 

@@ -75,4 +75,3 @@ class TableStage(BaseModel):
     def dict(self, **kwargs) -> "DictStrAny":  # noqa: F821
         exclude_unset = kwargs.pop("exclude_unset", True)
         return super().dict(exclude_unset=exclude_unset, **kwargs)
-
