@@ -169,3 +169,29 @@ class OdpRawStorageClient(BaseModel):
                 file.write(response.content)
         else:
             return response.content
+
+    def delete_file(self, resource_dto: ResourceDto, filename: str) -> bool:
+        """
+        Delete a file.
+
+        Args:
+            resource_dto: Dataset manifest
+            filename: File name in dataset to delete
+
+        Returns:
+            True if the file was deleted, False otherwise
+        """
+        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{filename}"
+
+        if resource_dto.metadata.uuid:
+            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{filename}"
+
+        response = self.http_client.delete(url)
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise OdpFileNotFoundError(f"File not found: {filename}") from e
+
+        return True
