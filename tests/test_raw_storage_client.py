@@ -63,12 +63,12 @@ def test_list_files_success(raw_storage_client, common_resource_dto):
         rsps.add(
             responses.POST,
             f"{raw_storage_client.raw_storage_url}/{common_resource_dto.metadata.uuid}/list",
-            json=[json.loads(file_metadata.model_dump_json())],
+            json={"results": [json.loads(file_metadata.model_dump_json())], "next": None, "num_results": 1},
             status=200,
             content_type="application/json",
         )
 
-        result = raw_storage_client.list_files(common_resource_dto)
+        result = raw_storage_client.list_files(common_resource_dto, name=file_metadata_name)
 
         assert result[0].name == file_metadata_name
         assert result[0].mime_type == file_metadata_mime_type
