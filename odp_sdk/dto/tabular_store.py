@@ -72,7 +72,7 @@ class TableStage(BaseModel):
 
         return cls(stage_id=uuid4(), status="active", created_time=now, expiry_time=now + expiry_time)
 
-    def dict(self, **kwargs) -> "DictStrAny":
+    def dict(self, **kwargs) -> "DictStrAny":  # noqa: F821
         exclude_unset = kwargs.pop("exclude_unset", True)
         return super().dict(exclude_unset=exclude_unset, **kwargs)
 

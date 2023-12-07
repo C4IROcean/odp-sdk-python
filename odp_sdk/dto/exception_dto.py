@@ -37,7 +37,7 @@ class ExceptionDto(BaseModel):
     def dict(
         self,
         **kwargs,
-    ) -> "DictStrAny":
+    ) -> "DictStrAny":  # noqa: F821
         dct = super().dict(**kwargs)
         dct["exception_cls"] = [self.exception_cls.__name__, cloudpickle.dumps(self.exception_cls)]
         return dct
