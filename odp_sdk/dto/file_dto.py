@@ -22,5 +22,5 @@ class FileMetadataDto(BaseModel):
     id: Optional[int] = None
     uploaded: Optional[bool] = None
     uploaded_time: Optional[int] = None
-    created_time: Optional[int] = None
+    created_time: Optional[int | str] = None
     last_updated_time: Optional[int] = None
