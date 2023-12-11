@@ -191,7 +191,7 @@ class OdpRawStorageClient(BaseModel):
         else:
             raise ValueError("You must provide either 'file_meta' or both 'filename' and 'mime_type'")
 
-        url = self._resolve_dataset_url(dataset_reference)
+        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{file_meta_dto.name}")
         response = self.http_client.post(url, content=file_meta_dto.model_dump_json(exclude_unset=True))
 
         try:
