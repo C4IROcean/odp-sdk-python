@@ -1,13 +1,13 @@
 from io import BytesIO
-from typing import List, Optional
+from typing import Iterable, List, Optional
+from uuid import UUID
 
 import requests
 from pydantic import BaseModel
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
-from odp_sdk.dto.pagination_dto import PaginationDto
-from odp_sdk.exc import OdpFileNotFoundError
+from odp_sdk.exc import OdpFileNotFoundError, OdpValidationError
 from odp_sdk.http_client import OdpHttpClient
 
 
@@ -24,12 +24,23 @@ class OdpRawStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.raw_storage_endpoint}"
 
-    def get_file_metadata(self, resource_dto: ResourceDto, filename: str) -> FileMetadataDto:
+    def _resolve_dataset_url(self, dataset_reference, endpoint: str = "") -> str:
+        kind = "/catalog.hubocean.io/dataset"
+        if isinstance(dataset_reference, UUID):
+            return f"{self.raw_storage_url}/{dataset_reference}{endpoint}"
+        elif isinstance(dataset_reference, ResourceDto) and dataset_reference.metadata.uuid:
+            return f"{self.raw_storage_url}/{dataset_reference.metadata.uuid}{endpoint}"
+        elif isinstance(dataset_reference, ResourceDto):
+            return f"{self.raw_storage_url}{kind}/{dataset_reference.metadata.name}{endpoint}"
+        else:
+            return f"{self.raw_storage_url}{kind}/{dataset_reference}{endpoint}"
+
+    def get_file_metadata(self, dataset_reference: str | ResourceDto | UUID, filename: str) -> FileMetadataDto:
         """
         Get file metadata by reference.
 
         Args:
-            resource_dto: Dataset manifest
+            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
             filename: File name in dataset to get metadata for
 
         Returns:
@@ -38,10 +49,8 @@ class OdpRawStorageClient(BaseModel):
         Raises:
             OdpFileNotFoundError: If the file does not exist
         """
-        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{filename}/metadata"
 
-        if resource_dto.metadata.uuid:
-            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{filename}/metadata"
+        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}/metadata")
 
         response = self.http_client.get(url)
         try:
@@ -49,50 +58,88 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {filename}") from e
+            raise  # Unhandled error
 
         return FileMetadataDto(**response.json())
 
-    def list_files(self, resource_dto: ResourceDto, **kwargs) -> List[FileMetadataDto]:
+    def list(
+        self, dataset_reference: str | ResourceDto | UUID, metadata_filter: dict[str, any]
+    ) -> Iterable[FileMetadataDto]:
         """
         List all files in a dataset.
 
         Args:
-            resource_dto: Dataset manifest
-            **kwargs: Keyword arguments for filtering
+            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            metadata_filter: List filter
 
         Returns:
             List of files in the dataset
         """
-        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
 
-        if resource_dto.metadata.uuid:
-            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/list"
+        metadata_filter = FileMetadataDto(**metadata_filter)
 
-        file_filter_body = FileMetadataDto(**kwargs)
+        while True:
+            page, cursor = self.list_paginated(dataset_reference, metadata_filter=metadata_filter)
+            yield from page
+            if not cursor:
+                break
 
-        response = self.http_client.post(url, content=file_filter_body)
-        response.raise_for_status()
-
-        return PaginationDto(**response.json()).results
-
-    def upload_file(
-        self, resource_dto: ResourceDto, file_meta_dto: FileMetadataDto, contents: bytes | BytesIO
-    ) -> FileMetadataDto:
+    def list_paginated(
+        self,
+        dataset_reference: str | ResourceDto | UUID,
+        metadata_filter: FileMetadataDto,
+        cursor: Optional[str] = None,
+        limit: int = 1000,
+    ) -> tuple[List[FileMetadataDto], str]:
         """
-        Upload a file.
+        List page
 
         Args:
-            resource_dto: Dataset manifest
+            dataset_reference: Dataset reference
+            metadata_filter: List filter
+            cursor: Optional cursor for pagination
+            limit: Optional limit for pagination
+
+        Returns:
+            Page of return values
+        """
+
+        url = self._resolve_dataset_url(dataset_reference, endpoint="/list")
+        params = {}
+
+        if cursor:
+            params["page"] = cursor
+        if limit:
+            params["limit"] = limit
+
+        response = self.http_client.post(url, params=params, content=metadata_filter.model_dump_json())
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 401:
+                raise OdpValidationError("API argument error") from e
+            raise  # Unhandled error
+
+        content = response.json()
+        return [FileMetadataDto(**item) for item in content["results"]], content.get("next")
+
+    def upload_file(
+        self, dataset_reference: str | ResourceDto | UUID, file_meta_dto: FileMetadataDto, contents: bytes | BytesIO
+    ) -> FileMetadataDto:
+        """
+        Upload data to a file.
+
+        Args:
+            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
             file_meta_dto: File metadata
             contents: File contents
 
         Returns:
             The metadata of the uploaded file
         """
-        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_meta_dto.ref}"
-
-        if resource_dto.metadata.uuid:
-            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_meta_dto.ref}"
+        filename = file_meta_dto.ref
+        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}")
 
         if isinstance(contents, bytes):
             contents = BytesIO(contents)
@@ -104,51 +151,73 @@ class OdpRawStorageClient(BaseModel):
         headers = {"Content-Type": "application/octet-stream"}
 
         response = self.http_client.post(url, headers=headers, content=contents)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise OdpFileNotFoundError(f"File not found: {filename}") from e
 
-        return self.get_file_metadata(resource_dto, file_meta_dto.name)
+        return self.get_file_metadata(dataset_reference, file_meta_dto.name)
 
     def create_file(
         self,
-        resource_dto: ResourceDto,
-        file_meta_dto: FileMetadataDto,
-        contents: Optional[bytes | BytesIO],
+        dataset_reference: str | ResourceDto | UUID,
+        file_meta: Optional[dict[str, any] | FileMetadataDto] = None,
+        filename: str = None,
+        mime_type: str = None,
+        contents: Optional[bytes | BytesIO] = None,
         overwrite: bool = False,
     ) -> FileMetadataDto:
         """
         Create a new file.
 
         Args:
-            resource_dto: Dataset manifest
-            file_meta_dto: File metadata
+            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            file_meta: File metadata
+            filename: Optional way to specify the filename
+            mime_type: Optional way to specify the MIME type,
             contents: File contents
             overwrite: Overwrite if the file already exists
 
         Returns:
             The metadata of the newly created file
         """
-        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{file_meta_dto.name}"
+        if isinstance(file_meta, FileMetadataDto):
+            file_meta_dto = file_meta
+        elif isinstance(file_meta, dict):
+            file_meta_dto = FileMetadataDto(**file_meta)
+        elif filename and mime_type:
+            file_meta_dto = FileMetadataDto(filename=filename, mime_type=mime_type)
+        else:
+            raise ValueError("You must provide either 'file_meta' or both 'filename' and 'mime_type'")
 
-        if resource_dto.metadata.uuid:
-            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{file_meta_dto.name}"
+        url = self._resolve_dataset_url(dataset_reference)
+        response = self.http_client.post(url, content=file_meta_dto.model_dump_json(exclude_unset=True))
 
-        response = self.http_client.post(url, content=file_meta_dto.model_dump_json())
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 401:
+                raise OdpValidationError("API argument error") from e
+            raise  # Unhandled error
 
         file_meta = FileMetadataDto(**response.json())
 
         if contents:
             return self.update_file(file_meta, contents, overwrite)
 
-        return self.get_file_metadata(resource_dto, file_meta_dto.name)
+        return self.get_file_metadata(dataset_reference, file_meta_dto.name)
 
-    def download_file(self, resource_dto: ResourceDto, file: [FileMetadataDto, str], save_path: str = None):
+    def download_file(
+        self, dataset_reference: str | ResourceDto | UUID, file: FileMetadataDto | str, save_path: str = None
+    ):
         """
         Download a file.
 
         Args:
-            resource_dto: Dataset manifest
+            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
             file: File metadata or file name
+            save_path: File path to save the downloaded file to
         """
 
         filename = file.name
@@ -156,13 +225,14 @@ class OdpRawStorageClient(BaseModel):
         if isinstance(file, str):
             filename = file
 
-        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{filename}"
-
-        if resource_dto.metadata.uuid:
-            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{filename}"
+        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}")
 
         response = self.http_client.get(url)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise OdpFileNotFoundError(f"File not found: {filename}") from e
 
         if save_path:
             with open(save_path, "wb") as file:
@@ -170,21 +240,18 @@ class OdpRawStorageClient(BaseModel):
         else:
             return response.content
 
-    def delete_file(self, resource_dto: ResourceDto, filename: str) -> bool:
+    def delete_file(self, dataset_reference: str | ResourceDto | UUID, filename: str) -> bool:
         """
         Delete a file.
 
         Args:
-            resource_dto: Dataset manifest
+            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
             filename: File name in dataset to delete
 
         Returns:
             True if the file was deleted, False otherwise
         """
-        url = f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/{filename}"
-
-        if resource_dto.metadata.uuid:
-            url = f"{self.raw_storage_url}/{resource_dto.metadata.uuid}/{filename}"
+        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}")
 
         response = self.http_client.delete(url)
 
