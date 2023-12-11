@@ -64,10 +64,14 @@ def test_list_files_success(raw_storage_client, common_resource_dto):
             content_type="application/json",
         )
 
-        result = raw_storage_client.list_files(common_resource_dto, name=file_metadata_name)
+        metadata_filter = {"name": file_metadata_name}
 
-        assert result[0].name == file_metadata_name
-        assert result[0].mime_type == file_metadata_mime_type
+        result = raw_storage_client.list(common_resource_dto, metadata_filter=metadata_filter)
+
+        first_item = next(iter(result))
+
+        assert first_item.name == file_metadata_name
+        assert first_item.mime_type == file_metadata_mime_type
 
 
 def test_create_file_success(raw_storage_client, common_resource_dto):
@@ -80,7 +84,7 @@ def test_create_file_success(raw_storage_client, common_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{raw_storage_client.raw_storage_url}/{common_resource_dto.metadata.uuid}/{file_name}",
+            f"{raw_storage_client.raw_storage_url}/{common_resource_dto.metadata.uuid}/{file_metadata.name}",
             status=200,
             json=json.loads(file_metadata.model_dump_json()),
             content_type="application/json",
@@ -94,7 +98,7 @@ def test_create_file_success(raw_storage_client, common_resource_dto):
             content_type="application/json",
         )
 
-        result = raw_storage_client.create_file(common_resource_dto, file_metadata, contents=None)
+        result = raw_storage_client.create_file(common_resource_dto, file_meta=file_metadata, contents=None)
 
         assert result.name == file_name
         assert result.mime_type == "text/plain"
