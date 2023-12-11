@@ -58,6 +58,7 @@ class HardcodedTokenProvider(TokenProvider):
     """Token provider for hardcoded tokens"""
 
     def __init__(self, token: str):
+        super().__init__()
         self._token = token
 
     def get_token(self) -> str:
@@ -347,7 +348,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
         return msal_extensions.FilePersistence(str(location))
 
 
-def get_default_token_provider(fallback: bool = False) -> TokenProvider:
+def get_default_token_provider(fallback: bool = True) -> TokenProvider:
     """Automatically select a token provider based on the environment
 
     Args:
