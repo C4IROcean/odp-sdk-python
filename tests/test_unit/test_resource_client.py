@@ -30,9 +30,9 @@ def test_get_resource_by_uuid(resource_client):
                 metadata=MetadataDto(name=name, uuid=uuid),
                 status=ResourceStatusDto(
                     num_updates=0,
-                    created_time=datetime.fromisoformat("2021-01-01T00:00:00Z"),
+                    created_time=datetime.fromisoformat("2021-01-01T00:00:00"),
                     created_by=uuid4(),
-                    updated_time=datetime.fromisoformat("2021-01-01T00:00:00Z"),
+                    updated_time=datetime.fromisoformat("2021-01-01T00:00:00"),
                     updated_by=uuid4(),
                 ),
                 spec={},
@@ -64,9 +64,9 @@ def test_get_resource_by_qname(resource_client):
                 metadata=MetadataDto(name=name, uuid=uuid),
                 status=ResourceStatusDto(
                     num_updates=0,
-                    created_time=datetime.fromisoformat("2021-01-01T00:00:00Z"),
+                    created_time=datetime.fromisoformat("2021-01-01T00:00:00"),
                     created_by=uuid4(),
-                    updated_time=datetime.fromisoformat("2021-01-01T00:00:00Z"),
+                    updated_time=datetime.fromisoformat("2021-01-01T00:00:00"),
                     updated_by=uuid4(),
                 ),
                 spec={},
