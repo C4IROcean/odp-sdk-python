@@ -4,9 +4,13 @@ import pytest
 
 from odp_sdk.dto import MetadataDto, ResourceDto
 
+__all__ = [
+    "raw_resource_dto",
+]
+
 
 @pytest.fixture()
-def common_resource_dto():
+def raw_resource_dto():
     name = "test_dataset"
     kind = "catalog.hubocean.io/dataset"
     version = "v1alpha3"
