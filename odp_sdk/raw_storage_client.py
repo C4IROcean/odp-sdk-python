@@ -240,9 +240,9 @@ class OdpRawStorageClient(BaseModel):
         else:
             return response.content
 
-    def delete_file(self, dataset_reference: str | ResourceDto | UUID, filename: str) -> bool:
+    def delete_file(self, dataset_reference: str | ResourceDto | UUID, filename: str):
         """
-        Delete a file.
+        Delete a file. Raises exception if any issues.
 
         Args:
             dataset_reference: Dataset manifest or name of dataset or UUID of dataset
@@ -260,5 +260,3 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {filename}") from e
-
-        return True
