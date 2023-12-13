@@ -17,20 +17,15 @@ class OdpHttpClient(BaseModel):
     @field_validator("base_url")
     @classmethod
     def _validate_url(cls, v: str) -> str:
-        regex_url = (
-            r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b" r"([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+        m = re.match(
+            r"https?:\/\/(www\.|localhost)?[-a-zA-Z0-9@:%._\+~#=]"
+            r"{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*|:\d+)",
+            v,
         )
-
-        regex_localhost = r"http:\/\/localhost(:\d+)?" r"([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
-
-        # Try matching with typical URL regex
-        if re.match(regex_url, v):
-            return v.rstrip("/")
-        # Try matching with localhost URL regex
-        elif re.match(regex_localhost, v):
-            return v.rstrip("/")
-        else:
+        if not m:
             raise ValueError(f"Invalid base URL: {v}")
+
+        return v.rstrip("/")
 
     def get(
         self,
