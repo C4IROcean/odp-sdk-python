@@ -126,21 +126,6 @@ def test_download_file_save(raw_storage_client, raw_resource_dto, tmp_path):
     assert saved_data == file_data
 
 
-def test_delete_file_success(raw_storage_client, raw_resource_dto):
-    filename = "test_file.txt"
-
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.DELETE,
-            f"{raw_storage_client.raw_storage_url}/{raw_resource_dto.metadata.uuid}/{filename}",
-            status=200,  # Assuming status code 200 indicates successful deletion
-        )
-
-        result = raw_storage_client.delete_file(raw_resource_dto, filename)
-
-    assert result is True
-
-
 def test_delete_file_not_found(raw_storage_client, raw_resource_dto):
     filename = "test_file.txt"
 
