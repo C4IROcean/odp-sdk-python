@@ -21,7 +21,7 @@ class OdpClient(BaseModel):
 
         self._http_client = OdpHttpClient(base_url=self.base_url, token_provider=self.token_provider)
         self._raw_storage_client = OdpRawStorageClient(http_client=self._http_client)
-        self._resource_client = OdpResourceClient(http_client=self._http_client)
+        self._resource_client = OdpResourceClient(http_client=self._http_client, endpoint="/catalog")
 
     @property
     def resource_store(self):
