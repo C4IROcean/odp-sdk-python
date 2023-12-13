@@ -55,7 +55,7 @@ class OdpWorkspaceTokenProvider(TokenProvider):
 
 
 class HardcodedTokenProvider(TokenProvider):
-    token: PrivateAttr(str)
+    _token: PrivateAttr()
     """Token provider for hardcoded tokens"""
 
     def get_token(self) -> str:
