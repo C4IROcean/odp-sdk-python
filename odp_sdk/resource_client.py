@@ -14,7 +14,7 @@ class OdpResourceClient(BaseModel):
     """Client for interacting with ODP resources."""
 
     http_client: OdpHttpClient
-    resource_endpoint: str = "/catalog"
+    resource_endpoint: str
 
     @field_validator("resource_endpoint")
     @classmethod
