@@ -25,7 +25,8 @@ class OdpClient(BaseModel):
 
     @property
     def resource_store(self):
-        return self._resource_client
+        # TODO: Implement resource store
+        raise NotImplementedError("Resource store not implemented")
 
     @property
     def catalog(self):
