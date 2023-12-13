@@ -24,7 +24,7 @@ class OdpRawStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.raw_storage_endpoint}"
 
-    def _resolve_dataset_url(self, dataset_reference, endpoint: str = "") -> str:
+    def _construct_url(self, dataset_reference, endpoint: str = "") -> str:
         kind = "/catalog.hubocean.io/dataset"
         if isinstance(dataset_reference, UUID):
             return f"{self.raw_storage_url}/{dataset_reference}{endpoint}"
@@ -50,7 +50,7 @@ class OdpRawStorageClient(BaseModel):
             OdpFileNotFoundError: If the file does not exist
         """
 
-        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}/metadata")
+        url = self._construct_url(dataset_reference, endpoint=f"/{filename}/metadata")
 
         response = self.http_client.get(url)
         try:
@@ -104,7 +104,7 @@ class OdpRawStorageClient(BaseModel):
             Page of return values
         """
 
-        url = self._resolve_dataset_url(dataset_reference, endpoint="/list")
+        url = self._construct_url(dataset_reference, endpoint="/list")
         params = {}
 
         if cursor:
@@ -139,7 +139,7 @@ class OdpRawStorageClient(BaseModel):
             The metadata of the uploaded file
         """
         filename = file_meta_dto.ref
-        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}")
+        url = self._construct_url(dataset_reference, endpoint=f"/{filename}")
 
         if isinstance(contents, bytes):
             contents = BytesIO(contents)
@@ -191,7 +191,7 @@ class OdpRawStorageClient(BaseModel):
         else:
             raise ValueError("You must provide either 'file_meta' or both 'filename' and 'mime_type'")
 
-        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{file_meta_dto.name}")
+        url = self._construct_url(dataset_reference, endpoint=f"/{file_meta_dto.name}")
         response = self.http_client.post(url, content=file_meta_dto.model_dump_json(exclude_unset=True))
 
         try:
@@ -225,7 +225,7 @@ class OdpRawStorageClient(BaseModel):
         if isinstance(file, str):
             filename = file
 
-        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}")
+        url = self._construct_url(dataset_reference, endpoint=f"/{filename}")
 
         response = self.http_client.get(url)
         try:
@@ -251,7 +251,7 @@ class OdpRawStorageClient(BaseModel):
         Returns:
             True if the file was deleted, False otherwise
         """
-        url = self._resolve_dataset_url(dataset_reference, endpoint=f"/{filename}")
+        url = self._construct_url(dataset_reference, endpoint=f"/{filename}")
 
         response = self.http_client.delete(url)
 
