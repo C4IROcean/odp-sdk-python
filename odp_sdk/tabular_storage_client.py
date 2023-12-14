@@ -16,7 +16,7 @@ class OdpTabularStorageController(BaseModel):
     _http_client: OdpHttpClient = PrivateAttr(default_factory=OdpHttpClient)
     tabular_storage_endpoint: str = "/data"
 
-    @field_validator('tabular_storage_endpoint')
+    @field_validator("tabular_storage_endpoint")
     def endpoint_validator(self, v: str):
         m = re.match(r"^/\w+(?<!/)", v)
         if not m:
