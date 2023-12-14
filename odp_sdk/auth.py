@@ -267,7 +267,9 @@ class InteractiveTokenProvider(JwtTokenProvider):
     client_id: SecretStr
     """IDP client ID"""
 
-    authority: str = "https://oceandataplatform.b2clogin.com/755f6e58-74f0-4a07-a599-f7479b9669ab/v2.0/"
+    authority: str = (
+        "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom"
+    )
     """IDP token Authority"""
 
     scope: list[str] = []
