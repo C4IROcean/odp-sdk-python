@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
-from odp_sdk.dto.exception_dto import ExceptionDto
 from odp_sdk.exc import OpenTableStageInvalidAction
 
 
@@ -25,7 +24,7 @@ class TableStage(BaseModel):
     updated_time: Optional[datetime] = None
 
     error: Optional[str] = None
-    error_info: Optional[ExceptionDto] = None
+    error_info: Optional[dict] = None
 
     def commit(self, inplace: bool = True) -> "TableStage":
         if self.status not in {"active", "commit-failed"}:
@@ -50,7 +49,7 @@ class TableStage(BaseModel):
         return stage
 
     def indicate_error(
-        self, exception: Exception, error_info: Optional[ExceptionDto] = None, inplace: bool = True
+        self, exception: Exception, error_info: Optional[dict] = None, inplace: bool = True
     ) -> "TableStage":
         stage = self if inplace else self.copy()
 

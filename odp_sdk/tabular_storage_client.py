@@ -1,20 +1,27 @@
+import re
 from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, PrivateAttr, field_validator
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
 from odp_sdk.dto.tabular_store import TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
-from odp_sdk.oqs.oqs_base import OqsBasePredicate
 
 
 class OdpTabularStorageController(BaseModel):
     _http_client: OdpHttpClient = PrivateAttr(default_factory=OdpHttpClient)
     tabular_storage_endpoint: str = "/data"
+
+    @field_validator('tabular_storage_endpoint')
+    def endpoint_validator(self, v: str):
+        m = re.match(r"^/\w+(?<!/)", v)
+        if not m:
+            raise ValueError(f"Invalid endpoint: {v}")
+        return v
 
     @property
     def tabular_storage_url(self) -> str:
@@ -53,6 +60,7 @@ class OdpTabularStorageController(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 409:
                 raise OdpResourceExistsError("Schema with identifier already exists") from e
+            raise
 
         return TableSpec(**response.json())
 
@@ -82,6 +90,7 @@ class OdpTabularStorageController(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpResourceNotFoundError("Schema not found") from e
+            raise
 
         return TableSpec(**response.json())
 
@@ -112,6 +121,7 @@ class OdpTabularStorageController(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpResourceNotFoundError("Schema not found") from e
+            raise
 
     def create_stage_request(self, resource_dto: ResourceDto) -> TableStage:
         """
@@ -141,6 +151,7 @@ class OdpTabularStorageController(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 409:
                 raise OdpResourceExistsError("Stage with identifier already exists") from e
+            raise
 
         return TableStage(**response.json())
 
@@ -191,6 +202,7 @@ class OdpTabularStorageController(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 400:  # This is coming as 400 for both 400 and 404 from ODP
                 raise OdpResourceNotFoundError("Schema not found") from e
+            raise
 
         return TableStage(**response.json())
 
@@ -220,6 +232,7 @@ class OdpTabularStorageController(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 400:  # This is coming as 400 for both 400 and 404 from ODP
                 raise OdpResourceNotFoundError("Schema not found") from e
+            raise
 
         return [TableStage(**table_stage) for table_stage in response.json()]
 
@@ -254,15 +267,128 @@ class OdpTabularStorageController(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 400:  # This is coming as 400 for both 400 and 404 from ODP
                 raise OdpResourceNotFoundError("Schema not found") from e
+            raise
 
-    def select(self, resource_dto: ResourceDto, filter_query: Optional[OqsBasePredicate]) -> List[Dict]:
-        raise NotImplementedError()
+    def select(self, resource_dto: ResourceDto, filter_query: Optional[dict]) -> List[Dict]:
+        """
+        Select data from dataset
+
+        Args:
+            resource_dto: Dataset manifest
+            filter_query: filter query in OQS format
+
+        Returns:
+            Data that is queried
+
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        if resource_dto.metadata.uuid:
+            url = f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}/list"
+        else:
+            url = f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
+
+        if filter_query:
+            response = self._http_client.post(url, content=filter_query)
+        else:
+            response = self._http_client.post(url)
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise OdpResourceNotFoundError("Resource not found") from e
+            raise
+
+        return [row for row in response.json()]
 
     def write(self, resource_dto: ResourceDto, data: List[Dict], table_stage: Optional[TableStage]):
-        raise NotImplementedError()
+        """
+        Write data to dataset
 
-    def delete(self, resource_dto: ResourceDto, filter_query: Optional[OqsBasePredicate]):
-        raise NotImplementedError()
+        Args:
+            resource_dto: Dataset manifest
+            data: data to ingest
+            table_stage: Stage specifications for the stage to ingest
 
-    def update(self, resource_dto: ResourceDto, filter_query: Optional[OqsBasePredicate], data: List[Dict]):
-        raise NotImplementedError()
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        if resource_dto.metadata.uuid:
+            url = f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}"
+        else:
+            url = f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}"
+
+        body = dict()
+        if table_stage:
+            body["stage_id"] = table_stage.stage_id
+        body["data"] = data
+
+        response = self._http_client.post(url, content=body)
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise OdpResourceNotFoundError("Resource not found") from e
+            raise
+
+    def delete(self, resource_dto: ResourceDto, filter_query: Optional[dict]):
+        """
+        Delete data from dataset
+
+        Args:
+            resource_dto: Dataset manifest
+            filter_query: filter query in OQS format
+
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        if resource_dto.metadata.uuid:
+            url = f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}/delete"
+        else:
+            url = f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/delete"
+
+        if filter_query:
+            response = self._http_client.post(url, content=filter_query)
+        else:
+            response = self._http_client.post(url)
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise OdpResourceNotFoundError("Resource not found") from e
+            raise
+
+    def update(self, resource_dto: ResourceDto, data: List[Dict]):
+        """
+        Update data from dataset
+
+        Args:
+            resource_dto: Dataset manifest
+            data: data to update
+
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        if resource_dto.metadata.uuid:
+            url = f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}/list"
+        else:
+            url = f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
+
+        body = dict()
+        body["data"] = data
+
+        response = self._http_client.patch(url, content=body)
+
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if response.status_code == 404:
+                raise OdpResourceNotFoundError("Resource not found") from e
+            raise
