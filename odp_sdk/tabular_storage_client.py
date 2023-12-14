@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 from uuid import UUID
 
 import requests
+from pandas import DataFrame
 from pydantic import BaseModel, PrivateAttr, field_validator
 
 from odp_sdk.dto import ResourceDto
@@ -275,7 +276,7 @@ class OdpTabularStorageController(BaseModel):
 
         Args:
             resource_dto: Dataset manifest
-            filter_query: filter query in OQS format
+            filter_query: Filter query in OQS format
 
         Returns:
             Data that is queried
@@ -303,13 +304,32 @@ class OdpTabularStorageController(BaseModel):
 
         return [row for row in response.json()]
 
+    def select_as_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict]) -> DataFrame:
+        """
+        Select data from dataset as a DataFrame
+
+        Args:
+            resource_dto: Dataset manifest
+            filter_query: Filter query in OQS format
+
+        Returns:
+            Data that is queried in DataFrame format
+
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        data = self.select(resource_dto, filter_query)
+
+        return DataFrame(data)
+
     def write(self, resource_dto: ResourceDto, data: List[Dict], table_stage: Optional[TableStage]):
         """
         Write data to dataset
 
         Args:
             resource_dto: Dataset manifest
-            data: data to ingest
+            data: Data to ingest
             table_stage: Stage specifications for the stage to ingest
 
         Raises
@@ -335,13 +355,30 @@ class OdpTabularStorageController(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
+    def write_dataframe(self, resource_dto: ResourceDto, data: DataFrame, table_stage: Optional[TableStage]):
+        """
+        Write data to dataset in DataFrame format
+
+        Args:
+            resource_dto: Dataset manifest
+            data: Data to ingest in DataFrame format
+            table_stage: Stage specifications for the stage to ingest
+
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        data_list = data.values.tolist()
+
+        self.write(resource_dto, data_list, table_stage)
+
     def delete(self, resource_dto: ResourceDto, filter_query: Optional[dict]):
         """
         Delete data from dataset
 
         Args:
             resource_dto: Dataset manifest
-            filter_query: filter query in OQS format
+            filter_query: Filter query in OQS format
 
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
@@ -364,12 +401,13 @@ class OdpTabularStorageController(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-    def update(self, resource_dto: ResourceDto, data: List[Dict]):
+    def update(self, resource_dto: ResourceDto, filter_query: Optional[dict], data: List[Dict]):
         """
         Update data from dataset
 
         Args:
             resource_dto: Dataset manifest
+            filter_query: Filter query in OQS format
             data: data to update
 
         Raises
@@ -382,6 +420,7 @@ class OdpTabularStorageController(BaseModel):
             url = f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/list"
 
         body = dict()
+        body["update_filters"] = filter_query
         body["data"] = data
 
         response = self._http_client.patch(url, content=body)
@@ -392,3 +431,20 @@ class OdpTabularStorageController(BaseModel):
             if response.status_code == 404:
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
+
+    def update_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict], data: DataFrame):
+        """
+        Update data from dataset in DataFrame format
+
+        Args:
+            resource_dto: Dataset manifest
+            filter_query: Filter query in OQS format
+            data: Data to update in DataFrame format
+
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        data_list = data.values.tolist()
+
+        self.update(resource_dto, filter_query, data_list)
