@@ -18,7 +18,8 @@ class OdpHttpClient(BaseModel):
     @classmethod
     def _validate_url(cls, v: str) -> str:
         m = re.match(
-            r"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)",
+            r"https?:\/\/(www\.|localhost)?[-a-zA-Z0-9@:%._\+~#=]"
+            r"{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*|:\d+)",
             v,
         )
         if not m:

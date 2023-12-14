@@ -55,10 +55,8 @@ class OdpWorkspaceTokenProvider(TokenProvider):
 
 
 class HardcodedTokenProvider(TokenProvider):
+    _token: PrivateAttr()
     """Token provider for hardcoded tokens"""
-
-    def __init__(self, token: str):
-        self._token = token
 
     def get_token(self) -> str:
         return self._token
@@ -347,7 +345,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
         return msal_extensions.FilePersistence(str(location))
 
 
-def get_default_token_provider(fallback: bool = False) -> TokenProvider:
+def get_default_token_provider(fallback: bool = True) -> TokenProvider:
     """Automatically select a token provider based on the environment
 
     Args:
