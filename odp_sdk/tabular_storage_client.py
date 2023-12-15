@@ -296,7 +296,7 @@ class OdpTabularStorageController(BaseModel):
         resource_dto: ResourceDto,
         filter_query: Optional[dict],
         limit: Optional[int] = None,
-        cursor: Optional[str] = None
+        cursor: Optional[str] = None,
     ) -> Iterator[dict]:
         """
         Helper method to get data in chunks and to compile them
@@ -328,7 +328,7 @@ class OdpTabularStorageController(BaseModel):
         resource_dto: ResourceDto,
         filter_query: Optional[dict],
         limit: Optional[int] = None,
-        cursor: Optional[str] = None
+        cursor: Optional[str] = None,
     ) -> tuple[list[dict], Optional[str]]:
         """
         Method to query a specific page from the data
