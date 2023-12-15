@@ -266,7 +266,7 @@ class OdpTabularStorageController(BaseModel):
             return f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}"
 
     def select(
-            self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None, stream: bool = False
+        self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None, stream: bool = False
     ) -> Iterable[dict]:
         """
         Select data from dataset
@@ -292,11 +292,11 @@ class OdpTabularStorageController(BaseModel):
         yield from row_iterator
 
     def select_stream(
-            self,
-            resource_dto: ResourceDto,
-            filter_query: Optional[dict],
-            limit: Optional[int] = None,
-            cursor: Optional[str] = None
+        self,
+        resource_dto: ResourceDto,
+        filter_query: Optional[dict],
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None
     ) -> Iterator[dict]:
         """
         Helper method to get data in chunks and to compile them
@@ -324,11 +324,11 @@ class OdpTabularStorageController(BaseModel):
                 page_size = limit
 
     def select_page(
-            self,
-            resource_dto: ResourceDto,
-            filter_query: Optional[dict],
-            limit: Optional[int] = None,
-            cursor: Optional[str] = None
+        self,
+        resource_dto: ResourceDto,
+        filter_query: Optional[dict],
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None
     ) -> tuple[list[dict], Optional[str]]:
         """
         Method to query a specific page from the data
