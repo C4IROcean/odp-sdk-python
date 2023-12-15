@@ -1,10 +1,8 @@
 from datetime import datetime, timedelta
-from typing import List, Literal, Optional, Union, Dict
+from typing import Dict, List, Literal, Optional, Union
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
-
-from odp_sdk.exc import OpenTableStageInvalidAction
 
 
 class TablePartitioningSpec(BaseModel):
@@ -38,6 +36,7 @@ class TableStage(BaseModel):
     def dict(self, **kwargs) -> "DictStrAny":  # noqa: F821
         exclude_unset = kwargs.pop("exclude_unset", True)
         return super().dict(exclude_unset=exclude_unset, **kwargs)
+
 
 class PaginatedSelectResultSet(BaseModel):
     """Paginated select result set.

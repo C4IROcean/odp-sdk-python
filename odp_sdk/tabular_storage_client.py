@@ -1,6 +1,6 @@
 import math
 import re
-from typing import Dict, List, Optional, Iterable, Iterator
+from typing import Dict, Iterable, Iterator, List, Optional
 from uuid import UUID
 
 import requests
@@ -9,10 +9,9 @@ from pydantic import BaseModel, PrivateAttr, field_validator
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
-from odp_sdk.dto.tabular_store import TableStage, PaginatedSelectResultSet
+from odp_sdk.dto.tabular_store import PaginatedSelectResultSet, TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
-from odp_sdk.utils.ndjson import NdJsonParser
 
 
 class OdpTabularStorageController(BaseModel):
@@ -266,8 +265,9 @@ class OdpTabularStorageController(BaseModel):
         else:
             return f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}"
 
-    def select(self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None,
-               stream: bool = False) -> Iterable[dict]:
+    def select(
+            self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None, stream: bool = False
+    ) -> Iterable[dict]:
         """
         Select data from dataset
 
@@ -291,8 +291,13 @@ class OdpTabularStorageController(BaseModel):
 
         yield from row_iterator
 
-    def select_stream(self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None,
-                      cursor: Optional[str] = None) -> Iterator[dict]:
+    def select_stream(
+            self,
+            resource_dto: ResourceDto,
+            filter_query: Optional[dict],
+            limit: Optional[int] = None,
+            cursor: Optional[str] = None
+    ) -> Iterator[dict]:
         """
         Helper method to get data in chunks and to compile them
         """
@@ -318,8 +323,13 @@ class OdpTabularStorageController(BaseModel):
             elif limit < page_size:
                 page_size = limit
 
-    def select_page(self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None,
-                    cursor: Optional[str] = None) -> tuple[list[dict], Optional[str]]:
+    def select_page(
+            self,
+            resource_dto: ResourceDto,
+            filter_query: Optional[dict],
+            limit: Optional[int] = None,
+            cursor: Optional[str] = None
+    ) -> tuple[list[dict], Optional[str]]:
         """
         Method to query a specific page from the data
         """
@@ -383,8 +393,8 @@ class OdpTabularStorageController(BaseModel):
         url = self.__get_crud_url(resource_dto)
 
         while len(data) > self.write_chunk_size_limit:
-            data_chunk = data[:self.write_chunk_size_limit]
-            data = data[self.write_chunk_size_limit:]
+            data_chunk = data[: self.write_chunk_size_limit]
+            data = data[self.write_chunk_size_limit :]
             self.__write_limited_size(url, data_chunk, table_stage)
 
         self.__write_limited_size(url, data, table_stage)
