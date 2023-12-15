@@ -21,7 +21,7 @@ class OdpClient(BaseModel):
 
         self._http_client = OdpHttpClient(base_url=self.base_url, token_provider=self.token_provider)
         self._raw_storage_client = OdpRawStorageClient(http_client=self._http_client)
-        self._catalog_client = OdpResourceClient(http_client=self._http_client, endpoint="/catalog")
+        self._catalog_client = OdpResourceClient(http_client=self._http_client, resource_endpoint="/catalog")
 
     @property
     def resource_store(self):
@@ -29,9 +29,8 @@ class OdpClient(BaseModel):
         raise NotImplementedError("Resource store not implemented")
 
     @property
-    def catalog(self):
-        # TODO: Implement data catalog controller
-        raise NotImplementedError("Catalog not implemented")
+    def catalog(self) -> OdpResourceClient:
+        return self._catalog_client
 
     @property
     def iam(self):

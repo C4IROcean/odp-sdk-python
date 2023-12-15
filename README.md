@@ -1,16 +1,15 @@
 <a href="https://www.oceandata.earth/">
-    <img src="https://raw.githubusercontent.com/C4IROcean/odp-sdk-python/master/docs/source/img/odp-favicon-rgb-blueandwhite.png" alt="ODP logo" title="ODP" align="right" height="100" />
+    <img src="assets/ODP-SDK.png" alt="ODP SDK logo" title="ODP" align="right" height="100" />
 </a>
 
-# Python SDK for The Ocean Data Platform (ODP)
+# ODP Python SDK
 
 Connect to the Ocean Data Platform with Python through the Python SDK. Download queried ocean data easily and efficiently into data frames, for easy exploring and further processing in your data science project.
-
-This is an extensions package to the Cognite Python SDK.
 
 ## Documentation
 
 [ODP Python SDK Documentation](https://odp-sdk-python.readthedocs.io/en/master/)
+[ODP Documentation](https://docs.hubocean.earth/)
 
 ## Installation
 
@@ -22,35 +21,23 @@ pip3 install odp_sdk
  
 ## Usage
 
-*Note: Accessing the Ocean Data Platform requires a personal api-key. Contact ODP to require one.*
+*Note: Accessing the Ocean Data Platform requires an authorzed account. Contact ODP to require one.*
 
 Import the Ocean Data Platform SDK 
 ```python
-from odp_sdk import ODPClient
+from odp_sdk.client import OdpClient
 ```
-Connect to the platform
+Create the client object, which by default authorizes with an interactive login.
 ```python
-client = ODPClient(api_key='your_personal_api_key_from_ODP')
+client = OdpClient()
 ```
-Get dataframe of ocean data samples (casts) within search criteria
-
-Basic usage:
+List all the resources avaliable to my user.
 ```python
-df=client.casts(longitude=[8,12],
-                latitude=[56,60],
-                timespan=['2019-06-01','2019-06-07']) 
+for item in catalog_client.list():
+     print(item)
 ```
 
-Basic usage with more options (Specifying the parameters of interest and removing flagged data):
-```python
-df=client.casts(longitude=[8,12],
-                latitude=[56,60],
-                timespan=['2018-06-01','2018-08-31'],
-                parameters=['date','lon','lat','z','Temperature','Oxygen','Salinity'],
-                n_threads=35,
-                include_flagged_data=False)
-```
-
+## Examples
 
 ## Utility Functions
 Utility functions available in the Example folder are not included in the pip install package and have to be downloaded separately.
