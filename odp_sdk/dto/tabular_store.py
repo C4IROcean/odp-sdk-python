@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union, Dict
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -26,42 +26,6 @@ class TableStage(BaseModel):
     error: Optional[str] = None
     error_info: Optional[dict] = None
 
-    def commit(self, inplace: bool = True) -> "TableStage":
-        if self.status not in {"active", "commit-failed"}:
-            raise OpenTableStageInvalidAction(f"Cannot commit stage with status '{self.status}'")
-
-        stage = self if inplace else self.copy()
-
-        stage.status = "commit"
-        stage.updated_time = datetime.now()
-
-        return stage
-
-    def soft_delete(self, force: bool = False, inplace: bool = True) -> "TableStage":
-        if self.status == "commit" and not force:
-            raise OpenTableStageInvalidAction(f"Cannot delete stage {self.stage_id} with status '{self.status}'")
-
-        stage = self if inplace else self.copy()
-
-        stage.status = "delete"
-        stage.updated_time = datetime.now()
-
-        return stage
-
-    def indicate_error(
-        self, exception: Exception, error_info: Optional[dict] = None, inplace: bool = True
-    ) -> "TableStage":
-        stage = self if inplace else self.copy()
-
-        stage.status = "commit-failed"
-        stage.updated_time = datetime.now()
-        stage.error = str(exception)
-
-        if error_info:
-            stage.error_info = error_info
-
-        return stage
-
     def serialize(self) -> bytes:
         return self.json(exclude_unset=True, exclude_none=True).encode("utf-8")
 
@@ -74,3 +38,12 @@ class TableStage(BaseModel):
     def dict(self, **kwargs) -> "DictStrAny":  # noqa: F821
         exclude_unset = kwargs.pop("exclude_unset", True)
         return super().dict(exclude_unset=exclude_unset, **kwargs)
+
+class PaginatedSelectResultSet(BaseModel):
+    """Paginated select result set.
+
+    Contains the rows and the next page token of a query result.
+    """
+
+    data: List[Dict]
+    next: Optional[str] = None
