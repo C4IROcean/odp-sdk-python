@@ -5,7 +5,7 @@ from uuid import UUID
 
 import requests
 from pandas import DataFrame
-from pydantic import BaseModel, PrivateAttr, field_validator
+from pydantic import BaseModel, field_validator
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
@@ -14,14 +14,17 @@ from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
 
 
-class OdpTabularStorageController(BaseModel):
-    _http_client: OdpHttpClient = PrivateAttr(default_factory=OdpHttpClient)
+class OdpTabularStorageClient(BaseModel):
+    http_client: OdpHttpClient
     tabular_storage_endpoint: str = "/data"
     write_chunk_size_limit: int = 10000
     select_chunk_size_limit: int = 10000
 
-    @field_validator("tabular_storage_endpoint")
-    def endpoint_validator(self, v: str):
+    def __init__(self, **data):
+        super().__init__(**data)
+
+    @field_validator('tabular_storage_endpoint')
+    def _endpoint_validator(cls, v: str):
         m = re.match(r"^/\w+(?<!/)", v)
         if not m:
             raise ValueError(f"Invalid endpoint: {v}")
@@ -35,7 +38,7 @@ class OdpTabularStorageController(BaseModel):
         Returns:
             The tabular storage URL
         """
-        return f"{self._http_client.base_url}{self.tabular_storage_endpoint}"
+        return f"{self.http_client.base_url}{self.tabular_storage_endpoint}"
 
     def __get_schema_url(self, resource_dto: ResourceDto):
         if resource_dto.metadata.uuid:
@@ -59,7 +62,7 @@ class OdpTabularStorageController(BaseModel):
         """
 
         url = self.__get_schema_url(resource_dto)
-        response = self._http_client.post(url, content=table_spec)
+        response = self.http_client.post(url, content=table_spec.model_dump_json())
 
         try:
             response.raise_for_status()
@@ -85,7 +88,7 @@ class OdpTabularStorageController(BaseModel):
         """
 
         url = self.__get_schema_url(resource_dto)
-        response = self._http_client.get(url)
+        response = self.http_client.get(url)
 
         try:
             response.raise_for_status()
@@ -113,7 +116,7 @@ class OdpTabularStorageController(BaseModel):
         query_params = dict()
         query_params["delete_data"] = delete_data
 
-        response = self._http_client.delete(url, params=query_params)
+        response = self.http_client.delete(url, params=query_params)
 
         try:
             response.raise_for_status()
@@ -144,9 +147,9 @@ class OdpTabularStorageController(BaseModel):
 
         url = self.__get_stage_url(resource_dto)
 
-        stage_data = StageDataPoints(action="create")
+        stage_data = StageDataPoints(action="create", stage_id=None)
 
-        response = self._http_client.post(url, content=stage_data)
+        response = self.http_client.post(url, content=stage_data)
 
         try:
             response.raise_for_status()
@@ -169,7 +172,7 @@ class OdpTabularStorageController(BaseModel):
 
         stage_data = StageDataPoints(action="commit", stage_id=table_stage.stage_id)
 
-        response = self._http_client.post(url, content=stage_data)
+        response = self.http_client.post(url, content=stage_data)
         response.raise_for_status()
 
     def get_stage_request(self, resource_dto: ResourceDto, table_stage_identifier: UUID | TableStage) -> TableStage:
@@ -189,12 +192,12 @@ class OdpTabularStorageController(BaseModel):
 
         url = self.__get_stage_url(resource_dto)
 
-        if table_stage_identifier.stage_id:
+        if isinstance(table_stage_identifier, TableStage):
             url = f"{url}/{table_stage_identifier.stage_id}"
         else:
             url = f"{url}/{table_stage_identifier}"
 
-        response = self._http_client.get(url)
+        response = self.http_client.get(url)
 
         try:
             response.raise_for_status()
@@ -221,7 +224,7 @@ class OdpTabularStorageController(BaseModel):
 
         url = self.__get_stage_url(resource_dto)
 
-        response = self._http_client.get(url)
+        response = self.http_client.get(url)
 
         try:
             response.raise_for_status()
@@ -250,7 +253,7 @@ class OdpTabularStorageController(BaseModel):
         query_params = dict()
         query_params["force_delete"] = force_delete
 
-        response = self._http_client.delete(url, params=query_params)
+        response = self.http_client.delete(url, params=query_params)
 
         try:
             response.raise_for_status()
@@ -265,8 +268,8 @@ class OdpTabularStorageController(BaseModel):
         else:
             return f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}"
 
-    def select(
-        self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None, stream: bool = False
+    def select_as_stream(
+        self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None
     ) -> Iterable[dict]:
         """
         Select data from dataset
@@ -275,23 +278,41 @@ class OdpTabularStorageController(BaseModel):
             resource_dto: Dataset manifest
             filter_query: Filter query in OQS format
             limit: limit for the number of rows returned
-            stream: whether you want to stream the resulting data or have it as a full list at once
 
         Returns:
-            Data that is queried
+            Data that is queried as a stream
 
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        row_iterator = self.select_stream(resource_dto, filter_query, limit)
-
-        if not stream:
-            return list(row_iterator)
+        row_iterator = self._select_stream(resource_dto, filter_query, limit)
 
         yield from row_iterator
 
-    def select_stream(
+    def select_as_list(
+        self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None
+    ) -> list[dict]:
+        """
+        Select data from dataset
+
+        Args:
+            resource_dto: Dataset manifest
+            filter_query: Filter query in OQS format
+            limit: limit for the number of rows returned
+
+        Returns:
+            Data that is queried as a list
+
+        Raises
+            OdpResourceNotFoundError: If the schema cannot be found
+        """
+
+        row_iterator = self._select_stream(resource_dto, filter_query, limit)
+
+        return list(row_iterator)
+
+    def _select_stream(
         self,
         resource_dto: ResourceDto,
         filter_query: Optional[dict],
@@ -306,24 +327,22 @@ class OdpTabularStorageController(BaseModel):
 
         page_size = min(self.select_chunk_size_limit, limit)
 
-        return_data = list()
-
         while True:
             # Make sure the page size is a multiple of 1000 per API specs
-            page_size = page_size // 1000
-            rows, cursor = self.select_page(resource_dto, filter_query, page_size, cursor)
-            return_data.extend(rows)
+            page_size = (page_size * 1000) // 1000
+            rows, cursor = self._select_page(resource_dto, filter_query, page_size, cursor)
+            yield from rows
 
             # Calculate remaining limit
             limit -= page_size
             # If limit is reached or no more data yield the result
             if limit == 0 or cursor is None:
-                yield from return_data
+                break
             # If limit not reached if limit is less than the page_size set new page size to not overflow the limit
             elif limit < page_size:
                 page_size = limit
 
-    def select_page(
+    def _select_page(
         self,
         resource_dto: ResourceDto,
         filter_query: Optional[dict],
@@ -343,9 +362,9 @@ class OdpTabularStorageController(BaseModel):
             query_parameters["cursor"] = cursor
 
         if filter_query:
-            response = self._http_client.post(url, content=filter_query, params=query_parameters)
+            response = self.http_client.post(url, content=filter_query, params=query_parameters)
         else:
-            response = self._http_client.post(url, params=query_parameters)
+            response = self.http_client.post(url, params=query_parameters)
 
         try:
             response.raise_for_status()
@@ -354,7 +373,7 @@ class OdpTabularStorageController(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-        result = PaginatedSelectResultSet(response.json())
+        result = PaginatedSelectResultSet(**response.json())
 
         return result.data, result.next
 
@@ -373,7 +392,7 @@ class OdpTabularStorageController(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        data = self.select(resource_dto, filter_query)
+        data = self.select_as_list(resource_dto, filter_query)
 
         return DataFrame(data)
 
@@ -408,7 +427,7 @@ class OdpTabularStorageController(BaseModel):
             body["stage_id"] = table_stage.stage_id
         body["data"] = data
 
-        response = self._http_client.post(url, content=body)
+        response = self.http_client.post(url, content=body)
 
         try:
             response.raise_for_status()
@@ -449,9 +468,9 @@ class OdpTabularStorageController(BaseModel):
         url = f"{self.__get_crud_url(resource_dto)}/delete"
 
         if filter_query:
-            response = self._http_client.post(url, content=filter_query)
+            response = self.http_client.post(url, content=filter_query)
         else:
-            response = self._http_client.post(url)
+            response = self.http_client.post(url)
 
         try:
             response.raise_for_status()
@@ -479,7 +498,7 @@ class OdpTabularStorageController(BaseModel):
         body["update_filters"] = filter_query
         body["data"] = data
 
-        response = self._http_client.patch(url, content=body)
+        response = self.http_client.patch(url, content=body)
 
         try:
             response.raise_for_status()

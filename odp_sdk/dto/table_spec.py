@@ -1,7 +1,7 @@
 from typing import List, Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, model_validator
 
 from odp_sdk.dto.tabular_store import TablePartitioningSpec
 
@@ -17,7 +17,7 @@ class StageDataPoints(BaseModel):
     action: Literal["create", "commit"]
     stage_id: Optional[UUID]
 
-    @root_validator
+    @model_validator(mode='before')
     def _validate_action(cls, values):
         if values.get("action") == "create" and values.get("stage_id"):
             raise ValueError("stage id cannot be issued with create action")
