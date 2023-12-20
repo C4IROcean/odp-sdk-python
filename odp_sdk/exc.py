@@ -35,3 +35,7 @@ class OdpValidationError(OdpError):
 
 class OdpFileNotFoundError(OdpError):
     """Exception raised when a file is not found."""
+
+
+class OpenTableStageInvalidAction(OdpError):
+    """Exception when table is getting deleted and it has active sessions."""

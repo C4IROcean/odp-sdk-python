@@ -56,10 +56,10 @@ class ResourceStatusDto(BaseModel):
 class ResourceDto(BaseModel):
     """Resource manifest base class"""
 
-    kind: str
+    kind: Optional[str] = None
     """Resource kind"""
 
-    version: str
+    version: Optional[str] = None
     """Resource version"""
 
     metadata: MetadataDto
@@ -68,5 +68,5 @@ class ResourceDto(BaseModel):
     status: Optional[ResourceStatusDto] = None
     """Resource status"""
 
-    spec: dict
+    spec: Optional[dict] = None
     """Resource spec"""
