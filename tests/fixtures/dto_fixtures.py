@@ -38,19 +38,9 @@ def raw_resource_dto():
 @pytest.fixture()
 def tabular_resource_dto():
     name = "test_dataset"
-    kind = "catalog.hubocean.io/dataset"
-    version = "v1alpha3"
     uuid = uuid4()
     return ResourceDto(
-        kind=kind,
-        version=version,
         metadata=MetadataDto(name=name, uuid=uuid),
-        spec=dict(
-            storage_class="registry.hubocean.io/storageClass/tabular",
-            maintainer={"organization": "HUB Ocean"},
-            documentation=["https://oceandata.earth"],
-            tags=["test", "hubocean"],
-        ),
     )
 
 
