@@ -14,7 +14,7 @@ cryptography = "^41.0.5"
 pyjwt = "^2.8.0"
 msal = "^1.24.1"
 msal-extensions = "^1.1.0"
-pandas = "^2.1.4"
+pandas = { version = "^2.1.4", optional = true}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -47,3 +47,6 @@ multi_line_output=3            # corresponds to -m  flag
 include_trailing_comma=true    # corresponds to -tc flag
 profile="black"
 known_local_folder="odp,tests"
+
+[tool.poetry.extras]
+pandas = ["pandas"]

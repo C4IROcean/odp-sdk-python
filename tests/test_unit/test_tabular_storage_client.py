@@ -14,10 +14,8 @@ def tabular_storage_client(http_client) -> OdpTabularStorageClient:
 @pytest.fixture()
 def tabular_storage_client_low_chunk_size(http_client) -> OdpTabularStorageClient:
     return OdpTabularStorageClient(
-        http_client=http_client,
-        tabular_storage_endpoint="/data",
-        select_chunk_size_limit=1,
-        write_chunk_size_limit=1)
+        http_client=http_client, tabular_storage_endpoint="/data", select_chunk_size_limit=1, write_chunk_size_limit=1
+    )
 
 
 def test_create_schema_success(tabular_storage_client, tabular_resource_dto, table_spec):
@@ -211,8 +209,10 @@ def test_list_stage_fail_400(tabular_storage_client, tabular_resource_dto):
 
 
 def test_delete_stage_success(tabular_storage_client, tabular_resource_dto, table_stage):
-    url = (f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
-           f"/{table_stage.stage_id}?force_delete=False")
+    url = (
+        f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
+        f"/{table_stage.stage_id}?force_delete=False"
+    )
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -334,9 +334,8 @@ def test_select_as_stream_small_chunk_small_limit_success(tabular_storage_client
         )
 
         response = tabular_storage_client_low_chunk_size.select_as_stream(
-            tabular_resource_dto,
-            limit=1,
-            filter_query=None)
+            tabular_resource_dto, limit=1, filter_query=None
+        )
 
         response_as_list = list(response)
 
@@ -355,9 +354,8 @@ def test_select_as_list_small_chunk_small_limit_success(tabular_storage_client_l
         )
 
         response = tabular_storage_client_low_chunk_size.select_as_list(
-            tabular_resource_dto,
-            limit=1,
-            filter_query=None)
+            tabular_resource_dto, limit=1, filter_query=None
+        )
 
         response_as_list = list(response)
 

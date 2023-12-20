@@ -17,7 +17,7 @@ class StageDataPoints(BaseModel):
     action: Literal["create", "commit"]
     stage_id: Optional[UUID]
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     def _validate_action(cls, values):
         if values.get("action") == "create" and values.get("stage_id"):
             raise ValueError("stage id cannot be issued with create action")

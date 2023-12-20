@@ -67,8 +67,5 @@ def table_spec():
 @pytest.fixture()
 def table_stage():
     return TableStage(
-        stage_id=uuid4(),
-        status="active",
-        created_time=datetime.datetime.now(),
-        expiry_time=datetime.MAXYEAR
+        stage_id=uuid4(), status="active", created_time=datetime.datetime.now(), expiry_time=datetime.MAXYEAR
     )

@@ -23,7 +23,7 @@ class OdpTabularStorageClient(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-    @field_validator('tabular_storage_endpoint')
+    @field_validator("tabular_storage_endpoint")
     def _endpoint_validator(cls, v: str):
         m = re.match(r"^/\w+(?<!/)", v)
         if not m:
@@ -40,7 +40,7 @@ class OdpTabularStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.tabular_storage_endpoint}"
 
-    def __get_schema_url(self, resource_dto: ResourceDto):
+    def _get_schema_url(self, resource_dto: ResourceDto):
         if resource_dto.metadata.uuid:
             return f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}/schema"
         else:
@@ -61,7 +61,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceExistsError: If the schema already exists with the same identifier
         """
 
-        url = self.__get_schema_url(resource_dto)
+        url = self._get_schema_url(resource_dto)
         response = self.http_client.post(url, content=table_spec.model_dump_json())
 
         try:
@@ -87,7 +87,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self.__get_schema_url(resource_dto)
+        url = self._get_schema_url(resource_dto)
         response = self.http_client.get(url)
 
         try:
@@ -111,7 +111,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self.__get_schema_url(resource_dto)
+        url = self._get_schema_url(resource_dto)
 
         query_params = dict()
         query_params["delete_data"] = delete_data
@@ -125,7 +125,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
 
-    def __get_stage_url(self, resource_dto: ResourceDto):
+    def _get_stage_url(self, resource_dto: ResourceDto):
         if resource_dto.metadata.uuid:
             return f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}/stage"
         else:
@@ -145,7 +145,7 @@ class OdpTabularStorageClient(BaseModel):
             Stage with the specified identifier already exists
         """
 
-        url = self.__get_stage_url(resource_dto)
+        url = self._get_stage_url(resource_dto)
 
         stage_data = StageDataPoints(action="create", stage_id=None)
 
@@ -190,7 +190,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self.__get_stage_url(resource_dto)
+        url = self._get_stage_url(resource_dto)
 
         if isinstance(table_stage_identifier, TableStage):
             url = f"{url}/{table_stage_identifier.stage_id}"
@@ -222,7 +222,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self.__get_stage_url(resource_dto)
+        url = self._get_stage_url(resource_dto)
 
         response = self.http_client.get(url)
 
@@ -248,7 +248,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = f"{self.__get_stage_url(resource_dto)}/{table_stage.stage_id}"
+        url = f"{self._get_stage_url(resource_dto)}/{table_stage.stage_id}"
 
         query_params = dict()
         query_params["force_delete"] = force_delete
@@ -262,7 +262,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
 
-    def __get_crud_url(self, resource_dto: ResourceDto):
+    def _get_crud_url(self, resource_dto: ResourceDto):
         if resource_dto.metadata.uuid:
             return f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}"
         else:
@@ -353,7 +353,7 @@ class OdpTabularStorageClient(BaseModel):
         Method to query a specific page from the data
         """
 
-        url = f"{self.__get_crud_url(resource_dto)}/list"
+        url = f"{self._get_crud_url(resource_dto)}/list"
 
         query_parameters = dict()
         if limit:
@@ -361,10 +361,13 @@ class OdpTabularStorageClient(BaseModel):
         if cursor:
             query_parameters["cursor"] = cursor
 
+        headers = dict()
+        headers["X-ODP-CHUNKED-ENCODING"] = "True"
+
         if filter_query:
-            response = self.http_client.post(url, content=filter_query, params=query_parameters)
+            response = self.http_client.post(url, content=filter_query, params=query_parameters, headers=headers)
         else:
-            response = self.http_client.post(url, params=query_parameters)
+            response = self.http_client.post(url, params=query_parameters, headers=headers)
 
         try:
             response.raise_for_status()
@@ -409,16 +412,16 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self.__get_crud_url(resource_dto)
+        url = self._get_crud_url(resource_dto)
 
         while len(data) > self.write_chunk_size_limit:
             data_chunk = data[: self.write_chunk_size_limit]
             data = data[self.write_chunk_size_limit :]
-            self.__write_limited_size(url, data_chunk, table_stage)
+            self._write_limited_size(url, data_chunk, table_stage)
 
-        self.__write_limited_size(url, data, table_stage)
+        self._write_limited_size(url, data, table_stage)
 
-    def __write_limited_size(self, url: str, data: List[Dict], table_stage: Optional[TableStage]):
+    def _write_limited_size(self, url: str, data: List[Dict], table_stage: Optional[TableStage]):
         if len(data) < 1:
             return
 
@@ -465,7 +468,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = f"{self.__get_crud_url(resource_dto)}/delete"
+        url = f"{self._get_crud_url(resource_dto)}/delete"
 
         if filter_query:
             response = self.http_client.post(url, content=filter_query)
@@ -492,7 +495,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = f"{self.__get_crud_url(resource_dto)}/list"
+        url = f"{self._get_crud_url(resource_dto)}/list"
 
         body = dict()
         body["update_filters"] = filter_query
