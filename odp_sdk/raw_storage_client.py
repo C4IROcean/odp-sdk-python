@@ -77,7 +77,7 @@ class OdpRawStorageClient(BaseModel):
     def list_paginated(
         self,
         resource_dto: ResourceDto,
-        metadata_filter: FileMetadataDto,
+        metadata_filter: Optional[dict[str, any]] = None,
         cursor: Optional[str] = None,
         limit: int = 1000,
     ) -> tuple[List[FileMetadataDto], str]:
