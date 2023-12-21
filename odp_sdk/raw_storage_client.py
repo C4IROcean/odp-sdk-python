@@ -1,6 +1,5 @@
 from io import BytesIO
 from typing import Iterable, List, Optional
-from uuid import UUID
 
 import requests
 from pydantic import BaseModel
@@ -24,23 +23,18 @@ class OdpRawStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.raw_storage_endpoint}"
 
-    def _construct_url(self, dataset_reference, endpoint: str = "") -> str:
-        kind = "/catalog.hubocean.io/dataset"
-        if isinstance(dataset_reference, UUID):
-            return f"{self.raw_storage_url}/{dataset_reference}{endpoint}"
-        elif isinstance(dataset_reference, ResourceDto) and dataset_reference.metadata.uuid:
-            return f"{self.raw_storage_url}/{dataset_reference.metadata.uuid}{endpoint}"
-        elif isinstance(dataset_reference, ResourceDto):
-            return f"{self.raw_storage_url}{kind}/{dataset_reference.metadata.name}{endpoint}"
+    def _construct_url(self, resource_dto: ResourceDto, endpoint: str = "") -> str:
+        if resource_dto.metadata.uuid:
+            return f"{self.raw_storage_url}/{resource_dto.metadata.uuid}{endpoint}"
         else:
-            return f"{self.raw_storage_url}{kind}/{dataset_reference}{endpoint}"
+            return f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}{endpoint}"
 
-    def get_file_metadata(self, dataset_reference: str | ResourceDto | UUID, filename: str) -> FileMetadataDto:
+    def get_file_metadata(self, resource_dto: ResourceDto, filename: str) -> FileMetadataDto:
         """
         Get file metadata by reference.
 
         Args:
-            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            resource_dto: Dataset manifest
             filename: File name in dataset to get metadata for
 
         Returns:
@@ -50,7 +44,7 @@ class OdpRawStorageClient(BaseModel):
             OdpFileNotFoundError: If the file does not exist
         """
 
-        url = self._construct_url(dataset_reference, endpoint=f"/{filename}/metadata")
+        url = self._construct_url(resource_dto, endpoint=f"/{filename}/metadata")
 
         response = self.http_client.get(url)
         try:
@@ -62,14 +56,12 @@ class OdpRawStorageClient(BaseModel):
 
         return FileMetadataDto(**response.json())
 
-    def list(
-        self, dataset_reference: str | ResourceDto | UUID, metadata_filter: dict[str, any]
-    ) -> Iterable[FileMetadataDto]:
+    def list(self, resource_dto: ResourceDto, metadata_filter: dict[str, any]) -> Iterable[FileMetadataDto]:
         """
         List all files in a dataset.
 
         Args:
-            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            resource_dto: Dataset manifest
             metadata_filter: List filter
 
         Returns:
@@ -79,14 +71,14 @@ class OdpRawStorageClient(BaseModel):
         metadata_filter = FileMetadataDto(**metadata_filter)
 
         while True:
-            page, cursor = self.list_paginated(dataset_reference, metadata_filter=metadata_filter)
+            page, cursor = self.list_paginated(resource_dto, metadata_filter=metadata_filter)
             yield from page
             if not cursor:
                 break
 
     def list_paginated(
         self,
-        dataset_reference: str | ResourceDto | UUID,
+        resource_dto: ResourceDto,
         metadata_filter: FileMetadataDto,
         cursor: Optional[str] = None,
         limit: int = 1000,
@@ -95,7 +87,7 @@ class OdpRawStorageClient(BaseModel):
         List page
 
         Args:
-            dataset_reference: Dataset reference
+            resource_dto: Dataset manifest
             metadata_filter: List filter
             cursor: Optional cursor for pagination
             limit: Optional limit for pagination
@@ -104,7 +96,7 @@ class OdpRawStorageClient(BaseModel):
             Page of return values
         """
 
-        url = self._construct_url(dataset_reference, endpoint="/list")
+        url = self._construct_url(resource_dto, endpoint="/list")
         params = {}
 
         if cursor:
@@ -125,13 +117,13 @@ class OdpRawStorageClient(BaseModel):
         return [FileMetadataDto(**item) for item in content["results"]], content.get("next")
 
     def upload_file(
-        self, dataset_reference: str | ResourceDto | UUID, file_meta_dto: FileMetadataDto, contents: bytes | BytesIO
+        self, resource_dto: ResourceDto, file_meta_dto: FileMetadataDto, contents: bytes | BytesIO
     ) -> FileMetadataDto:
         """
         Upload data to a file.
 
         Args:
-            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            resource_dto: Dataset manifest
             file_meta_dto: File metadata
             contents: File contents
 
@@ -139,7 +131,7 @@ class OdpRawStorageClient(BaseModel):
             The metadata of the uploaded file
         """
         filename = file_meta_dto.ref
-        url = self._construct_url(dataset_reference, endpoint=f"/{filename}")
+        url = self._construct_url(resource_dto, endpoint=f"/{filename}")
 
         if isinstance(contents, bytes):
             contents = BytesIO(contents)
@@ -157,11 +149,11 @@ class OdpRawStorageClient(BaseModel):
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {filename}") from e
 
-        return self.get_file_metadata(dataset_reference, file_meta_dto.name)
+        return self.get_file_metadata(resource_dto, file_meta_dto.name)
 
     def create_file(
         self,
-        dataset_reference: str | ResourceDto | UUID,
+        resource_dto: ResourceDto,
         file_meta: Optional[dict[str, any] | FileMetadataDto] = None,
         filename: str = None,
         mime_type: str = None,
@@ -172,7 +164,7 @@ class OdpRawStorageClient(BaseModel):
         Create a new file.
 
         Args:
-            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            resource_dto: Dataset manifest
             file_meta: File metadata
             filename: Optional way to specify the filename
             mime_type: Optional way to specify the MIME type,
@@ -191,7 +183,7 @@ class OdpRawStorageClient(BaseModel):
         else:
             raise ValueError("You must provide either 'file_meta' or both 'filename' and 'mime_type'")
 
-        url = self._construct_url(dataset_reference, endpoint=f"/{file_meta_dto.name}")
+        url = self._construct_url(resource_dto, endpoint=f"/{file_meta_dto.name}")
         response = self.http_client.post(url, content=file_meta_dto.model_dump_json(exclude_unset=True))
 
         try:
@@ -206,16 +198,14 @@ class OdpRawStorageClient(BaseModel):
         if contents:
             return self.update_file(file_meta, contents, overwrite)
 
-        return self.get_file_metadata(dataset_reference, file_meta_dto.name)
+        return self.get_file_metadata(resource_dto, file_meta_dto.name)
 
-    def download_file(
-        self, dataset_reference: str | ResourceDto | UUID, file: FileMetadataDto | str, save_path: str = None
-    ):
+    def download_file(self, resource_dto: ResourceDto, file: FileMetadataDto | str, save_path: str = None):
         """
         Download a file.
 
         Args:
-            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            resource_dto: Dataset manifest
             file: File metadata or file name
             save_path: File path to save the downloaded file to
         """
@@ -225,7 +215,7 @@ class OdpRawStorageClient(BaseModel):
         if isinstance(file, str):
             filename = file
 
-        url = self._construct_url(dataset_reference, endpoint=f"/{filename}")
+        url = self._construct_url(resource_dto, endpoint=f"/{filename}")
 
         response = self.http_client.get(url)
         try:
@@ -240,18 +230,18 @@ class OdpRawStorageClient(BaseModel):
         else:
             return response.content
 
-    def delete_file(self, dataset_reference: str | ResourceDto | UUID, filename: str):
+    def delete_file(self, resource_dto: ResourceDto, filename: str):
         """
         Delete a file. Raises exception if any issues.
 
         Args:
-            dataset_reference: Dataset manifest or name of dataset or UUID of dataset
+            resource_dto: Dataset manifest
             filename: File name in dataset to delete
 
         Returns:
             True if the file was deleted, False otherwise
         """
-        url = self._construct_url(dataset_reference, endpoint=f"/{filename}")
+        url = self._construct_url(resource_dto, endpoint=f"/{filename}")
 
         response = self.http_client.delete(url)
 
