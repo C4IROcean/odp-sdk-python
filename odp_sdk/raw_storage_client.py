@@ -56,7 +56,7 @@ class OdpRawStorageClient(BaseModel):
 
         return FileMetadataDto(**response.json())
 
-    def list(self, resource_dto: ResourceDto, metadata_filter: dict[str, any]) -> Iterable[FileMetadataDto]:
+    def list(self, resource_dto: ResourceDto, metadata_filter: dict[str, any] = None) -> Iterable[FileMetadataDto]:
         """
         List all files in a dataset.
 
@@ -67,8 +67,6 @@ class OdpRawStorageClient(BaseModel):
         Returns:
             List of files in the dataset
         """
-
-        metadata_filter = FileMetadataDto(**metadata_filter)
 
         while True:
             page, cursor = self.list_paginated(resource_dto, metadata_filter=metadata_filter)
@@ -104,7 +102,7 @@ class OdpRawStorageClient(BaseModel):
         if limit:
             params["limit"] = limit
 
-        response = self.http_client.post(url, params=params, content=metadata_filter.model_dump_json())
+        response = self.http_client.post(url, params=params, content=metadata_filter)
 
         try:
             response.raise_for_status()
