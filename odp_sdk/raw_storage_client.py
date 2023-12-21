@@ -152,9 +152,7 @@ class OdpRawStorageClient(BaseModel):
     def create_file(
         self,
         resource_dto: ResourceDto,
-        file_meta: Optional[dict[str, any] | FileMetadataDto] = None,
-        filename: str = None,
-        mime_type: str = None,
+        file_meta: FileMetadataDto,
         contents: Optional[bytes | BytesIO] = None,
         overwrite: bool = False,
     ) -> FileMetadataDto:
@@ -164,25 +162,15 @@ class OdpRawStorageClient(BaseModel):
         Args:
             resource_dto: Dataset manifest
             file_meta: File metadata
-            filename: Optional way to specify the filename
-            mime_type: Optional way to specify the MIME type,
             contents: File contents
             overwrite: Overwrite if the file already exists
 
         Returns:
             The metadata of the newly created file
         """
-        if isinstance(file_meta, FileMetadataDto):
-            file_meta_dto = file_meta
-        elif isinstance(file_meta, dict):
-            file_meta_dto = FileMetadataDto(**file_meta)
-        elif filename and mime_type:
-            file_meta_dto = FileMetadataDto(filename=filename, mime_type=mime_type)
-        else:
-            raise ValueError("You must provide either 'file_meta' or both 'filename' and 'mime_type'")
 
-        url = self._construct_url(resource_dto, endpoint=f"/{file_meta_dto.name}")
-        response = self.http_client.post(url, content=file_meta_dto.model_dump_json(exclude_unset=True))
+        url = self._construct_url(resource_dto)
+        response = self.http_client.post(url, content=file_meta.model_dump_json(exclude_unset=True))
 
         try:
             response.raise_for_status()
@@ -196,7 +184,7 @@ class OdpRawStorageClient(BaseModel):
         if contents:
             return self.update_file(file_meta, contents, overwrite)
 
-        return self.get_file_metadata(resource_dto, file_meta_dto.name)
+        return self.get_file_metadata(resource_dto, file_meta.name)
 
     def download_file(self, resource_dto: ResourceDto, file: FileMetadataDto | str, save_path: str = None):
         """
