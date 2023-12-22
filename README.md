@@ -9,6 +9,7 @@ Connect to the Ocean Data Platform with Python through the Python SDK. Download 
 ## Documentation
 
 [ODP Python SDK Documentation](https://odp-sdk-python.readthedocs.io/en/master/)
+
 [ODP Documentation](https://docs.hubocean.earth/)
 
 ## Installation
@@ -33,6 +34,8 @@ client = OdpClient()
 ```
 List all the resources avaliable to my user.
 ```python
-for item in catalog_client.list():
+for item in client.catalog.list():
      print(item)
 ```
+
+Examples can be found in /examples. 
