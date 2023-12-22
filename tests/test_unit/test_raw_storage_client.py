@@ -14,9 +14,7 @@ def raw_storage_client(http_client) -> OdpRawStorageClient:
 
 
 def test_get_file_metadata_success(raw_storage_client, raw_resource_dto):
-    file_meta = FileMetadataDto(
-        file_metadata_name="file.zip", file_metadata_mime_type="application/zip"
-    )
+    file_meta = FileMetadataDto(file_metadata_name="file.zip", file_metadata_mime_type="application/zip")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -34,9 +32,7 @@ def test_get_file_metadata_success(raw_storage_client, raw_resource_dto):
 
 
 def test_get_file_metadata_not_found(raw_storage_client, raw_resource_dto):
-    file_meta = FileMetadataDto(
-        file_metadata_name="file.zip", file_metadata_mime_type="application/zip"
-    )
+    file_meta = FileMetadataDto(file_metadata_name="file.zip", file_metadata_mime_type="application/zip")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -70,9 +66,7 @@ def test_list_files_success(raw_storage_client, raw_resource_dto):
 
         metadata_filter = {"name": file_metadata.name}
 
-        result = raw_storage_client.list(
-            raw_resource_dto, metadata_filter=metadata_filter
-        )
+        result = raw_storage_client.list(raw_resource_dto, metadata_filter=metadata_filter)
 
         first_item = next(iter(result))
 
@@ -103,9 +97,7 @@ def test_create_file_success(raw_storage_client, raw_resource_dto):
             content_type="application/json",
         )
 
-        result = raw_storage_client.create_file(
-            raw_resource_dto, file_metadata_dto=file_metadata, contents=None
-        )
+        result = raw_storage_client.create_file(raw_resource_dto, file_metadata_dto=file_metadata, contents=None)
 
         assert result.name == file_metadata.name
         assert result.mime_type == "text/plain"
@@ -125,9 +117,7 @@ def test_download_file_save(raw_storage_client, raw_resource_dto, tmp_path):
             status=200,
         )
 
-        raw_storage_client.download_file(
-            raw_resource_dto, file_metadata, save_path=str(save_path)
-        )
+        raw_storage_client.download_file(raw_resource_dto, file_metadata, save_path=str(save_path))
 
         with open(save_path, "rb") as file:
             saved_data = file.read()

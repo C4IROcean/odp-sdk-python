@@ -29,9 +29,7 @@ class OdpRawStorageClient(BaseModel):
         else:
             return f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}{endpoint}"
 
-    def get_file_metadata(
-        self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto
-    ) -> FileMetadataDto:
+    def get_file_metadata(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto) -> FileMetadataDto:
         """
         Get file metadata by reference.
 
@@ -46,25 +44,19 @@ class OdpRawStorageClient(BaseModel):
             OdpFileNotFoundError: If the file does not exist
         """
 
-        url = self._construct_url(
-            resource_dto, endpoint=f"/{file_metadata_dto.name}/metadata"
-        )
+        url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}/metadata")
 
         response = self.http_client.get(url)
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(
-                    f"File not found: {file_metadata_dto.name}"
-                ) from e
+                raise OdpFileNotFoundError(f"File not found: {file_metadata_dto.name}") from e
             raise  # Unhandled error
 
         return FileMetadataDto(**response.json())
 
-    def list(
-        self, resource_dto: ResourceDto, metadata_filter: dict[str, any] = None
-    ) -> Iterable[FileMetadataDto]:
+    def list(self, resource_dto: ResourceDto, metadata_filter: dict[str, any] = None) -> Iterable[FileMetadataDto]:
         """
         List all files in a dataset.
 
@@ -77,9 +69,7 @@ class OdpRawStorageClient(BaseModel):
         """
 
         while True:
-            page, cursor = self.list_paginated(
-                resource_dto, metadata_filter=metadata_filter
-            )
+            page, cursor = self.list_paginated(resource_dto, metadata_filter=metadata_filter)
             yield from page
             if not cursor:
                 break
@@ -122,9 +112,7 @@ class OdpRawStorageClient(BaseModel):
             raise  # Unhandled error
 
         content = response.json()
-        return [FileMetadataDto(**item) for item in content["results"]], content.get(
-            "next"
-        )
+        return [FileMetadataDto(**item) for item in content["results"]], content.get("next")
 
     def upload_file(
         self,
@@ -226,9 +214,7 @@ class OdpRawStorageClient(BaseModel):
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(
-                    f"File not found: {file_metadata_dto.name}"
-                ) from e
+                raise OdpFileNotFoundError(f"File not found: {file_metadata_dto.name}") from e
 
         if save_path:
             with open(save_path, "wb") as file:
@@ -236,9 +222,7 @@ class OdpRawStorageClient(BaseModel):
         else:
             return response.content
 
-    def delete_file(
-        self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto
-    ):
+    def delete_file(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto):
         """
         Delete a file. Raises exception if any issues.
 
@@ -257,6 +241,4 @@ class OdpRawStorageClient(BaseModel):
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(
-                    f"File not found: {file_metadata_dto.name}"
-                ) from e
+                raise OdpFileNotFoundError(f"File not found: {file_metadata_dto.name}") from e

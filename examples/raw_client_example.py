@@ -16,9 +16,7 @@ my_dataset = ResourceDto(
         "spec": {
             "storage_controller": "registry.hubocean.io/storageController/storage-raw-cdffs",
             "storage_class": "registry.hubocean.io/storageClass/raw",
-            "maintainer": {
-                "contact": "Just Me <raw_client_example@hubocean.earth>"  # <-- strict syntax here
-            },
+            "maintainer": {"contact": "Just Me <raw_client_example@hubocean.earth>"},  # <-- strict syntax here
         },
     }
 )
@@ -29,9 +27,7 @@ my_dataset = client.catalog.create(my_dataset)
 # Creating and uploading a file.
 file_dto = client.raw.create_file(
     resource_dto=my_dataset,
-    file_metadata_dto=FileMetadataDto(
-        **{"name": "test.txt", "mime_type": "text/plain"}
-    ),
+    file_metadata_dto=FileMetadataDto(**{"name": "test.txt", "mime_type": "text/plain"}),
     contents=b"Hello, World!",
 )
 print("-------FILES IN DATASET--------")
