@@ -2,15 +2,14 @@
     <img src="assets/ODP-SDK.png" alt="ODP SDK logo" title="ODP" align="right" height="100" />
 </a>
 
+
 # ODP Python SDK
 
 Connect to the Ocean Data Platform with Python through the Python SDK. Download queried ocean data easily and efficiently into data frames, for easy exploring and further processing in your data science project.
 
 ## Documentation
 
-[ODP Python SDK Documentation](https://odp-sdk-python.readthedocs.io/en/master/)
-
-[ODP Documentation](https://docs.hubocean.earth/)
+[WIP]
 
 ## Installation
 
@@ -24,16 +23,11 @@ pip3 install odp_sdk
 
 *Note: Accessing the Ocean Data Platform requires an authorzed account. Contact ODP to require one.*
 
-Import the Ocean Data Platform SDK 
 ```python
 from odp_sdk.client import OdpClient
-```
-Create the client object, which by default authorizes with an interactive login.
-```python
+
 client = OdpClient()
-```
-List all the resources avaliable to my user.
-```python
+
 for item in client.catalog.list():
      print(item)
 ```
