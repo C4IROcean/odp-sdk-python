@@ -2,10 +2,9 @@ from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
 
-# export ODP_ACCESS_TOKEN=Bearer thisismyaccesstoken
+# export ODP_ACCESS_TOKEN=Bearer thisismyaccesstoken <-- Omit this to run interactive auth
 
 client = OdpClient()
-
 
 my_dataset = ResourceDto(
     **{
@@ -17,29 +16,34 @@ my_dataset = ResourceDto(
         "spec": {
             "storage_controller": "registry.hubocean.io/storageController/storage-raw-cdffs",
             "storage_class": "registry.hubocean.io/storageClass/raw",
-            "maintainer": {"contact": "Just Me <raw_client_example@hubocean.earth>"},  # <-- strict syntax here
+            "maintainer": {
+                "contact": "Just Me <raw_client_example@hubocean.earth>"  # <-- strict syntax here
+            },
         },
     }
 )
 
-# client.catalog.delete(my_dataset)
-
 # The dataset is created in the catalog.
 my_dataset = client.catalog.create(my_dataset)
 
-# The resource_dto is updated with the uuid etc
-print(my_dataset)
-
-
+# Creating and uploading a file.
 file_dto = client.raw.create_file(
     resource_dto=my_dataset,
-    file_meta=FileMetadataDto(**{"name": "test_csv.csv", "mime_type": "text/csv"}),
-    contents=b"This is a test file",
-    overwrite=True,
+    file_metadata_dto=FileMetadataDto(
+        **{"name": "test.txt", "mime_type": "text/plain"}
+    ),
+    contents=b"Hello, World!",
 )
+print("-------FILES IN DATASET--------")
 
-print("---------------")
+for file in client.raw.list(my_dataset):
+    print(file)
 
-print(file_dto)
+# Download file
+client.raw.download_file(my_dataset, file_dto, "test.txt")
+
+
+# Clean up
+client.raw.delete_file(my_dataset, file_dto)
 
 client.catalog.delete(my_dataset)
