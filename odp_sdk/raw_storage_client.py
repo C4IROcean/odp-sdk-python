@@ -29,13 +29,15 @@ class OdpRawStorageClient(BaseModel):
         else:
             return f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}{endpoint}"
 
-    def get_file_metadata(self, resource_dto: ResourceDto, filename: str) -> FileMetadataDto:
+    def get_file_metadata(
+        self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto
+    ) -> FileMetadataDto:
         """
         Get file metadata by reference.
 
         Args:
             resource_dto: Dataset manifest
-            filename: File name in dataset to get metadata for
+            file_metadata_dto: File metadata to retrieve
 
         Returns:
             The metadata of the file corresponding to the reference
@@ -44,19 +46,25 @@ class OdpRawStorageClient(BaseModel):
             OdpFileNotFoundError: If the file does not exist
         """
 
-        url = self._construct_url(resource_dto, endpoint=f"/{filename}/metadata")
+        url = self._construct_url(
+            resource_dto, endpoint=f"/{file_metadata_dto.name}/metadata"
+        )
 
         response = self.http_client.get(url)
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(f"File not found: {filename}") from e
+                raise OdpFileNotFoundError(
+                    f"File not found: {file_metadata_dto.name}"
+                ) from e
             raise  # Unhandled error
 
         return FileMetadataDto(**response.json())
 
-    def list(self, resource_dto: ResourceDto, metadata_filter: dict[str, any] = None) -> Iterable[FileMetadataDto]:
+    def list(
+        self, resource_dto: ResourceDto, metadata_filter: dict[str, any] = None
+    ) -> Iterable[FileMetadataDto]:
         """
         List all files in a dataset.
 
@@ -69,7 +77,9 @@ class OdpRawStorageClient(BaseModel):
         """
 
         while True:
-            page, cursor = self.list_paginated(resource_dto, metadata_filter=metadata_filter)
+            page, cursor = self.list_paginated(
+                resource_dto, metadata_filter=metadata_filter
+            )
             yield from page
             if not cursor:
                 break
@@ -112,23 +122,28 @@ class OdpRawStorageClient(BaseModel):
             raise  # Unhandled error
 
         content = response.json()
-        return [FileMetadataDto(**item) for item in content["results"]], content.get("next")
+        return [FileMetadataDto(**item) for item in content["results"]], content.get(
+            "next"
+        )
 
     def upload_file(
-        self, resource_dto: ResourceDto, file_meta_dto: FileMetadataDto, contents: bytes | BytesIO
+        self,
+        resource_dto: ResourceDto,
+        file_metadata_dto: FileMetadataDto,
+        contents: bytes | BytesIO,
     ) -> FileMetadataDto:
         """
         Upload data to a file.
 
         Args:
             resource_dto: Dataset manifest
-            file_meta_dto: File metadata
+            file_metadata_dto: File metadata
             contents: File contents
 
         Returns:
             The metadata of the uploaded file
         """
-        filename = file_meta_dto.ref
+        filename = file_metadata_dto.name
         url = self._construct_url(resource_dto, endpoint=f"/{filename}")
 
         if isinstance(contents, bytes):
@@ -140,37 +155,40 @@ class OdpRawStorageClient(BaseModel):
 
         headers = {"Content-Type": "application/octet-stream"}
 
-        response = self.http_client.post(url, headers=headers, content=contents)
+        response = self.http_client.patch(url, headers=headers, content=contents)
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {filename}") from e
 
-        return self.get_file_metadata(resource_dto, file_meta_dto.name)
+        return self.get_file_metadata(resource_dto, file_metadata_dto)
 
     def create_file(
         self,
         resource_dto: ResourceDto,
-        file_meta: FileMetadataDto,
+        file_metadata_dto: FileMetadataDto,
         contents: Optional[bytes | BytesIO] = None,
-        overwrite: bool = False,
     ) -> FileMetadataDto:
         """
         Create a new file.
 
         Args:
             resource_dto: Dataset manifest
-            file_meta: File metadata
+            file_metadata_dto: File metadata
             contents: File contents
-            overwrite: Overwrite if the file already exists
 
         Returns:
             The metadata of the newly created file
         """
 
         url = self._construct_url(resource_dto)
-        response = self.http_client.post(url, content=file_meta.model_dump_json(exclude_unset=True))
+        headers = {"Content-Type": "application/json"}
+        response = self.http_client.post(
+            url,
+            headers=headers,
+            content=file_metadata_dto.model_dump_json(exclude_unset=True),
+        )
 
         try:
             response.raise_for_status()
@@ -182,33 +200,35 @@ class OdpRawStorageClient(BaseModel):
         file_meta = FileMetadataDto(**response.json())
 
         if contents:
-            return self.update_file(file_meta, contents, overwrite)
+            return self.upload_file(resource_dto, file_meta, contents)
 
-        return self.get_file_metadata(resource_dto, file_meta.name)
+        return self.get_file_metadata(resource_dto, file_meta)
 
-    def download_file(self, resource_dto: ResourceDto, file: FileMetadataDto | str, save_path: str = None):
+    def download_file(
+        self,
+        resource_dto: ResourceDto,
+        file_metadata_dto: FileMetadataDto,
+        save_path: str = None,
+    ):
         """
         Download a file.
 
         Args:
             resource_dto: Dataset manifest
-            file: File metadata or file name
+            file_metadata_dto: File metadata of file
             save_path: File path to save the downloaded file to
         """
 
-        filename = file.name
-
-        if isinstance(file, str):
-            filename = file
-
-        url = self._construct_url(resource_dto, endpoint=f"/{filename}")
+        url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}")
 
         response = self.http_client.get(url)
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(f"File not found: {filename}") from e
+                raise OdpFileNotFoundError(
+                    f"File not found: {file_metadata_dto.name}"
+                ) from e
 
         if save_path:
             with open(save_path, "wb") as file:
@@ -216,18 +236,20 @@ class OdpRawStorageClient(BaseModel):
         else:
             return response.content
 
-    def delete_file(self, resource_dto: ResourceDto, filename: str):
+    def delete_file(
+        self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto
+    ):
         """
         Delete a file. Raises exception if any issues.
 
         Args:
             resource_dto: Dataset manifest
-            filename: File name in dataset to delete
+            file_metadata_dto: File metadata og file to delete.
 
         Returns:
             True if the file was deleted, False otherwise
         """
-        url = self._construct_url(resource_dto, endpoint=f"/{filename}")
+        url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}")
 
         response = self.http_client.delete(url)
 
@@ -235,4 +257,6 @@ class OdpRawStorageClient(BaseModel):
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(f"File not found: {filename}") from e
+                raise OdpFileNotFoundError(
+                    f"File not found: {file_metadata_dto.name}"
+                ) from e
