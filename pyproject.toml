@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "odp-sdk-python"
-version = "0.1.0"
+name = "odp-sdk"
+version = "0.4.2"
 description = "ODP Python SDK"
 authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
 license = "MIT"
