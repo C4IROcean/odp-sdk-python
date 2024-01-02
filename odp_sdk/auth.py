@@ -58,6 +58,10 @@ class HardcodedTokenProvider(TokenProvider):
     _token: PrivateAttr()
     """Token provider for hardcoded tokens"""
 
+    def __init__(self, token: str, **data):
+        super().__init__(**data)
+        self._token = token
+
     def get_token(self) -> str:
         return self._token
 

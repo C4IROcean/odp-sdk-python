@@ -109,7 +109,7 @@ class OdpResourceClient(BaseModel):
         if oqs_filter:
             body = oqs_filter
 
-        res = self.http_client.post(self.resource_endpoint, params=params, content=body)
+        res = self.http_client.post(self.resource_endpoint + "/list", params=params, content=body)
         try:
             res.raise_for_status()
         except requests.HTTPError as e:
@@ -139,7 +139,7 @@ class OdpResourceClient(BaseModel):
             res.raise_for_status()
         except requests.HTTPError as e:
             if res.status_code == 400:
-                raise OdpValidationError("Invalid input") from e
+                raise OdpValidationError("Invalid input", res.text) from e
             if res.status_code == 409:
                 raise OdpResourceExistsError("Resource already exists") from e
             raise  # Unhandled error
