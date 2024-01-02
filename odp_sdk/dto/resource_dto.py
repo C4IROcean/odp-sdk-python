@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class MetadataDto(BaseModel):
     """Resource manifest metadata"""
 
-    name: str
+    name: Optional[str] = None
     """Resource name. Must consist of alphanumeric characters, dashes or underscores and must start
     with an alphanumeric character"""
 
@@ -25,6 +25,13 @@ class MetadataDto(BaseModel):
     """Resource labels"""
 
     owner: Optional[UUID] = None
+
+    @model_validator(mode="before")
+    def _validate_action(cls, values):
+        if not values.get("name") and not values.get("uuid"):
+            raise ValueError("name or uuid must be set")
+
+        return values
 
 
 class ResourceStatusDto(BaseModel):
