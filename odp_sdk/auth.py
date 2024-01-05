@@ -117,10 +117,12 @@ class JwtTokenProvider(TokenProvider, ABC):
         """
 
         if self._access_token and time.time() < self._expiry - self.token_exp_lee_way:
-            return self._access_token
+            access_token = self._access_token
+        else:
+            auth_response = self.authenticate()
+            access_token = self._parse_token(auth_response)
 
-        auth_response = self.authenticate()
-        return "Bearer {}".format(self._parse_token(auth_response))
+        return "Bearer {}".format(access_token)
 
     def _parse_and_validate(self, access_token: str) -> str:
         token_components = [self._base64_decode(x) for x in access_token.split(".")]
