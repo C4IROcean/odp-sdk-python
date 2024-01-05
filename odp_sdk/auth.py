@@ -117,10 +117,12 @@ class JwtTokenProvider(TokenProvider, ABC):
         """
 
         if self._access_token and time.time() < self._expiry - self.token_exp_lee_way:
-            return self._access_token
+            access_token = self._access_token
+        else:
+            auth_response = self.authenticate()
+            access_token = self._parse_token(auth_response)
 
-        auth_response = self.authenticate()
-        return self._parse_token(auth_response)
+        return "Bearer {}".format(access_token)
 
     def _parse_and_validate(self, access_token: str) -> str:
         token_components = [self._base64_decode(x) for x in access_token.split(".")]
@@ -276,7 +278,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
     )
     """IDP token Authority"""
 
-    scope: list[str] = []
+    scope: list[str] = ["https://oceandataplatform.onmicrosoft.com/odcat/API_ACCESS"]
     """IDP token scope"""
 
     jwks_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/discovery/v2.0/keys"  # noqa: E501
@@ -341,7 +343,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
             try:
                 return msal_extensions.LibsecretPersistence(
                     str(location),
-                    schema_name="prefect",
+                    schema_name="odcat-sdk",
                     attributes={"app": "odcat", "component": "odcat-cli"},
                 )
             except Exception:
