@@ -104,7 +104,7 @@ class OdpResourceClient(BaseModel):
         if cursor:
             params["page"] = cursor
         if limit:
-            params["limit"] = limit
+            params["page_size"] = limit
 
         if oqs_filter:
             body = oqs_filter
