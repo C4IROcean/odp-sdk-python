@@ -162,15 +162,16 @@ class OdpTabularStorageClient(BaseModel):
 
         return TableStage(**response.json())
 
-    def commit_stage_request(self, table_stage: TableStage):
+    def commit_stage_request(self, resource_dto: ResourceDto, table_stage: TableStage):
         """
         Commit Stage
 
         Args:
+            resource_dto: Dataset manifest
             table_stage: Stage specifications for the stage that is to be committed
         """
 
-        url = f"{self.tabular_storage_url}/{table_stage.stage_id}/stage"
+        url = self._get_stage_url(resource_dto)
 
         stage_data = StageDataPoints(action="commit", stage_id=table_stage.stage_id)
 
@@ -312,7 +313,7 @@ class OdpTabularStorageClient(BaseModel):
 
         row_iterator = self._select_stream(resource_dto, filter_query, limit)
 
-        return list(row_iterator)
+        return list(row_iterator)[:-1]
 
     def _select_stream(
         self,
@@ -403,7 +404,7 @@ class OdpTabularStorageClient(BaseModel):
 
         data = self.select_as_list(resource_dto, filter_query)
 
-        return DataFrame(data)
+        return DataFrame(data[:-1])
 
     def write(self, resource_dto: ResourceDto, data: List[Dict], table_stage: Optional[TableStage] = None):
         """
@@ -433,7 +434,7 @@ class OdpTabularStorageClient(BaseModel):
 
         body = dict()
         if table_stage:
-            body["stage_id"] = table_stage.stage_id
+            body["stage_id"] = str(table_stage.stage_id)
         body["data"] = data
 
         response = self.http_client.post(url, content=body)
@@ -458,7 +459,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        data_list = data.values.tolist()
+        data_list = data.to_dict(orient="records")
 
         self.write(resource_dto, data_list, table_stage)
 
