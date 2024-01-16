@@ -1,5 +1,6 @@
 import math
 import re
+from json import JSONDecodeError
 from typing import Dict, Iterable, Iterator, List, Optional
 from uuid import UUID
 
@@ -377,9 +378,11 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-        data = list(iter(NdJsonParser(response.text)))
-
-        result = PaginatedSelectResultSet(data=data)
+        try:
+            result = PaginatedSelectResultSet(**response.json())
+        except JSONDecodeError as e:
+            data = list(iter(NdJsonParser(response.text)))
+            result = PaginatedSelectResultSet(data=data)
 
         return result.data, result.next
 
