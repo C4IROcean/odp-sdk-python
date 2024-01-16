@@ -380,7 +380,7 @@ class OdpTabularStorageClient(BaseModel):
 
         try:
             result = PaginatedSelectResultSet(**response.json())
-        except JSONDecodeError as e:
+        except JSONDecodeError:
             data = list(iter(NdJsonParser(response.text)))
             result = PaginatedSelectResultSet(data=data)
 
