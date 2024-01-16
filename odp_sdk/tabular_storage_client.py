@@ -313,7 +313,10 @@ class OdpTabularStorageClient(BaseModel):
 
         row_iterator = self._select_stream(resource_dto, filter_query, limit)
 
-        return list(row_iterator)[:-1]
+        if limit:
+            return list(row_iterator)
+        else:
+            return list(row_iterator)[:-1]
 
     def _select_stream(
         self,
@@ -404,7 +407,7 @@ class OdpTabularStorageClient(BaseModel):
 
         data = self.select_as_list(resource_dto, filter_query)
 
-        return DataFrame(data[:-1])
+        return DataFrame(data)
 
     def write(self, resource_dto: ResourceDto, data: List[Dict], table_stage: Optional[TableStage] = None):
         """
