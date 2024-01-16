@@ -12,6 +12,7 @@ from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
 from odp_sdk.dto.tabular_store import PaginatedSelectResultSet, TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
+from odp_sdk.utils.ndjson import NdJsonParser
 
 
 class OdpTabularStorageClient(BaseModel):
@@ -62,7 +63,7 @@ class OdpTabularStorageClient(BaseModel):
         """
 
         url = self._get_schema_url(resource_dto)
-        response = self.http_client.post(url, content=table_spec.model_dump_json())
+        response = self.http_client.post(url, content=table_spec)
 
         try:
             response.raise_for_status()
@@ -269,7 +270,7 @@ class OdpTabularStorageClient(BaseModel):
             return f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}"
 
     def select_as_stream(
-        self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None
+        self, resource_dto: ResourceDto, filter_query: Optional[dict] = None, limit: Optional[int] = None
     ) -> Iterable[dict]:
         """
         Select data from dataset
@@ -291,7 +292,7 @@ class OdpTabularStorageClient(BaseModel):
         yield from row_iterator
 
     def select_as_list(
-        self, resource_dto: ResourceDto, filter_query: Optional[dict], limit: Optional[int] = None
+        self, resource_dto: ResourceDto, filter_query: Optional[dict] = None, limit: Optional[int] = None
     ) -> list[dict]:
         """
         Select data from dataset
@@ -315,7 +316,7 @@ class OdpTabularStorageClient(BaseModel):
     def _select_stream(
         self,
         resource_dto: ResourceDto,
-        filter_query: Optional[dict],
+        filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> Iterator[dict]:
@@ -345,7 +346,7 @@ class OdpTabularStorageClient(BaseModel):
     def _select_page(
         self,
         resource_dto: ResourceDto,
-        filter_query: Optional[dict],
+        filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> tuple[list[dict], Optional[str]]:
@@ -376,11 +377,13 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-        result = PaginatedSelectResultSet(**response.json())
+        data = list(iter(NdJsonParser(response.text)))
+
+        result = PaginatedSelectResultSet(data=data)
 
         return result.data, result.next
 
-    def select_as_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict]) -> DataFrame:
+    def select_as_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict] = None) -> DataFrame:
         """
         Select data from dataset as a DataFrame
 
@@ -399,7 +402,7 @@ class OdpTabularStorageClient(BaseModel):
 
         return DataFrame(data)
 
-    def write(self, resource_dto: ResourceDto, data: List[Dict], table_stage: Optional[TableStage]):
+    def write(self, resource_dto: ResourceDto, data: List[Dict], table_stage: Optional[TableStage] = None):
         """
         Write data to dataset
 
@@ -421,7 +424,7 @@ class OdpTabularStorageClient(BaseModel):
 
         self._write_limited_size(url, data, table_stage)
 
-    def _write_limited_size(self, url: str, data: List[Dict], table_stage: Optional[TableStage]):
+    def _write_limited_size(self, url: str, data: List[Dict], table_stage: Optional[TableStage] = None):
         if len(data) < 1:
             return
 
@@ -439,7 +442,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-    def write_dataframe(self, resource_dto: ResourceDto, data: DataFrame, table_stage: Optional[TableStage]):
+    def write_dataframe(self, resource_dto: ResourceDto, data: DataFrame, table_stage: Optional[TableStage] = None):
         """
         Write data to dataset in DataFrame format
 
@@ -456,7 +459,7 @@ class OdpTabularStorageClient(BaseModel):
 
         self.write(resource_dto, data_list, table_stage)
 
-    def delete(self, resource_dto: ResourceDto, filter_query: Optional[dict]):
+    def delete(self, resource_dto: ResourceDto, filter_query: Optional[dict] = None):
         """
         Delete data from dataset
 
@@ -482,7 +485,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-    def update(self, resource_dto: ResourceDto, filter_query: Optional[dict], data: List[Dict]):
+    def update(self, resource_dto: ResourceDto, data: List[Dict], filter_query: dict):
         """
         Update data from dataset
 
@@ -495,7 +498,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = f"{self._get_crud_url(resource_dto)}/list"
+        url = self._get_crud_url(resource_dto)
 
         body = dict()
         body["update_filters"] = filter_query
@@ -510,7 +513,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-    def update_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict], data: DataFrame):
+    def update_dataframe(self, resource_dto: ResourceDto, data: DataFrame, filter_query: Optional[dict] = None):
         """
         Update data from dataset in DataFrame format
 
