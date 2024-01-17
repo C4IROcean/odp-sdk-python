@@ -1,6 +1,7 @@
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
+from odp_sdk.exc import OdpResourceNotFoundError
 
 # export ODP_ACCESS_TOKEN=Bearer thisismyaccesstoken <-- Omit this to run interactive auth
 
@@ -67,8 +68,12 @@ print(result)
 # Delete the schema
 client.tabular.delete_schema(my_dataset)
 
-print("Schema not found error since it is deleted")
-print(client.tabular.get_schema(my_dataset))
+try:
+    client.tabular.get_schema(my_dataset)
+except OdpResourceNotFoundError as e:
+    print("Schema not found error since it is deleted:")
+    print(e)
+
 
 # Delete the dataset
 client.catalog.delete(my_dataset)
