@@ -1,12 +1,12 @@
 import math
 import re
-from json import JSONDecodeError
 from typing import Dict, Iterable, Iterator, List, Optional
 from uuid import UUID
 
 import requests
 from pandas import DataFrame
 from pydantic import BaseModel, field_validator
+from requests import JSONDecodeError
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
