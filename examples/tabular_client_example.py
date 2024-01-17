@@ -11,7 +11,7 @@ my_dataset = ResourceDto(
         "kind": "catalog.hubocean.io/dataset",
         "version": "v1alpha3",
         "metadata": {
-            "name": "seahorses_tabular", # Add your name to the dataset
+            "name": "narwhals", # Add your name to the dataset
         },
         "spec": {
             "storage_controller": "registry.hubocean.io/storageController/storage-tabular", # Tabular storage controller
@@ -43,9 +43,11 @@ client.tabular.write(
 
 # Query the data
 our_data = client.tabular.select_as_list(my_dataset)
+
+print("-------DATA IN DATASET--------")
 print(our_data)
 
-# To update the data filter must be declared
+# To update the data filters must be declared
 update_filters = {"#EQUALS": ["$Data", "Test"]}
 new_data = [{"Data": "Test Updated"}]
 
@@ -57,11 +59,11 @@ client.tabular.update(
 
 result = client.tabular.select_as_list(my_dataset)
 
+print("-------UPDATED DATA IN DATASET--------")
 print(result)
 
 # Delete the data with another filter
 delete_filters = {"#EQUALS": ["$Data", "Test1"]}
-
 client.tabular.delete(
     resource_dto=my_dataset,
     filter_query=delete_filters
@@ -69,12 +71,14 @@ client.tabular.delete(
 
 result = client.tabular.select_as_list(my_dataset)
 
+print("-------DATA IN DATASET AFTER DELETION--------")
 print(result)
-
 # Delete the schema
 client.tabular.delete_schema(my_dataset)
 
+print("Schema not found error since it is deleted")
 print(client.tabular.get_schema(my_dataset))
 
 # Delete the dataset
 client.catalog.delete(my_dataset)
+print("Dataset deleted successfully")
