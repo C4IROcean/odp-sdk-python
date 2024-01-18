@@ -107,7 +107,7 @@ class OdpResourceClient(BaseModel):
             params["page_size"] = limit
 
         if oqs_filter:
-            body = oqs_filter
+            body = {"oqs": oqs_filter}
 
         res = self.http_client.post(self.resource_endpoint + "/list", params=params, content=body)
         try:
