@@ -11,7 +11,7 @@ my_dataset = ResourceDto(
         "kind": "catalog.hubocean.io/dataset",
         "version": "v1alpha3",
         "metadata": {
-            "name": "seahorses",
+            "name": "sdk-raw-example",
         },
         "spec": {
             "storage_controller": "registry.hubocean.io/storageController/storage-raw-cdffs",
