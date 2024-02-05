@@ -6,13 +6,7 @@ client = OdpClient()
 catalog_client = client.catalog
 
 # List observables in the catalog
-observable_filter = {
-    "selectors": [
-        {
-            "kind": "catalog.hubocean.io/observable"
-        }
-    ]
-}
+observable_filter = {"selectors": [{"kind": "catalog.hubocean.io/observable"}]}
 
 for item in catalog_client.list(observable_filter):
     print(item)
@@ -28,17 +22,12 @@ observable_manifest = ResourceDto(
             "name": "sdk-observable-example",
             "display_name": "Test Observable for time",
             "description": "A test observable for time",
-            "labels": {
-                "hubocean.io/test": True
-            }
+            "labels": {"hubocean.io/test": True},
         },
         "spec": {
             "dataset": "catalog.hubocean.io/test-dataset",
-            "details": {
-                "value": [0, 1684147082],
-                "cls": "odp.odcat.observable.observable.StaticCoverage"
-            }
-        }
+            "details": {"value": [0, 1684147082], "cls": "odp.odcat.observable.observable.StaticCoverage"},
+        },
     }
 )
 
@@ -53,9 +42,7 @@ print("-------")
 # An example query to search for observables in certain geometries
 observable_geometry_filter = {
     "selectors": [
-        {
-            "kind": "catalog.hubocean.io/observable"
-        },
+        {"kind": "catalog.hubocean.io/observable"},
         {
             "geometry": {
                 "spec.details.value": {
@@ -63,32 +50,17 @@ observable_geometry_filter = {
                         "type": "Polygon",
                         "coordinates": [
                             [
-                                [
-                                    -73.981200,
-                                    40.764950
-                                ],
-                                [
-                                    -73.980600,
-                                    40.764000
-                                ],
-                                [
-                                    -73.979800,
-                                    40.764450
-                                ],
-                                [
-                                    -73.980400,
-                                    40.765400
-                                ],
-                                [
-                                    -73.981200,
-                                    40.764950
-                                ]
+                                [-73.981200, 40.764950],
+                                [-73.980600, 40.764000],
+                                [-73.979800, 40.764450],
+                                [-73.980400, 40.765400],
+                                [-73.981200, 40.764950],
                             ]
-                        ]
+                        ],
                     }
                 }
             }
-        }
+        },
     ]
 }
 
