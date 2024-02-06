@@ -5,6 +5,8 @@ client = OdpClient()
 
 catalog_client = client.catalog
 
+observables = []
+
 # List observables in the catalog
 observable_filter = {"selectors": [{"kind": "catalog.hubocean.io/observable"}]}
 
@@ -33,6 +35,7 @@ observable_manifest = ResourceDto(
 
 # The observable is created in the catalog.
 observable_manifest = catalog_client.create(observable_manifest)
+observables.append(observable_manifest)
 
 # Fetch the manifest from the observable using the UUID
 fetched_manifest = catalog_client.get(observable_manifest.metadata.uuid)
@@ -69,5 +72,86 @@ for item in catalog_client.list(observable_geometry_filter):
     print(item)
 print("-------")
 
+
+# Create static observables to filter
+static_manifest_small = ResourceDto(
+    **{
+        "kind": "catalog.hubocean.io/observable",
+        "version": "v1alpha1",
+        "metadata": {
+            "name": "sdk-example-small-value",
+            "display_name": "SDK Example Small Value",
+            "description": "An observable that emits a small value",
+            "labels": {
+                "hubocean.io/test": True
+            }
+        },
+        "spec": {
+            "dataset": "catalog.hubocean.io/test-dataset",
+            "details": {
+                "value": 1,
+                "cls": "odp.odcat.observable.observable.StaticObservable"
+            }
+        }
+    }
+)
+
+small_manifest = catalog_client.create(static_manifest_small)
+observables.append(small_manifest)
+
+static_manifest_large = ResourceDto(
+    **{
+        "kind": "catalog.hubocean.io/observable",
+        "version": "v1alpha1",
+        "metadata": {
+            "name": "sdk-example-large-value",
+            "display_name": "SDK Example Large Value",
+            "description": "An observable that emits a large value",
+            "labels": {
+                "hubocean.io/test": True
+            }
+        },
+        "spec": {
+            "dataset": "catalog.hubocean.io/test-dataset",
+            "details": {
+                "value": 3,
+                "cls": "odp.odcat.observable.observable.StaticObservable"
+            }
+        }
+    }
+)
+
+large_manifest = catalog_client.create(static_manifest_large)
+observables.append(large_manifest)
+
+
+# An example query to search for observables in certain range
+observable_range_filter = {
+    "oqs": {
+        "#AND": [
+            {
+                "#WITHIN": [
+                    "$spec.details.cls",
+                    [
+                        "odp.odcat.observable.observable.StaticObservable"
+                    ]
+                ]
+            },
+            {
+                "#GREATER_THAN_OR_EQUALS": [
+                    "$spec.details.value",
+                    "2"
+                ]
+            }
+        ]
+    }
+}
+
+# List all observables in the catalog that intersect with the geometry
+for item in catalog_client.list(observable_range_filter):
+    print(item)
+print("-------")
+
 # Clean up
-catalog_client.delete(observable_manifest)
+for obs in observables:
+    catalog_client.delete(obs)
