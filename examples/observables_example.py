@@ -82,17 +82,12 @@ static_manifest_small = ResourceDto(
             "name": "sdk-example-small-value",
             "display_name": "SDK Example Small Value",
             "description": "An observable that emits a small value",
-            "labels": {
-                "hubocean.io/test": True
-            }
+            "labels": {"hubocean.io/test": True},
         },
         "spec": {
             "dataset": "catalog.hubocean.io/test-dataset",
-            "details": {
-                "value": 1,
-                "cls": "odp.odcat.observable.observable.StaticObservable"
-            }
-        }
+            "details": {"value": 1, "cls": "odp.odcat.observable.observable.StaticObservable"},
+        },
     }
 )
 
@@ -107,17 +102,12 @@ static_manifest_large = ResourceDto(
             "name": "sdk-example-large-value",
             "display_name": "SDK Example Large Value",
             "description": "An observable that emits a large value",
-            "labels": {
-                "hubocean.io/test": True
-            }
+            "labels": {"hubocean.io/test": True},
         },
         "spec": {
             "dataset": "catalog.hubocean.io/test-dataset",
-            "details": {
-                "value": 3,
-                "cls": "odp.odcat.observable.observable.StaticObservable"
-            }
-        }
+            "details": {"value": 3, "cls": "odp.odcat.observable.observable.StaticObservable"},
+        },
     }
 )
 
@@ -129,20 +119,8 @@ observables.append(large_manifest)
 observable_range_filter = {
     "oqs": {
         "#AND": [
-            {
-                "#WITHIN": [
-                    "$spec.details.cls",
-                    [
-                        "odp.odcat.observable.observable.StaticObservable"
-                    ]
-                ]
-            },
-            {
-                "#GREATER_THAN_OR_EQUALS": [
-                    "$spec.details.value",
-                    "2"
-                ]
-            }
+            {"#WITHIN": ["$spec.details.cls", ["odp.odcat.observable.observable.StaticObservable"]]},
+            {"#GREATER_THAN_OR_EQUALS": ["$spec.details.value", "2"]},
         ]
     }
 }
