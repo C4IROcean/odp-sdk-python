@@ -47,8 +47,11 @@ class TokenProvider(AuthBase, BaseModel, ABC):
 class OdpWorkspaceTokenProvider(TokenProvider):
     """Token provider for ODP workspaces"""
 
+    token_uri: str = "http://localhost:8000/access_token"
+    """Token endpoint."""
+
     def get_token(self) -> str:
-        res = requests.post("http://localhost:8000/access_token")
+        res = requests.post(self.token_uri)
         res.raise_for_status()
 
         return "Bearer " + res.json()["token"]

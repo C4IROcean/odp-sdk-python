@@ -14,11 +14,8 @@ from odp_sdk.exc import OdpAuthError
 
 
 def test_interactive_auth():
-    names_to_remove = {"ODP_ACCESS_TOKEN", "JUPYTERHUB_API_TOKEN", "ODP_CLIENT_SECRET"}
-    modified_environ = {k: v for k, v in os.environ.items() if k not in names_to_remove}
-    with mock.patch.dict(os.environ, modified_environ, clear=True):
-        auth = get_default_token_provider()
-        assert isinstance(auth, InteractiveTokenProvider)
+    auth = get_default_token_provider()
+    assert isinstance(auth, InteractiveTokenProvider)
 
 
 @mock.patch.dict(os.environ, {"ODP_ACCESS_TOKEN": "Test"})
