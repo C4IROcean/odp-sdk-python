@@ -33,18 +33,11 @@ def odp_workspace_token_provider() -> OdpWorkspaceTokenProvider:
 
 @pytest.fixture()
 def azure_token_provider() -> AzureTokenProvider:
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.POST,
-            MOCK_TOKEN_URI,
-            json={"access_token": "test"},
-        )
-
-        yield AzureTokenProvider(
-            client_id=MOCK_CLIENT_ID,
-            client_secret=MOCK_CLIENT_SECRET,
-            token_uri=MOCK_TOKEN_URI,
-        )
+    return AzureTokenProvider(
+        client_id=MOCK_CLIENT_ID,
+        client_secret=MOCK_CLIENT_SECRET,
+        token_uri=MOCK_TOKEN_URI,
+    )
 
 
 @pytest.fixture(autouse=True)
