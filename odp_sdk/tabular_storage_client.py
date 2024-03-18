@@ -447,7 +447,7 @@ class OdpTabularStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpResourceNotFoundError("Resource not found") from e
-            raise
+            raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
     def write_dataframe(self, resource_dto: ResourceDto, data: DataFrame, table_stage: Optional[TableStage] = None):
         """
