@@ -60,8 +60,6 @@ class OdpResourceClient(BaseModel):
                 raise OdpResourceNotFoundError(f"Resource not found: {ref}") from e
             raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
-
-
         return ResourceDto(**res.json())
 
     def list(self, oqs_filter: Optional[dict] = None, cursor: Optional[str] = None) -> Iterable[ResourceDto]:

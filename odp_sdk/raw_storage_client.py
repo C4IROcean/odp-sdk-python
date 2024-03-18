@@ -31,17 +31,17 @@ class OdpRawStorageClient(BaseModel):
 
     def get_file_metadata(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto) -> FileMetadataDto:
         """
-        Get file metadata by reference.
+                Get file metadata by reference.
 
-        Args:
-            resource_dto: Dataset manifest
-            file_metadata_dto: File metadata to retrieve
+                Args:
+                    resource_dto: Dataset manifest
+                    file_metadata_dto: File metadata to retrieve
 
-        Returns:
-            The metadata of the file corresponding to the reference
-requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
-        Raises:
-            OdpFileNotFoundError: If the file does not exist
+                Returns:
+                    The metadata of the file corresponding to the reference
+        requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
+                Raises:
+                    OdpFileNotFoundError: If the file does not exist
         """
 
         url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}/metadata")
