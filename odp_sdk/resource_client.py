@@ -58,7 +58,7 @@ class OdpResourceClient(BaseModel):
                 raise OdpValidationError("Invalid input") from e
             if res.status_code == 404:
                 raise OdpResourceNotFoundError(f"Resource not found: {ref}") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
         return ResourceDto(**res.json())
 
@@ -115,7 +115,7 @@ class OdpResourceClient(BaseModel):
         except requests.HTTPError as e:
             if res.status_code == 401:
                 raise OdpValidationError("API argument error") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
         content = res.json()
         return [ResourceDto(**item) for item in content["results"]], content.get("next")
@@ -142,7 +142,7 @@ class OdpResourceClient(BaseModel):
                 raise OdpValidationError("Invalid input", res.text) from e
             if res.status_code == 409:
                 raise OdpResourceExistsError("Resource already exists") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
         return ResourceDto(**res.json())
 
@@ -177,7 +177,7 @@ class OdpResourceClient(BaseModel):
                 raise OdpValidationError("Invalid input") from e
             if res.status_code == 404:
                 raise OdpResourceNotFoundError("Resource not found") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
         return ResourceDto(**res.json())
 
@@ -199,4 +199,4 @@ class OdpResourceClient(BaseModel):
         except requests.HTTPError as e:
             if res.status_code == 404:
                 raise OdpResourceNotFoundError(f"Resource not found: {ref}") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")

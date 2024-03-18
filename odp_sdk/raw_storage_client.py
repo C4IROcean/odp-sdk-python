@@ -31,17 +31,17 @@ class OdpRawStorageClient(BaseModel):
 
     def get_file_metadata(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto) -> FileMetadataDto:
         """
-        Get file metadata by reference.
+                Get file metadata by reference.
 
-        Args:
-            resource_dto: Dataset manifest
-            file_metadata_dto: File metadata to retrieve
+                Args:
+                    resource_dto: Dataset manifest
+                    file_metadata_dto: File metadata to retrieve
 
-        Returns:
-            The metadata of the file corresponding to the reference
-
-        Raises:
-            OdpFileNotFoundError: If the file does not exist
+                Returns:
+                    The metadata of the file corresponding to the reference
+        requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
+                Raises:
+                    OdpFileNotFoundError: If the file does not exist
         """
 
         url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}/metadata")
@@ -52,7 +52,7 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {file_metadata_dto.name}") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
         return FileMetadataDto(**response.json())
 
@@ -109,7 +109,7 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 401:
                 raise OdpValidationError("API argument error") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
         content = response.json()
         return [FileMetadataDto(**item) for item in content["results"]], content.get("next")
@@ -149,6 +149,7 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {filename}") from e
+            raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
         return self.get_file_metadata(resource_dto, file_metadata_dto)
 
@@ -183,7 +184,7 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 401:
                 raise OdpValidationError("API argument error") from e
-            raise  # Unhandled error
+            raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
         file_meta = FileMetadataDto(**response.json())
 
@@ -215,6 +216,7 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {file_metadata_dto.name}") from e
+            raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
         if save_path:
             with open(save_path, "wb") as file:
@@ -242,3 +244,5 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 404:
                 raise OdpFileNotFoundError(f"File not found: {file_metadata_dto.name}") from e
+
+            raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
