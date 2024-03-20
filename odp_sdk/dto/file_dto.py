@@ -1,29 +1,27 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
 
 class FileMetadataDto(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
 
     """File Metadata Model."""
 
-    external_id: Optional[any] = None
-    name: Optional[str] = None
-    source: Optional[str] = None
-    mime_type: Optional[str] = None
-    metadata: Optional[Dict[str, str]] = None
-    directory: Optional[any] = None
-    asset_ids: Optional[List[any]] = None
-    data_set_id: Optional[any] = None
-    labels: Optional[List[any]] = None
-    geo_location: Optional[any] = None
-    source_created_time: Optional[any] = None
-    source_modified_time: Optional[any] = None
-    security_categories: Optional[List[any]] = None
-    id: Optional[any] = None
-    uploaded: Optional[any] = None
-    uploaded_time: Optional[any] = None
-    created_time: Optional[any] = None
-    last_updated_time: Optional[any] = None
+    external_id: Optional[Any] = None
+    name: Optional[Any] = None
+    source: Optional[Any] = None
+    mime_type: Optional[Any] = None
+    metadata: Optional[Dict[Any, Any]] = None
+    directory: Optional[Any] = None
+    asset_ids: Optional[List[Any]] = None
+    data_set_id: Optional[Any] = None
+    labels: Optional[List[Any]] = None
+    geo_location: Optional[Any] = None
+    source_created_time: Optional[Any] = None
+    source_modified_time: Optional[Any] = None
+    security_categories: Optional[List[Any]] = None
+    id: Optional[Any] = None
+    uploaded: Optional[Any] = None
+    uploaded_time: Optional[Any] = None
+    created_time: Optional[Any] = None
+    last_updated_time: Optional[Any] = None
