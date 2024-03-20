@@ -4,6 +4,9 @@ from pydantic import BaseModel
 
 
 class FileMetadataDto(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+
     """File Metadata Model."""
 
     external_id: Optional[any] = None
