@@ -19,7 +19,7 @@ print("-------")
 observable_manifest = ResourceDto(
     **{
         "kind": "catalog.hubocean.io/observable",
-        "version": "v1alpha1",
+        "version": "v1alpha2",
         "metadata": {
             "name": "sdk-observable-example",
             "display_name": "Test Observable for time",
@@ -27,8 +27,9 @@ observable_manifest = ResourceDto(
             "labels": {"hubocean.io/test": True},
         },
         "spec": {
-            "dataset": "catalog.hubocean.io/test-dataset",
-            "details": {"value": [0, 1684147082], "cls": "odp.odcat.observable.observable.StaticCoverage"},
+            "ref": "catalog.hubocean.io/dataset/test-dataset",
+            "observable_class": "catalog.hubocean.io/observableClass/static-coverage",
+            "details": {"value": [0, 1684147082], "attribute": "test"},
         },
     }
 )
