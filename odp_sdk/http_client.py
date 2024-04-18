@@ -13,6 +13,7 @@ from .exc import OdpForbiddenError, OdpUnauthorizedError
 class OdpHttpClient(BaseModel):
     base_url: str = "https://api.hubocean.earth"
     token_provider: TokenProvider
+    custom_user_agent: str = None
 
     @field_validator("base_url")
     @classmethod
@@ -229,6 +230,10 @@ class OdpHttpClient(BaseModel):
             base_url = ""
 
         headers = headers or {}
+        if self.custom_user_agent:
+            headers["User-Agent"] = self.custom_user_agent
+        else:
+            headers["User-Agent"] = self.token_provider.user_agent
 
         if isinstance(content, (dict, list)):
             body = json.dumps(content)
