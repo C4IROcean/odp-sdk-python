@@ -43,3 +43,22 @@ def test_request_has_auth_token(http_client):
         )
 
         http_client.get("/foobar")
+
+
+def test_custom_user_agent(http_client):
+    custom_user_agent = "my-custom-user-agent"
+
+    http_client.custom_user_agent = custom_user_agent
+
+    test_url = "http://someurl.local"
+
+    assert test_url != http_client.base_url
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(responses.GET, test_url, status=200)
+
+        res = http_client.get(test_url)
+        res.raise_for_status()
+
+        assert res.status_code == 200
+        assert rsps.calls[0].request.headers["User-Agent"] == custom_user_agent

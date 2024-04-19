@@ -8,6 +8,7 @@ from odp_sdk.auth import (
     get_default_token_provider,
 )
 from odp_sdk.exc import OdpAuthError
+from odp_sdk.utils import get_version
 
 
 @pytest.fixture(scope="function")
@@ -22,24 +23,28 @@ def clean_env(monkeypatch):
 def test_interactive_auth():
     auth = get_default_token_provider()
     assert isinstance(auth, InteractiveTokenProvider)
+    assert auth.user_agent == f"odp-sdk/{get_version()} (Interactive)"
 
 
 def test_hardcoded_auth(monkeypatch):
     monkeypatch.setenv("ODP_ACCESS_TOKEN", "Test")
     auth = get_default_token_provider()
     assert isinstance(auth, HardcodedTokenProvider)
+    assert auth.user_agent == f"odp-sdk/{get_version()} (Hardcoded)"
 
 
 def test_workspace_auth(monkeypatch):
     monkeypatch.setenv("JUPYTERHUB_API_TOKEN", "Test")
     auth = get_default_token_provider()
     assert isinstance(auth, OdpWorkspaceTokenProvider)
+    assert auth.user_agent == f"odp-sdk/{get_version()} (Workspaces)"
 
 
 def test_azure_auth(monkeypatch):
     monkeypatch.setenv("ODP_CLIENT_SECRET", "Test")
     auth = get_default_token_provider()
     assert isinstance(auth, AzureTokenProvider)
+    assert auth.user_agent == f"odp-sdk/{get_version()} (Azure)"
 
 
 def test_auth_error():

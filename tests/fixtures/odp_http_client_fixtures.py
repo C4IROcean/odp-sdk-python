@@ -19,7 +19,7 @@ def mock_odp_endpoint() -> str:
 def mock_token_provider() -> TokenProvider:
     class MockTokenProvider(TokenProvider):
         def __init__(self):
-            pass
+            super().__init__()
 
         def get_token(self) -> str:
             return "Bearer abc"

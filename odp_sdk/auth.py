@@ -21,12 +21,15 @@ from pydantic import BaseModel, PrivateAttr, SecretStr
 from requests.auth import AuthBase
 
 from .exc import OdpAuthError
+from .utils import get_version
 
 LOG = logging.getLogger(__name__)
 
 
 class TokenProvider(AuthBase, BaseModel, ABC):
     """Base class for token providers"""
+
+    user_agent: str = "odp-sdk/" + get_version()
 
     @abstractmethod
     def get_token(self) -> str:
@@ -50,6 +53,10 @@ class OdpWorkspaceTokenProvider(TokenProvider):
     token_uri: str = "http://localhost:8000/access_token"
     """Token endpoint."""
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.user_agent = self.user_agent + " (Workspaces)"
+
     def get_token(self) -> str:
         res = requests.post(self.token_uri)
         res.raise_for_status()
@@ -58,12 +65,14 @@ class OdpWorkspaceTokenProvider(TokenProvider):
 
 
 class HardcodedTokenProvider(TokenProvider):
-    _token: PrivateAttr()
     """Token provider for hardcoded tokens"""
+
+    _token: PrivateAttr()
 
     def __init__(self, token: str, **data):
         super().__init__(**data)
         self._token = token
+        self.user_agent = self.user_agent + " (Hardcoded)"
 
     def get_token(self) -> str:
         return self._token
@@ -247,6 +256,10 @@ class AzureTokenProvider(JwtTokenProvider):
     jwks_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/discovery/v2.0/keys"  # noqa: E501
     """JWKS endpoint."""
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        self.user_agent = self.user_agent + " (Azure)"
+
     def get_jwks_uri(self) -> str:
         return self.jwks_uri
 
@@ -306,6 +319,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
             authority=self.authority,
             token_cache=cache,
         )
+        self.user_agent = self.user_agent + " (Interactive)"
 
     def get_jwks_uri(self) -> str:
         return self.jwks_uri

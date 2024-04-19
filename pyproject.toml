@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "odp-sdk"
-version = "0.4.2"
+version = "0.4.7"
 description = "ODP Python SDK"
 authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
 license = "MIT"
@@ -15,6 +15,7 @@ pyjwt = "^2.8.0"
 msal = "^1.24.1"
 msal-extensions = "^1.1.0"
 pandas = { version = "^2.1.4", optional = true}
+tomli = "^2.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
