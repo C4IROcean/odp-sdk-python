@@ -1,6 +1,6 @@
 import json
 from collections import deque
-from io import BytesIO, StringIO
+from io import StringIO
 from typing import IO, Deque, Iterable, Optional, cast
 from warnings import warn
 
@@ -29,7 +29,7 @@ class NdJsonParser:
             json_parser: JSON parser to use, defaults to the standard `json` module
         """
         self.json_parser = json_parser
-        self.line = ""
+        self.line = []
         self.delimiter_stack: Deque[str] = deque()
 
         if s and fp:
@@ -37,7 +37,12 @@ class NdJsonParser:
         elif not s and not fp:
             raise ValueError("Either 's' or 'fp' must be set")
 
-        self.fb = fp if fp else (StringIO(s) if isinstance(s, str) else BytesIO(s))
+        if fp:
+            self.fb = fp
+        elif isinstance(s, str):
+            self.fb = StringIO(s)
+        else:
+            self.fb = StringIO(s.decode())
 
     def _consume_line(self) -> JsonType:
         """Consume a line from the file-like object
@@ -48,8 +53,8 @@ class NdJsonParser:
         if self.delimiter_stack:
             warn("Attempting to parse NDJSON line while the delimiter stack was non-empty")
 
-        obj = self.json_parser.loads(self.line)
-        self.line = ""
+        obj = self.json_parser.loads("".join(self.line))
+        self.line = []
         self.delimiter_stack.clear()
 
         return obj
@@ -62,13 +67,11 @@ class NdJsonParser:
             try:
                 s = next(self.fb)
             except StopIteration:
-                if self.line:
+                if len(self.line) > 0:
                     return self._consume_line()
                 raise
 
             for c in s:
-                if isinstance(c, int):
-                    c = chr(c)
                 last_delimiter = self.delimiter_stack[-1] if self.delimiter_stack else None
 
                 in_quote = last_delimiter in {"'", '"', "\\"}
@@ -76,7 +79,7 @@ class NdJsonParser:
                 if c == "\n" and not in_quote:
                     return self._consume_line()
 
-                self.line += c
+                self.line.append(c)
                 if in_quote:
                     if last_delimiter == "\\":
                         self.delimiter_stack.pop()
