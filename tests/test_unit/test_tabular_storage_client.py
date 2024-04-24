@@ -274,6 +274,41 @@ def test_select_as_list_success(tabular_storage_client, tabular_resource_dto):
         assert response[1]["test_key2"] == "test_value2"
 
 
+def test_select_as_list_wkt_success(tabular_storage_client, tabular_resource_dto):
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.POST,
+            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            body='{"test_key1": "POINT(0 0)"}\n{"test_key2": "POINT(0 1)"}\n{"@@end": true}',
+            status=200,
+            content_type="application/json",
+        )
+
+        response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
+
+        assert len(response) == 2
+        assert response[0]["test_key1"] == {"coordinates": [0.0, 0.0], "type": "Point"}
+        assert response[1]["test_key2"] == {"coordinates": [0.0, 1.0], "type": "Point"}
+
+
+def test_select_as_list_wkb_success(tabular_storage_client, tabular_resource_dto):
+    with responses.RequestsMock() as rsps:
+        rsps.add(
+            responses.POST,
+            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            body='{"test_key1": "010100000000000000000000000000000000000000"}\n'
+            '{"test_key2": "01010000000000000000000000000000000000f03f"}\n{"@@end": true}',
+            status=200,
+            content_type="application/json",
+        )
+
+        response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
+
+        assert len(response) == 2
+        assert response[0]["test_key1"] == {"coordinates": [0.0, 0.0], "type": "Point"}
+        assert response[1]["test_key2"] == {"coordinates": [0.0, 1.0], "type": "Point"}
+
+
 def test_select_as_stream_small_chunk_success(tabular_storage_client_low_chunk_size, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(

@@ -13,6 +13,7 @@ from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
 from odp_sdk.dto.tabular_store import PaginatedSelectResultSet, TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
+from odp_sdk.utils import convert_geometry
 from odp_sdk.utils.ndjson import NdJsonParser
 
 
@@ -354,6 +355,7 @@ class OdpTabularStorageClient(BaseModel):
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
+        result_geometry: Optional[str] = "geojson",
     ) -> tuple[list[dict], Optional[str]]:
         """
         Method to query a specific page from the data
@@ -386,6 +388,8 @@ class OdpTabularStorageClient(BaseModel):
             result = PaginatedSelectResultSet(**response.json())
         except JSONDecodeError:
             data = list(iter(NdJsonParser(response.text)))
+            data = convert_geometry(data, result_geometry)
+
             result = PaginatedSelectResultSet(data=data)
 
         return result.data, result.next
