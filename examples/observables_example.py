@@ -78,7 +78,7 @@ print("-------")
 static_manifest_small = ResourceDto(
     **{
         "kind": "catalog.hubocean.io/observable",
-        "version": "v1alpha1",
+        "version": "v1alpha2",
         "metadata": {
             "name": "sdk-example-small-value",
             "display_name": "SDK Example Small Value",
@@ -86,8 +86,9 @@ static_manifest_small = ResourceDto(
             "labels": {"hubocean.io/test": True},
         },
         "spec": {
-            "dataset": "catalog.hubocean.io/test-dataset",
-            "details": {"value": 1, "cls": "odp.odcat.observable.observable.StaticObservable"},
+            "observable_class": "catalog.hubocean.io/observableClass/static-observable",
+            "ref": "catalog.hubocean.io/dataset/test-dataset",
+            "details": {"value": 1},
         },
     }
 )
@@ -98,7 +99,7 @@ observables.append(small_manifest)
 static_manifest_large = ResourceDto(
     **{
         "kind": "catalog.hubocean.io/observable",
-        "version": "v1alpha1",
+        "version": "v1alpha2",
         "metadata": {
             "name": "sdk-example-large-value",
             "display_name": "SDK Example Large Value",
@@ -106,8 +107,9 @@ static_manifest_large = ResourceDto(
             "labels": {"hubocean.io/test": True},
         },
         "spec": {
-            "dataset": "catalog.hubocean.io/test-dataset",
-            "details": {"value": 3, "cls": "odp.odcat.observable.observable.StaticObservable"},
+            "observable_class": "catalog.hubocean.io/observableClass/static-observable",
+            "ref": "catalog.hubocean.io/dataset/test-dataset",
+            "details": {"value": 3},
         },
     }
 )
@@ -120,7 +122,12 @@ observables.append(large_manifest)
 observable_range_filter = {
     "oqs": {
         "#AND": [
-            {"#WITHIN": ["$spec.details.cls", ["odp.odcat.observable.observable.StaticObservable"]]},
+            {
+                "#WITHIN": [
+                    "$spec.observable_class",
+                    ["catalog.hubocean.io/observableClass/static-observable"],
+                ]
+            },
             {"#GREATER_THAN_OR_EQUALS": ["$spec.details.value", "2"]},
         ]
     }
