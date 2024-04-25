@@ -4,7 +4,6 @@ from typing import Dict, Iterable, Iterator, List, Optional
 from uuid import UUID
 
 import requests
-from pandas import DataFrame
 from pydantic import BaseModel, field_validator
 from requests import JSONDecodeError
 
@@ -14,6 +13,11 @@ from odp_sdk.dto.tabular_store import PaginatedSelectResultSet, TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
 from odp_sdk.utils.ndjson import NdJsonParser
+
+try:
+    from pandas import DataFrame
+except ImportError:
+    print("Pandas not installed. DataFrame support will not be available.")
 
 
 class OdpTabularStorageClient(BaseModel):
