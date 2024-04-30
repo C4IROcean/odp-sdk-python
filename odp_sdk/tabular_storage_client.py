@@ -4,7 +4,7 @@ from typing import Dict, Iterable, Iterator, List, Optional
 from uuid import UUID
 
 import requests
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ValidationError, field_validator
 from requests import JSONDecodeError
 
 from odp_sdk.dto import ResourceDto
@@ -390,7 +390,7 @@ class OdpTabularStorageClient(BaseModel):
 
         try:
             result = PaginatedSelectResultSet(**response.json())
-        except JSONDecodeError:
+        except (JSONDecodeError, ValidationError):
             data = list(iter(NdJsonParser(response.text)))
             data = convert_geometry(data, result_geometry)
 
