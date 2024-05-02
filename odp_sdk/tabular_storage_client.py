@@ -1,4 +1,3 @@
-import math
 import re
 from typing import Dict, Iterable, Iterator, List, Optional
 from uuid import UUID
@@ -24,8 +23,6 @@ except ImportError:
 class OdpTabularStorageClient(BaseModel):
     http_client: OdpHttpClient
     tabular_storage_endpoint: str = "/data"
-    write_chunk_size_limit: int = 10000
-    select_chunk_size_limit: int = 10000
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -333,25 +330,11 @@ class OdpTabularStorageClient(BaseModel):
         """
         Helper method to get data in chunks and to compile them
         """
-        if not limit:
-            limit = math.inf
-
-        page_size = min(self.select_chunk_size_limit, limit)
-
-        while True:
-            # Make sure the page size is a multiple of 1000 per API specs
-            page_size = (page_size * 1000) // 1000
-            rows, cursor = self._select_page(resource_dto, filter_query, page_size, cursor)
-            yield from rows
-
-            # Calculate remaining limit
-            limit -= page_size
-            # If limit is reached or no more data yield the result
-            if limit == 0 or cursor is None:
-                break
-            # If limit not reached if limit is less than the page_size set new page size to not overflow the limit
-            elif limit < page_size:
-                page_size = limit
+        # Make sure the page size is a multiple of 1000 per API specs
+        if limit:
+            limit = (limit // 1000) * 1000
+        rows, cursor = self._select_page(resource_dto, filter_query, limit, cursor)
+        yield from rows
 
     def _select_page(
         self,
@@ -431,12 +414,6 @@ class OdpTabularStorageClient(BaseModel):
         """
 
         url = self._get_crud_url(resource_dto)
-
-        while len(data) > self.write_chunk_size_limit:
-            data_chunk = data[: self.write_chunk_size_limit]
-            data = data[self.write_chunk_size_limit :]
-            self._write_limited_size(url, data_chunk, table_stage)
-
         self._write_limited_size(url, data, table_stage)
 
     def _write_limited_size(self, url: str, data: List[Dict], table_stage: Optional[TableStage] = None):

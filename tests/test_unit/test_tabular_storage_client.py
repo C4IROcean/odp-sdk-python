@@ -11,13 +11,6 @@ def tabular_storage_client(http_client) -> OdpTabularStorageClient:
     return OdpTabularStorageClient(http_client=http_client, tabular_storage_endpoint="/data")
 
 
-@pytest.fixture()
-def tabular_storage_client_low_chunk_size(http_client) -> OdpTabularStorageClient:
-    return OdpTabularStorageClient(
-        http_client=http_client, tabular_storage_endpoint="/data", select_chunk_size_limit=1, write_chunk_size_limit=1
-    )
-
-
 def test_create_schema_success(tabular_storage_client, tabular_resource_dto, table_spec):
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -309,102 +302,6 @@ def test_select_as_list_wkb_success(tabular_storage_client, tabular_resource_dto
         assert response[1]["test_key2"] == {"coordinates": [0.0, 1.0], "type": "Point"}
 
 
-def test_select_as_stream_small_chunk_success(tabular_storage_client_low_chunk_size, tabular_resource_dto):
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.POST,
-            f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
-            json={"data": [{"test_key1": "test_value"}], "next": "cursor"},
-            status=200,
-            content_type="application/json",
-        )
-        rsps.add(
-            responses.POST,
-            f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
-            json={"data": [{"test_key2": "test_value2"}]},
-            status=200,
-            content_type="application/json",
-        )
-
-        response = tabular_storage_client_low_chunk_size.select_as_stream(tabular_resource_dto, filter_query=None)
-        response_as_list = list(response)
-
-        assert len(response_as_list) == 2
-        assert response_as_list[0]["test_key1"] == "test_value"
-        assert response_as_list[1]["test_key2"] == "test_value2"
-
-
-def test_select_as_list_small_chunk_success(tabular_storage_client_low_chunk_size, tabular_resource_dto):
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.POST,
-            f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
-            json={"data": [{"test_key1": "test_value"}], "next": "cursor"},
-            status=200,
-            content_type="application/json",
-        )
-        rsps.add(
-            responses.POST,
-            f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
-            json={"data": [{"test_key2": "test_value2"}], "next": "cursor"},
-            status=200,
-            content_type="application/json",
-        )
-        rsps.add(
-            responses.POST,
-            f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
-            json={"data": [{"@@end": True}]},
-            status=200,
-            content_type="application/json",
-        )
-
-        response = tabular_storage_client_low_chunk_size.select_as_list(tabular_resource_dto, filter_query=None)
-
-        assert len(response) == 2
-        assert response[0]["test_key1"] == "test_value"
-        assert response[1]["test_key2"] == "test_value2"
-
-
-def test_select_as_stream_small_chunk_small_limit_success(tabular_storage_client_low_chunk_size, tabular_resource_dto):
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.POST,
-            f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
-            json={"data": [{"test_key1": "test_value"}], "next": "cursor"},
-            status=200,
-            content_type="application/json",
-        )
-
-        response = tabular_storage_client_low_chunk_size.select_as_stream(
-            tabular_resource_dto, limit=1, filter_query=None
-        )
-
-        response_as_list = list(response)
-
-        assert len(response_as_list) == 1
-        assert response_as_list[0]["test_key1"] == "test_value"
-
-
-def test_select_as_list_small_chunk_small_limit_success(tabular_storage_client_low_chunk_size, tabular_resource_dto):
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.POST,
-            f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
-            json={"data": [{"test_key1": "test_value"}], "next": "cursor"},
-            status=200,
-            content_type="application/json",
-        )
-
-        response = tabular_storage_client_low_chunk_size.select_as_list(
-            tabular_resource_dto, limit=1, filter_query=None
-        )
-
-        response_as_list = list(response)
-
-        assert len(response_as_list) == 1
-        assert response_as_list[0]["test_key1"] == "test_value"
-
-
 def test_select_as_stream_fail_404(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -462,23 +359,6 @@ def test_write_small_success(tabular_storage_client, tabular_resource_dto):
         tabular_storage_client.write(tabular_resource_dto, data, table_stage=None)
 
         assert rsps.assert_call_count(url, 1)
-
-
-def test_write_large_success(tabular_storage_client_low_chunk_size, tabular_resource_dto):
-    url = f"{tabular_storage_client_low_chunk_size.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}"
-
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.POST,
-            url,
-            status=200,
-        )
-
-        data = [{"test_key1": "test_value"}, {"test_key2": "test_value2"}]
-
-        tabular_storage_client_low_chunk_size.write(tabular_resource_dto, data, table_stage=None)
-
-        assert rsps.assert_call_count(url, 2)
 
 
 def test_write_fail_404(tabular_storage_client, tabular_resource_dto):
