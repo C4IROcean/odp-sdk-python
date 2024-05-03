@@ -239,7 +239,7 @@ def test_select_as_stream_success(tabular_storage_client, tabular_resource_dto):
             f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
             body='{"test_key1": "test_value"}\n{"test_key2": "test_value2"}',
             status=200,
-            content_type="application/json",
+            content_type="application/x-ndjson",
         )
 
         response = tabular_storage_client.select_as_stream(tabular_resource_dto, filter_query=None)
@@ -257,7 +257,7 @@ def test_select_as_list_success(tabular_storage_client, tabular_resource_dto):
             f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
             body='{"test_key1": "test_value"}\n{"test_key2": "test_value2"}\n{"@@end": true}',
             status=200,
-            content_type="application/json",
+            content_type="application/x-ndjson",
         )
 
         response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
@@ -274,7 +274,7 @@ def test_select_as_list_wkt_success(tabular_storage_client, tabular_resource_dto
             f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
             body='{"test_key1": "POINT(0 0)"}\n{"test_key2": "POINT(0 1)"}\n{"@@end": true}',
             status=200,
-            content_type="application/json",
+            content_type="application/x-ndjson",
         )
 
         response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
@@ -292,7 +292,7 @@ def test_select_as_list_wkb_success(tabular_storage_client, tabular_resource_dto
             body='{"test_key1": "010100000000000000000000000000000000000000"}\n'
             '{"test_key2": "01010000000000000000000000000000000000f03f"}\n{"@@end": true}',
             status=200,
-            content_type="application/json",
+            content_type="application/x-ndjson",
         )
 
         response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
@@ -334,7 +334,7 @@ def test_select_as_dataframe(tabular_storage_client, tabular_resource_dto):
             f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
             body='{"test_key1": "test_value"}\n{"test_key2": "test_value2"}\n{"@@end": true}',
             status=200,
-            content_type="application/json",
+            content_type="application/x-ndjson",
         )
 
         response = tabular_storage_client.select_as_dataframe(tabular_resource_dto, filter_query=None)
