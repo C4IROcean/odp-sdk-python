@@ -372,12 +372,18 @@ class OdpTabularStorageClient(BaseModel):
             raise
 
         try:
-            result = PaginatedSelectResultSet(**response.json())
-        except (JSONDecodeError, ValidationError):
-            data = list(iter(NdJsonParser(response.text)))
-            data = convert_geometry(data, result_geometry)
+            if response.headers.get("Content-Type") == "application/json":
+                result = PaginatedSelectResultSet(**response.json())
+            elif response.headers.get("Content-Type") == "application/x-ndjson":
+                data = list(iter(NdJsonParser(response.text)))
+                data = convert_geometry(data, result_geometry)
 
-            result = PaginatedSelectResultSet(data=data)
+                result = PaginatedSelectResultSet(data=data)
+            else:
+                raise ValueError("Invalid response content type")
+        except (JSONDecodeError, ValidationError, ValueError) as e:
+            print(f"Error decoding response: {e}")
+            result = PaginatedSelectResultSet(data=[])
 
         return result.data, result.next
 
