@@ -1,10 +1,12 @@
 import unittest
 
+from odp_sdk.auth import get_default_token_provider
 from odp_sdk.client import OdpClient
 
 
 class TestCatalogOqsQueryExample(unittest.TestCase):
     def test_catalog_oqs_query(self):
+        get_default_token_provider()
         client = OdpClient()
 
         # Filter collections

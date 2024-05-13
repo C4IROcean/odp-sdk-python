@@ -3,6 +3,7 @@ import random
 import string
 import unittest
 
+from odp_sdk.auth import get_default_token_provider
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
@@ -10,6 +11,7 @@ from odp_sdk.dto.file_dto import FileMetadataDto
 
 class TestRawClientExample(unittest.TestCase):
     def test_raw_client(self):
+        get_default_token_provider()
         client = OdpClient()
 
         my_dataset = ResourceDto(
@@ -49,5 +51,7 @@ class TestRawClientExample(unittest.TestCase):
 
         # Clean up
         client.raw.delete_file(my_dataset, file_dto)
+        if os.path.exists("test.txt"):
+            os.remove("test.txt")
 
         client.catalog.delete(my_dataset)

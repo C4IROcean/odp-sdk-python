@@ -2,12 +2,14 @@ import random
 import string
 import unittest
 
+from odp_sdk.auth import get_default_token_provider
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 
 
 class TestCatalogMethods(unittest.TestCase):
     def test_get_catalog(self):
+        get_default_token_provider()
         client = OdpClient()
 
         resource_manifest = client.catalog.get(
@@ -21,6 +23,7 @@ class TestCatalogMethods(unittest.TestCase):
         self.assertTrue(same_resource_manifest)
 
     def test_list_catalog(self):
+        get_default_token_provider()
         client = OdpClient()
 
         oqs_filter = {
@@ -33,6 +36,7 @@ class TestCatalogMethods(unittest.TestCase):
         self.assertTrue(client.catalog.list(oqs_filter=oqs_filter))
 
     def test_create_catalog(self):
+        get_default_token_provider()
         client = OdpClient()
 
         # ResourceDto

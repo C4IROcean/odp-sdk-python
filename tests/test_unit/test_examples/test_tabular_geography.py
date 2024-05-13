@@ -2,6 +2,7 @@ import random
 import string
 import unittest
 
+from odp_sdk.auth import get_default_token_provider
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
@@ -9,6 +10,7 @@ from odp_sdk.dto.table_spec import TableSpec
 
 class TestTabularGeography(unittest.TestCase):
     def test_tabular_geography(self):
+        get_default_token_provider()
         client = OdpClient()
 
         # Create a new manifest to add to the catalog

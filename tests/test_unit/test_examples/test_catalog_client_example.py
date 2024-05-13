@@ -2,12 +2,14 @@ import random
 import string
 import unittest
 
+from odp_sdk.auth import get_default_token_provider
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 
 
 class TestCatalogClientExample(unittest.TestCase):
     def test_catalog_client(self):
+        get_default_token_provider()
         client = OdpClient()
 
         catalog_client = client.catalog
