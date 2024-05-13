@@ -244,7 +244,7 @@ class AzureTokenProvider(JwtTokenProvider):
     authority: str = "https://oceandataplatform.b2clogin.com/755f6e58-74f0-4a07-a599-f7479b9669ab/v2.0/"
     """IDP token Authority"""
 
-    scope: List[str] = ["https://oceandataplatform.onmicrosoft.com/odcat-test/.default"]
+    scope: List[str] = ["https://oceandataplatform.onmicrosoft.com/odcat/.default"]
     """IDP token scope"""
 
     tenant_id: str = "755f6e58-74f0-4a07-a599-f7479b9669ab"
