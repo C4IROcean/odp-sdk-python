@@ -2,14 +2,11 @@ import os
 import random
 import string
 
-import pytest
-
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
 
 
-@pytest.mark.usefixtures("azure_token_provider")
 def test_raw_client(odp_client: OdpClient):
     my_dataset = ResourceDto(
         **{

@@ -5,7 +5,7 @@ on:
 
 jobs:
   examples-test:
-    name: Examples test
+    name: Test examples
     runs-on: ubuntu-latest
     env:
       ODCAT_AUTH_CLIENT_ID: ${{ secrets.ODCAT_AUTH_CLIENT_ID }}

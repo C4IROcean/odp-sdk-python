@@ -1,14 +1,11 @@
 import random
 import string
 
-import pytest
-
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
 
 
-@pytest.mark.usefixtures("azure_token_provider")
 def test_tabular_geography(odp_client: OdpClient):
     # Create a new manifest to add to the catalog
     manifest = ResourceDto(

@@ -1,13 +1,10 @@
 import random
 import string
 
-import pytest
-
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 
 
-@pytest.mark.usefixtures("azure_token_provider")
 def test_observables(odp_client: OdpClient):
     catalog_client = odp_client.catalog
 

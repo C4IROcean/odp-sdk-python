@@ -1,13 +1,10 @@
 import random
 import string
 
-import pytest
-
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 
 
-@pytest.mark.usefixtures("azure_token_provider")
 def test_get_catalog(odp_client: OdpClient):
     resource_manifest = odp_client.catalog.get(
         "catalog.hubocean.io/dataCollection/1e3401d4-9630-40cd-a9cf-d875cb310449-glodap"
@@ -31,7 +28,6 @@ def test_list_catalog(odp_client: OdpClient):
     assert odp_client.catalog.list(oqs_filter=oqs_filter) != []
 
 
-@pytest.mark.usefixtures("azure_token_provider")
 def test_create_catalog(odp_client: OdpClient):
     # ResourceDto
     manifest = ResourceDto(
