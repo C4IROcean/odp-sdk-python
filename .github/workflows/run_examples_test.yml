@@ -43,5 +43,5 @@ jobs:
         run: |
           poetry run pytest tests/test_examples
         env:
-          ODCAT_BASE_URL: https://odcat-${{ github.event.pull_request.number }}.${{ env.DOMAIN }}
+          ODCAT_BASE_URL: https://api.hubocean.earth
           GITHUB_SHA: ${{ github.sha }}
