@@ -9,9 +9,7 @@ from odp_sdk.dto.table_spec import TableSpec
 
 
 @pytest.mark.usefixtures("azure_token_provider")
-def test_tabular_geography():
-    client = OdpClient()
-
+def test_tabular_geography(odp_client: OdpClient):
     # Create a new manifest to add to the catalog
     manifest = ResourceDto(
         **{
@@ -29,7 +27,7 @@ def test_tabular_geography():
     )
 
     # The dataset is created in the catalog.
-    manifest = client.catalog.create(manifest)
+    manifest = odp_client.catalog.create(manifest)
 
     print("Manifest created successfully")
 
@@ -39,7 +37,7 @@ def test_tabular_geography():
 
     my_table_spec = TableSpec(table_schema=table_schema, partitioning=partitioning)
 
-    my_table_spec = client.tabular.create_schema(resource_dto=manifest, table_spec=my_table_spec)
+    my_table_spec = odp_client.tabular.create_schema(resource_dto=manifest, table_spec=my_table_spec)
 
     print("Table spec created successfully")
 
@@ -85,11 +83,11 @@ def test_tabular_geography():
     ]
 
     print("Inserting data into the table")
-    client.tabular.write(resource_dto=manifest, data=data)
+    odp_client.tabular.write(resource_dto=manifest, data=data)
     print("Data inserted and partitioned")
 
     print("Querying for cities in europe")
-    europe_list = client.tabular.select_as_list(
+    europe_list = odp_client.tabular.select_as_list(
         resource_dto=manifest,
         filter_query={
             "#ST_WITHIN": [
@@ -115,5 +113,5 @@ def test_tabular_geography():
     assert europe_list != []
 
     # Clean up
-    client.tabular.delete_schema(manifest)
-    client.catalog.delete(manifest)
+    odp_client.tabular.delete_schema(manifest)
+    odp_client.catalog.delete(manifest)

@@ -1,19 +1,13 @@
 import random
 import string
 
-import pytest
-
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.resource_client import OdpResourceClient
-from tests.fixtures import azure_token_provider
 
 
-@pytest.mark.usefixtures("azure_token_provider")
-def test_catalog_client():
-    client = OdpClient()
-
-    catalog_client = client.catalog
+def test_catalog_client(odp_client: OdpClient):
+    catalog_client = odp_client.catalog
     assert isinstance(catalog_client, OdpResourceClient)
 
     # List all resources in the catalog

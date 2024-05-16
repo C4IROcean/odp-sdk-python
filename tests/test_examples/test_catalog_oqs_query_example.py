@@ -1,12 +1,7 @@
-import pytest
-
 from odp_sdk.client import OdpClient
 
 
-@pytest.mark.usefixtures("azure_token_provider")
-def test_catalog_oqs_query():
-    client = OdpClient()
-
+def test_catalog_oqs_query(odp_client: OdpClient):
     # Filter collections
 
     oqs_filter = {
@@ -16,7 +11,7 @@ def test_catalog_oqs_query():
         ]
     }
 
-    for item in client.catalog.list(oqs_filter):
+    for item in odp_client.catalog.list(oqs_filter):
         print(item)
 
-    assert client.catalog.list(oqs_filter) != []
+    assert odp_client.catalog.list(oqs_filter) != []
