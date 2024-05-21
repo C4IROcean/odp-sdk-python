@@ -296,7 +296,11 @@ class OdpTabularStorageClient(BaseModel):
         yield from row_iterator
 
     def select_as_list(
-        self, resource_dto: ResourceDto, filter_query: Optional[dict] = None, limit: Optional[int] = None
+        self,
+        resource_dto: ResourceDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None
     ) -> list[dict]:
         """
         Select data from dataset
@@ -305,6 +309,7 @@ class OdpTabularStorageClient(BaseModel):
             resource_dto: Dataset manifest
             filter_query: Filter query in OQS format
             limit: limit for the number of rows returned
+            cursor: pointer to next list page
 
         Returns:
             Data that is queried as a list
@@ -313,7 +318,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        row_iterator = self._select_stream(resource_dto, filter_query, limit)
+        row_iterator = self._select_stream(resource_dto, filter_query, limit, cursor)
 
         if limit:
             return list(row_iterator)
