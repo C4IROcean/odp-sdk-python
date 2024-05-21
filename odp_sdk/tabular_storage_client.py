@@ -300,7 +300,7 @@ class OdpTabularStorageClient(BaseModel):
         resource_dto: ResourceDto,
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
-        cursor: Optional[str] = None
+        cursor: Optional[str] = None,
     ) -> list[dict]:
         """
         Select data from dataset
