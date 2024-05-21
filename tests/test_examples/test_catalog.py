@@ -25,7 +25,8 @@ def test_list_catalog(odp_client: OdpClient):
         ]
     }
 
-    assert odp_client.catalog.list(oqs_filter=oqs_filter) != []
+    list_elements = [data_collection for data_collection in odp_client.catalog.list(oqs_filter=oqs_filter)]
+    assert list_elements != []
 
 
 def test_create_catalog(odp_client: OdpClient):

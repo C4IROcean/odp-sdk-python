@@ -43,5 +43,6 @@ jobs:
         run: |
           poetry run pytest tests/test_examples
         env:
-          ODCAT_BASE_URL: https://api.hubocean.earth
+          ODCAT_BASE_URL: https://odcat.dev.hubocean.io
+          ODCAT_AUTH_SCOPE: https://oceandataplatform.onmicrosoft.com/odcat-dev/.default
           GITHUB_SHA: ${{ github.sha }}
