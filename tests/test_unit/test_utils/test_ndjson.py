@@ -99,3 +99,34 @@ def test_parse_ndjson_embedded_json():
     assert parsed_rows[0]["content"] == 'Nested objects: {"key1": "value1", "key2": "value2"}'
     assert parsed_rows[1]["config"] == '{ "param1": [1, 2, 3], "param2": {"a": true, "b": false} }'
     assert parsed_rows[2]["formula"] == 'Mathematical expressions: {"equation": "x^2 + y^2 = r^2"}'
+
+
+def test_parse_ndjson_wkt_simple():
+    test_str = (
+        dedent(
+            """
+            {"product_id": 1, "name": "Widget", "geo": "POINT(0 0)"}
+            {"product_id": 2, "name": "Gadget", "geo": "POINT(0 1)"}
+            {"product_id": 3, "name": "Tool", "geo": "POINT(0 2)"}
+            """
+        )
+        .strip()
+        .encode("utf-8")
+    )
+
+    ndjson_parser = NdJsonParser(s=test_str)
+
+    parsed_rows = list(iter(ndjson_parser))
+
+    assert isinstance(parsed_rows, list)
+    assert len(parsed_rows) == 3
+
+    assert parsed_rows[0]["product_id"] == 1
+    assert parsed_rows[0]["name"] == "Widget"
+    assert parsed_rows[0]["geo"] == "POINT(0 0)"
+    assert parsed_rows[1]["product_id"] == 2
+    assert parsed_rows[1]["name"] == "Gadget"
+    assert parsed_rows[1]["geo"] == "POINT(0 1)"
+    assert parsed_rows[2]["product_id"] == 3
+    assert parsed_rows[2]["name"] == "Tool"
+    assert parsed_rows[2]["geo"] == "POINT(0 2)"
