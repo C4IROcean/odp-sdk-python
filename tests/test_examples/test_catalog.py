@@ -31,7 +31,7 @@ def test_list_catalog(odp_client: OdpClient):
     assert list_elements != []
 
 
-def test_create_catalog(odp_client_owner: Tuple[OdpClient, UUID]):
+def test_create_catalog(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     # ResourceDto
     manifest = ResourceDto(
         **{
@@ -39,7 +39,7 @@ def test_create_catalog(odp_client_owner: Tuple[OdpClient, UUID]):
             "version": "v1alpha3",
             "metadata": {
                 "name": "".join(random.choices(string.ascii_lowercase + string.digits, k=20)),
-                "owner": odp_client_owner[1],
+                "labels": {"test_uuid": odp_client_test_uuid[1]},
             },
             "spec": {
                 "storage_controller": "registry.hubocean.io/storageController/storage-tabular",
@@ -49,4 +49,4 @@ def test_create_catalog(odp_client_owner: Tuple[OdpClient, UUID]):
         }
     )
 
-    assert isinstance(odp_client_owner[0].catalog.create(manifest), ResourceDto)
+    assert isinstance(odp_client_test_uuid[0].catalog.create(manifest), ResourceDto)

@@ -8,8 +8,8 @@ from odp_sdk.dto import ResourceDto
 from odp_sdk.resource_client import OdpResourceClient
 
 
-def test_catalog_client(odp_client_owner: Tuple[OdpClient, UUID]):
-    catalog_client = odp_client_owner[0].catalog
+def test_catalog_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
+    catalog_client = odp_client_test_uuid[0].catalog
     assert isinstance(catalog_client, OdpResourceClient)
 
     # List all resources in the catalog
@@ -25,7 +25,7 @@ def test_catalog_client(odp_client_owner: Tuple[OdpClient, UUID]):
             "version": "v1alpha3",
             "metadata": {
                 "name": "".join(random.choices(string.ascii_lowercase + string.digits, k=20)),
-                "owner": odp_client_owner[1],
+                "labels": {"test_uuid": odp_client_test_uuid[1]},
             },
             "spec": {
                 "storage_controller": "registry.hubocean.io/storageController/storage-tabular",

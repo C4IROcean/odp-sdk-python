@@ -57,11 +57,14 @@ def delete_element(func: Callable, *args, **kwargs) -> None:
 
 
 @pytest.fixture
-def odp_client_owner(odp_client: OdpClient, token_provider: AzureTokenProvider) -> Tuple[OdpClient, uuid.UUID]:
-    yield odp_client, uuid.UUID(token_provider.client_id.get_secret_value())
+def odp_client_test_uuid(odp_client: OdpClient) -> Tuple[OdpClient, uuid.UUID]:
+    test_uuid = uuid.uuid4()
+    yield odp_client, test_uuid
 
     # Clean up
-    for manifest in odp_client.catalog.list({"#EQUALS": ["$metadata.owner", str(token_provider.client_id.get_secret_value())]}):
+    for manifest in odp_client.catalog.list(
+        {"#EQUALS": ["$metadata.labels.test_uuid", str(test_uuid)]}
+    ):
         if "raw" in manifest.spec.get("storage_class", ""):
             for file in odp_client.raw.list(manifest):
                 delete_element(odp_client.raw.delete_file, manifest, file)
