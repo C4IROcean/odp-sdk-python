@@ -32,8 +32,8 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
             },
             "spec": {
                 "ref": "catalog.hubocean.io/dataset/test-dataset",
-                "observable_class": "catalog.hubocean.io/observableClass/static-coverage",
-                "details": {"value": [0, 1684147082], "attribute": "test"},
+                "observable_class": "catalog.hubocean.io/observableClass/static-geometric-coverage",
+                "details": {"value": {"type": "Point", "coordinates": [-73.981200, 40.764950]}, "attribute": "test"},
             },
         }
     )
