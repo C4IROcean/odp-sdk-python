@@ -61,7 +61,7 @@ def odp_client_owner(odp_client: OdpClient, token_provider: AzureTokenProvider) 
     yield odp_client, token_provider.client_id.get_secret_value()
 
     # Clean up
-    for manifest in odp_client.catalog.list({"#EQUALS": ["$metadata.owner", str(token_provider.client_id)]}):
+    for manifest in odp_client.catalog.list({"#EQUALS": ["$metadata.owner", token_provider.client_id.get_secret_value()]}):
         if "raw" in manifest.spec.get("storage_class", ""):
             for file in odp_client.raw.list(manifest):
                 delete_element(odp_client.raw.delete_file, manifest, file)
