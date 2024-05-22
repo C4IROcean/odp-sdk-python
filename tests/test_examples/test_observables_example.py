@@ -86,7 +86,7 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
                 "name": "".join(random.choices(string.ascii_lowercase + string.digits, k=20)),
                 "display_name": "SDK Example Small Value",
                 "description": "An observable that emits a small value",
-                "labels": {"hubocean.io/test": True, "test_uuid": odp_client_test_uuid[1]}
+                "labels": {"hubocean.io/test": True, "test_uuid": odp_client_test_uuid[1]},
             },
             "spec": {
                 "ref": "catalog.hubocean.io/dataset/test-dataset",

@@ -62,9 +62,7 @@ def odp_client_test_uuid(odp_client: OdpClient) -> Tuple[OdpClient, uuid.UUID]:
     yield odp_client, test_uuid
 
     # Clean up
-    for manifest in odp_client.catalog.list(
-        {"#EQUALS": ["$metadata.labels.test_uuid", str(test_uuid)]}
-    ):
+    for manifest in odp_client.catalog.list({"#EQUALS": ["$metadata.labels.test_uuid", str(test_uuid)]}):
         if "raw" in manifest.spec.get("storage_class", ""):
             for file in odp_client.raw.list(manifest):
                 delete_element(odp_client.raw.delete_file, manifest, file)

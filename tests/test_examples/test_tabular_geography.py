@@ -16,7 +16,7 @@ def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
             "version": "v1alpha3",
             "metadata": {
                 "name": "".join(random.choices(string.ascii_lowercase + string.digits, k=20)),
-                "labels": {"test_uuid": odp_client_test_uuid[1]}
+                "labels": {"test_uuid": odp_client_test_uuid[1]},
             },
             "spec": {
                 "storage_controller": "registry.hubocean.io/storageController/storage-tabular",
