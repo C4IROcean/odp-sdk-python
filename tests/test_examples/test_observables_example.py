@@ -76,7 +76,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
     for item in catalog_client.list(observable_geometry_filter):
         print(item)
     print("-------")
-    assert [observable for observable in catalog_client.list(observable_geometry_filter)] != []
+    assert fetched_manifest in [observable for observable in catalog_client.list(observable_geometry_filter)]
 
     # Create static observables to filter
     static_manifest_small = ResourceDto(
@@ -98,7 +98,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
         }
     )
 
-    catalog_client.create(static_manifest_small)
+    lower_than_two = catalog_client.create(static_manifest_small)
 
     static_manifest_large = ResourceDto(
         **{
@@ -119,7 +119,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
         }
     )
 
-    catalog_client.create(static_manifest_large)
+    equal_greater_than_two = catalog_client.create(static_manifest_large)
 
     # An example query to search for observables in certain range
     observable_range_filter = {
@@ -129,8 +129,11 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
         ]
     }
 
+    list_observables = []
     # List all observables in the catalog that intersect with the geometry
     for item in catalog_client.list(observable_range_filter):
         print(item)
+        list_observables.append(item)
     print("-------")
-    assert [observable for observable in catalog_client.list(observable_range_filter)] != []
+    assert equal_greater_than_two in list_observables
+    assert lower_than_two not in list_observables
