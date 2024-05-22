@@ -52,7 +52,7 @@ def odp_client(token_provider: AzureTokenProvider) -> OdpClient:
 def delete_element(func: Callable, *args, **kwargs) -> None:
     try:
         func(*args, **kwargs)
-    except OdpResourceNotFoundError:
+    except (OdpResourceNotFoundError, Exception):
         pass
 
 

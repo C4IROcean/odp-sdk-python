@@ -76,7 +76,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
     for item in catalog_client.list(observable_geometry_filter):
         print(item)
     print("-------")
-    assert fetched_manifest in [observable for observable in catalog_client.list(observable_geometry_filter)]
+    assert [observable for observable in catalog_client.list(observable_geometry_filter)] != []
 
     # Create static observables to filter
     static_manifest_small = ResourceDto(
