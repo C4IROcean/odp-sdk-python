@@ -10,8 +10,6 @@ from odp_sdk.dto import ResourceDto
 def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
     catalog_client = odp_client_owner[0].catalog
 
-    observables = []
-
     # List observables in the catalog
     observable_filter = {"#EQUALS": ["$kind", "catalog.hubocean.io/observable"]}
 
@@ -42,8 +40,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
 
     # The observable is created in the catalog.
     observable_manifest = catalog_client.create(observable_manifest)
-    observables.append(observable_manifest)
-    assert isinstance(observables[0], ResourceDto)
+    assert isinstance(observable_manifest, ResourceDto)
 
     # Fetch the manifest from the observable using the UUID
     fetched_manifest = catalog_client.get(observable_manifest.metadata.uuid)
@@ -79,7 +76,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
     for item in catalog_client.list(observable_geometry_filter):
         print(item)
     print("-------")
-    assert catalog_client.list(observable_geometry_filter) != []
+    assert [observable for observable in catalog_client.list(observable_geometry_filter)] != []
 
     # Create static observables to filter
     static_manifest_small = ResourceDto(
@@ -101,8 +98,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
         }
     )
 
-    small_manifest = catalog_client.create(static_manifest_small)
-    observables.append(small_manifest)
+    catalog_client.create(static_manifest_small)
 
     static_manifest_large = ResourceDto(
         **{
@@ -123,8 +119,7 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
         }
     )
 
-    large_manifest = catalog_client.create(static_manifest_large)
-    observables.append(large_manifest)
+    catalog_client.create(static_manifest_large)
 
     # An example query to search for observables in certain range
     observable_range_filter = {
@@ -138,4 +133,4 @@ def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
     for item in catalog_client.list(observable_range_filter):
         print(item)
     print("-------")
-    assert catalog_client.list(observable_range_filter) != []
+    assert [observable for observable in catalog_client.list(observable_range_filter)] != []
