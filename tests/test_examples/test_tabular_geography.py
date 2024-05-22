@@ -1,12 +1,14 @@
 import random
 import string
+from typing import Tuple
+from uuid import UUID
 
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
 
 
-def test_tabular_geography(odp_client: OdpClient):
+def test_tabular_geography(odp_client_owner: Tuple[OdpClient, UUID]):
     # Create a new manifest to add to the catalog
     manifest = ResourceDto(
         **{
@@ -14,6 +16,7 @@ def test_tabular_geography(odp_client: OdpClient):
             "version": "v1alpha3",
             "metadata": {
                 "name": "".join(random.choices(string.ascii_lowercase + string.digits, k=20)),
+                "owner": odp_client_owner[1],
             },
             "spec": {
                 "storage_controller": "registry.hubocean.io/storageController/storage-tabular",
@@ -24,7 +27,7 @@ def test_tabular_geography(odp_client: OdpClient):
     )
 
     # The dataset is created in the catalog.
-    manifest = odp_client.catalog.create(manifest)
+    manifest = odp_client_owner[0].catalog.create(manifest)
 
     print("Manifest created successfully")
 
@@ -34,7 +37,7 @@ def test_tabular_geography(odp_client: OdpClient):
 
     my_table_spec = TableSpec(table_schema=table_schema, partitioning=partitioning)
 
-    my_table_spec = odp_client.tabular.create_schema(resource_dto=manifest, table_spec=my_table_spec)
+    my_table_spec = odp_client_owner[0].tabular.create_schema(resource_dto=manifest, table_spec=my_table_spec)
 
     print("Table spec created successfully")
 
@@ -80,11 +83,11 @@ def test_tabular_geography(odp_client: OdpClient):
     ]
 
     print("Inserting data into the table")
-    odp_client.tabular.write(resource_dto=manifest, data=data)
+    odp_client_owner[0].tabular.write(resource_dto=manifest, data=data)
     print("Data inserted and partitioned")
 
     print("Querying for cities in europe")
-    europe_list = odp_client.tabular.select_as_list(
+    europe_list = odp_client_owner[0].tabular.select_as_list(
         resource_dto=manifest,
         filter_query={
             "#ST_WITHIN": [
@@ -108,7 +111,3 @@ def test_tabular_geography(odp_client: OdpClient):
     for city in europe_list:
         print(city.get("name"))
     assert europe_list != []
-
-    # Clean up
-    odp_client.tabular.delete_schema(manifest)
-    odp_client.catalog.delete(manifest)

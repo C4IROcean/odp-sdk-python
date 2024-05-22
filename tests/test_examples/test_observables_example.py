@@ -1,12 +1,14 @@
 import random
 import string
+from typing import Tuple
+from uuid import UUID
 
 from odp_sdk.client import OdpClient
 from odp_sdk.dto import ResourceDto
 
 
-def test_observables(odp_client: OdpClient):
-    catalog_client = odp_client.catalog
+def test_observables(odp_client_owner: Tuple[OdpClient, UUID]):
+    catalog_client = odp_client_owner[0].catalog
 
     observables = []
 
@@ -28,6 +30,7 @@ def test_observables(odp_client: OdpClient):
                 "display_name": "Test Observable for time",
                 "description": "A test observable for time",
                 "labels": {"hubocean.io/test": True},
+                "owner": odp_client_owner[1],
             },
             "spec": {
                 "ref": "catalog.hubocean.io/dataset/test-dataset",
@@ -88,6 +91,7 @@ def test_observables(odp_client: OdpClient):
                 "display_name": "SDK Example Small Value",
                 "description": "An observable that emits a small value",
                 "labels": {"hubocean.io/test": True},
+                "owner": odp_client_owner[1],
             },
             "spec": {
                 "ref": "catalog.hubocean.io/dataset/test-dataset",
@@ -109,6 +113,7 @@ def test_observables(odp_client: OdpClient):
                 "display_name": "SDK Example Large Value",
                 "description": "An observable that emits a large value",
                 "labels": {"hubocean.io/test": True},
+                "owner": odp_client_owner[1],
             },
             "spec": {
                 "ref": "catalog.hubocean.io/dataset/test-dataset",
@@ -134,7 +139,3 @@ def test_observables(odp_client: OdpClient):
         print(item)
     print("-------")
     assert catalog_client.list(observable_range_filter) != []
-
-    # Clean up
-    for obs in observables:
-        catalog_client.delete(obs)
