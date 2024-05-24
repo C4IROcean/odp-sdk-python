@@ -21,7 +21,7 @@ pip3 install odp_sdk
  
 ## Usage
 
-*Note: Accessing the Ocean Data Platform requires an authorzed account. Contact ODP to require one.*
+*Note: Accessing the Ocean Data Platform requires an authorized account. Contact ODP to require one.*
 
 ```python
 from odp_sdk.client import OdpClient
