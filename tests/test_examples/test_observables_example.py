@@ -10,15 +10,11 @@ from odp_sdk.dto import ResourceDto
 def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     catalog_client = odp_client_test_uuid[0].catalog
 
-    # List observables in the catalog
     observable_filter = {"#EQUALS": ["$kind", "catalog.hubocean.io/observable"]}
 
     for item in catalog_client.list(observable_filter):
-        print(item)
+        assert isinstance(item, ResourceDto)
 
-    print("-------")
-
-    # Create a new manifest to add to the catalog
     observable_manifest = ResourceDto(
         **{
             "kind": "catalog.hubocean.io/observable",
@@ -37,17 +33,12 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         }
     )
 
-    # The observable is created in the catalog.
     observable_manifest = catalog_client.create(observable_manifest)
     assert isinstance(observable_manifest, ResourceDto)
 
-    # Fetch the manifest from the observable using the UUID
     fetched_manifest = catalog_client.get(observable_manifest.metadata.uuid)
-    print(fetched_manifest)
-    print("-------")
     assert isinstance(fetched_manifest, ResourceDto)
 
-    # An example query to search for observables in certain geometries
     observable_geometry_filter = {
         "#AND": [
             {"#EQUALS": ["$kind", "catalog.hubocean.io/observable"]},
@@ -71,13 +62,10 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         ]
     }
 
-    # List all observables in the catalog that intersect with the geometry
     for item in catalog_client.list(observable_geometry_filter):
-        print(item)
-    print("-------")
+        assert isinstance(item, ResourceDto)
     assert [observable for observable in catalog_client.list(observable_geometry_filter)] != []
 
-    # Create static observables to filter
     static_manifest_small = ResourceDto(
         **{
             "kind": "catalog.hubocean.io/observable",
@@ -118,7 +106,6 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
 
     catalog_client.create(static_manifest_large)
 
-    # An example query to search for observables in certain range
     observable_range_filter = {
         "#AND": [
             {"#WITHIN": ["$spec.observable_class", ["catalog.hubocean.io/observableClass/static-observable"]]},
@@ -127,9 +114,8 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     }
 
     list_observables = []
-    # List all observables in the catalog that intersect with the geometry
     for item in catalog_client.list(observable_range_filter):
-        print(item)
+        assert isinstance(item, ResourceDto)
         list_observables.append(item)
-    print("-------")
+
     assert list_observables != []

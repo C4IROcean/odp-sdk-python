@@ -26,22 +26,18 @@ def test_raw_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         }
     )
 
-    # The dataset is created in the catalog.
     my_dataset = odp_client_test_uuid[0].catalog.create(my_dataset)
     assert isinstance(my_dataset, ResourceDto)
 
-    # Creating and uploading a file.
     file_dto = odp_client_test_uuid[0].raw.create_file(
         resource_dto=my_dataset,
         file_metadata_dto=FileMetadataDto(**{"name": "test.txt", "mime_type": "text/plain"}),
         contents=b"Hello, World!",
     )
-    print("-------FILES IN DATASET--------")
 
     for file in odp_client_test_uuid[0].raw.list(my_dataset):
-        print(file)
+        assert isinstance(file, FileMetadataDto)
     assert odp_client_test_uuid[0].raw.list(my_dataset) != []
 
-    # Download file
     odp_client_test_uuid[0].raw.download_file(my_dataset, file_dto, "test.txt")
     assert os.path.exists("test.txt")

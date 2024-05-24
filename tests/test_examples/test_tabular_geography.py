@@ -9,7 +9,6 @@ from odp_sdk.dto.table_spec import TableSpec
 
 
 def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
-    # Create a new manifest to add to the catalog
     manifest = ResourceDto(
         **{
             "kind": "catalog.hubocean.io/dataset",
@@ -26,10 +25,7 @@ def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         }
     )
 
-    # The dataset is created in the catalog.
     manifest = odp_client_test_uuid[0].catalog.create(manifest)
-
-    print("Manifest created successfully")
 
     table_schema = {"name": {"type": "string"}, "location": {"type": "geometry"}}
 
@@ -38,8 +34,6 @@ def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     my_table_spec = TableSpec(table_schema=table_schema, partitioning=partitioning)
 
     my_table_spec = odp_client_test_uuid[0].tabular.create_schema(resource_dto=manifest, table_spec=my_table_spec)
-
-    print("Table spec created successfully")
 
     data = [
         {"name": "Oslo", "location": {"type": "Point", "coordinates": [10.74609, 59.91273]}},
@@ -82,18 +76,15 @@ def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         {"name": "Bogotá", "location": {"type": "Point", "coordinates": [-74.072092, 4.710989]}},
     ]
 
-    print("Inserting data into the table")
     odp_client_test_uuid[0].tabular.write(resource_dto=manifest, data=data)
-    print("Data inserted and partitioned")
 
-    print("Querying for cities in europe")
     europe_list = odp_client_test_uuid[0].tabular.select_as_list(
         resource_dto=manifest,
         filter_query={
             "#ST_WITHIN": [
-                "$location",  # <- Name of column to perform geographic query against.
+                "$location",
                 {
-                    "type": "Polygon",  # This is a rough polygon encompassing Europe.
+                    "type": "Polygon",
                     "coordinates": [
                         [
                             [37.02028908997249, 70.9411520317463],
@@ -108,6 +99,4 @@ def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         },
     )
 
-    for city in europe_list:
-        print(city.get("name"))
     assert europe_list != []

@@ -12,13 +12,9 @@ def test_catalog_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     catalog_client = odp_client_test_uuid[0].catalog
     assert isinstance(catalog_client, OdpResourceClient)
 
-    # List all resources in the catalog
     for item in catalog_client.list():
-        print(item)
+        assert isinstance(item, ResourceDto)
 
-    print("-------")
-
-    # Create a new manifest to add to the catalog
     manifest = ResourceDto(
         **{
             "kind": "catalog.hubocean.io/dataset",
@@ -35,11 +31,8 @@ def test_catalog_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         }
     )
 
-    # The dataset is created in the catalog.
     manifest = catalog_client.create(manifest)
     assert isinstance(manifest, ResourceDto)
 
-    # Fetch the manifest from the catalog using the UUID
     fetched_manifest = catalog_client.get(manifest.metadata.uuid)
-    print(fetched_manifest)
     assert isinstance(fetched_manifest, ResourceDto)
