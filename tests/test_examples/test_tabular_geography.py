@@ -99,4 +99,7 @@ def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         },
     )
 
-    assert europe_list != []
+    expected_cities = ["Paris", "London", "Edinburgh", "Budapest", "Stockholm", "Oslo", "Berlin", "Rome", "Madrid"]
+    for city in europe_list:
+        assert city.get("name") in expected_cities
+    assert len(europe_list) == len(expected_cities)
