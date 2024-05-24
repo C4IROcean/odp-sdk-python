@@ -63,7 +63,7 @@ new_data = [{"Data": "Test Updated"}]
 print("Updating data in the table")
 client.tabular.update(
     resource_dto=my_dataset,
-    data=test_data,
+    data=new_data,
     filter_query=update_filters,
 )
 
