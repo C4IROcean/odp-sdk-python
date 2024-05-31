@@ -37,5 +37,9 @@ class OdpFileNotFoundError(OdpError):
     """Exception raised when a file is not found."""
 
 
+class OdpFileAlreadyExistsError(OdpError):
+    """File already exists"""
+
+
 class OpenTableStageInvalidAction(OdpError):
     """Exception when table is getting deleted and it has active sessions."""
