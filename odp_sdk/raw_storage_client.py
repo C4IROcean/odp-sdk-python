@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
-from odp_sdk.exc import OdpFileNotFoundError, OdpValidationError
+from odp_sdk.exc import OdpFileAlreadyExistsError, OdpFileNotFoundError, OdpValidationError
 from odp_sdk.http_client import OdpHttpClient
 
 
@@ -119,6 +119,7 @@ class OdpRawStorageClient(BaseModel):
         resource_dto: ResourceDto,
         file_metadata_dto: FileMetadataDto,
         contents: bytes | BytesIO,
+        overwrite: bool = False,
     ) -> FileMetadataDto:
         """
         Upload data to a file.
@@ -143,7 +144,7 @@ class OdpRawStorageClient(BaseModel):
 
         headers = {"Content-Type": "application/octet-stream"}
 
-        response = self.http_client.patch(url, headers=headers, content=contents)
+        response = self.http_client.patch(url, params={"overwrite": overwrite}, headers=headers, content=contents)
         try:
             response.raise_for_status()
         except requests.HTTPError as e:
@@ -184,6 +185,10 @@ class OdpRawStorageClient(BaseModel):
         except requests.HTTPError as e:
             if response.status_code == 401:
                 raise OdpValidationError("API argument error") from e
+            elif response.status_code == 409:
+                raise OdpFileAlreadyExistsError(
+                    f"File already exists: {file_metadata_dto.directory}/{file_metadata_dto.name}"
+                )
             raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
         file_meta = FileMetadataDto(**response.json())
