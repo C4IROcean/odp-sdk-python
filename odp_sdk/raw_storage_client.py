@@ -187,7 +187,7 @@ class OdpRawStorageClient(BaseModel):
                 raise OdpValidationError("API argument error") from e
             elif response.status_code == 409:
                 raise OdpFileAlreadyExistsError(
-                    f"File already exists: {file_metadata_dto.directory}/{file_metadata_dto.name}"
+                    f"File already exists: {file_metadata_dto.name}"
                 )
             raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
