@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 class FileMetadataDto(BaseModel):
     """File Metadata Model."""
+
     name: Optional[Any] = None
     mime_type: Optional[Any] = None
     dataset: Optional[UUID] = None

@@ -18,16 +18,18 @@ def raw_storage_client(http_client) -> OdpRawStorageClient:
 def test_get_file_metadata_success(raw_storage_client, raw_resource_dto):
     rand_uuid = uuid.uuid4()
     time_now = datetime.now()
-    file_meta = FileMetadataDto(name="file.zip",
-                                mime_type="application/zip",
-                                dataset=rand_uuid,
-                                metadata={"name": "sdk-raw-example"},
-                                geo_location="Somewhere",
-                                size_bytes=123456789,
-                                checksum="asdf",
-                                created_time=time_now,
-                                modified_time=time_now,
-                                deleted_time=time_now)
+    file_meta = FileMetadataDto(
+        name="file.zip",
+        mime_type="application/zip",
+        dataset=rand_uuid,
+        metadata={"name": "sdk-raw-example"},
+        geo_location="Somewhere",
+        size_bytes=123456789,
+        checksum="asdf",
+        created_time=time_now,
+        modified_time=time_now,
+        deleted_time=time_now,
+    )
 
     with responses.RequestsMock() as rsps:
         rsps.add(
