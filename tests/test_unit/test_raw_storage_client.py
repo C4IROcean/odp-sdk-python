@@ -1,4 +1,6 @@
 import json
+import uuid
+from datetime import datetime
 
 import pytest
 import responses
@@ -14,7 +16,20 @@ def raw_storage_client(http_client) -> OdpRawStorageClient:
 
 
 def test_get_file_metadata_success(raw_storage_client, raw_resource_dto):
-    file_meta = FileMetadataDto(file_metadata_name="file.zip", file_metadata_mime_type="application/zip")
+    rand_uuid = uuid.uuid4()
+    time_now = datetime.now()
+    file_meta = FileMetadataDto(
+        name="file.zip",
+        mime_type="application/zip",
+        dataset=rand_uuid,
+        metadata={"name": "sdk-raw-example"},
+        geo_location="Somewhere",
+        size_bytes=123456789,
+        checksum="asdf",
+        created_time=time_now,
+        modified_time=time_now,
+        deleted_time=time_now,
+    )
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -27,12 +42,20 @@ def test_get_file_metadata_success(raw_storage_client, raw_resource_dto):
 
         result = raw_storage_client.get_file_metadata(raw_resource_dto, file_meta)
 
-        assert result.name == file_meta.name
-        assert result.mime_type == file_meta.mime_type
+        assert result.name == "file.zip"
+        assert result.mime_type == "application/zip"
+        assert result.dataset == rand_uuid
+        assert result.metadata == {"name": "sdk-raw-example"}
+        assert result.geo_location == "Somewhere"
+        assert result.size_bytes == 123456789
+        assert result.checksum == "asdf"
+        assert result.created_time == time_now
+        assert result.modified_time == time_now
+        assert result.deleted_time == time_now
 
 
 def test_get_file_metadata_not_found(raw_storage_client, raw_resource_dto):
-    file_meta = FileMetadataDto(file_metadata_name="file.zip", file_metadata_mime_type="application/zip")
+    file_meta = FileMetadataDto(name="file.zip", mime_type="application/zip")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -46,10 +69,7 @@ def test_get_file_metadata_not_found(raw_storage_client, raw_resource_dto):
 
 
 def test_list_files_success(raw_storage_client, raw_resource_dto):
-    file_metadata = FileMetadataDto(
-        name="file.zip",
-        mime_type="application/zip",
-    )
+    file_metadata = FileMetadataDto(name="file.zip", mime_type="application/zip")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
