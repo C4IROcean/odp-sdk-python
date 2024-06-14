@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Dict, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel
@@ -36,13 +36,3 @@ class TableStage(BaseModel):
     def dict(self, **kwargs) -> "DictStrAny":  # noqa: F821
         exclude_unset = kwargs.pop("exclude_unset", True)
         return super().dict(exclude_unset=exclude_unset, **kwargs)
-
-
-class PaginatedSelectResultSet(BaseModel):
-    """Paginated select result set.
-
-    Contains the rows and the next page token of a query result.
-    """
-
-    data: List[Dict]
-    next: Optional[str] = None

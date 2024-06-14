@@ -1,14 +1,14 @@
 import re
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, List, Optional
 from uuid import UUID
+from warnings import warn
 
 import requests
-from pydantic import BaseModel, ValidationError, field_validator
-from requests import JSONDecodeError
+from pydantic import BaseModel, field_validator
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
-from odp_sdk.dto.tabular_store import PaginatedSelectResultSet, TableStage
+from odp_sdk.dto.tabular_store import TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
 from odp_sdk.utils import convert_geometry
@@ -17,7 +17,8 @@ from odp_sdk.utils.ndjson import NdJsonParser
 try:
     from pandas import DataFrame
 except ImportError:
-    print("Pandas not installed. DataFrame support will not be available.")
+    DataFrame = ImportError
+    warn("Pandas not installed. DataFrame support will not be available.")
 
 
 class OdpTabularStorageClient(BaseModel):
@@ -29,6 +30,12 @@ class OdpTabularStorageClient(BaseModel):
 
     pagination_size: int = 10_000
     """List-limit when paginating"""
+
+    chunked_encoding_page_size: int = 1_000_000
+    """List-limit when using chunked encoding"""
+
+    paginate_by_default: bool = False
+    """Whether to paginate by default"""
 
     @field_validator("tabular_storage_endpoint")
     def _endpoint_validator(cls, v: str):
@@ -229,8 +236,57 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
 
+    def select(
+        self,
+        resource_dto: ResourceDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+        paginate: Optional[bool] = None,
+    ) -> Iterable[dict]:
+        """Read data from tabular API
+
+        Args:
+            resource_dto: Dataset manifest
+            filter_query: Filter query in OQS format
+            limit: Limit for the number of rows returned
+            cursor: Pagination token for the next page
+            paginate: Whether or not to paginate the response or use chunked encoding
+
+        Yields:
+            Each row of the data
+        """
+
+        paginate = paginate if paginate is not None else self.paginate_by_default
+
+        if paginate is True:
+            use_limit = self.pagination_size
+        else:
+            use_limit = self.chunked_encoding_page_size
+
+        num_rows = 0
+
+        while True:
+            rows = self._select_page(resource_dto, filter_query, use_limit, cursor)
+            rows = list(rows)
+            for row, is_meta in rows:
+                if is_meta:
+                    cursor = row.get("@@next")
+                    continue
+
+                yield row
+                num_rows += 1
+                if limit and num_rows >= limit:
+                    return
+
+            if not cursor:
+                break
+
     def select_as_stream(
-        self, resource_dto: ResourceDto, filter_query: Optional[dict] = None, limit: Optional[int] = None
+        self,
+        resource_dto: ResourceDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
     ) -> Iterable[dict]:
         """
         Select data from dataset
@@ -246,10 +302,7 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
-
-        row_iterator = self._select_stream(resource_dto, filter_query, limit)
-
-        yield from row_iterator
+        yield from self.select(resource_dto, filter_query, limit=limit)
 
     def select_as_list(
         self,
@@ -274,28 +327,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        row_iterator = self._select_stream(resource_dto, filter_query, limit, cursor)
-
-        if limit:
-            return list(row_iterator)
-        else:
-            return list(row_iterator)[:-1]
-
-    def _select_stream(
-        self,
-        resource_dto: ResourceDto,
-        filter_query: Optional[dict] = None,
-        limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-    ) -> Iterator[dict]:
-        """
-        Helper method to get data in chunks and to compile them
-        """
-        # Make sure the page size is a multiple of 1000 per API specs
-        if limit:
-            limit = (limit // 1000) * 1000
-        rows, cursor = self._select_page(resource_dto, filter_query, limit, cursor)
-        yield from rows
+        return list(self.select(resource_dto, filter_query, limit, cursor))
 
     def _select_page(
         self,
@@ -304,18 +336,22 @@ class OdpTabularStorageClient(BaseModel):
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
         result_geometry: Optional[str] = "geojson",
-    ) -> tuple[list[dict], Optional[str]]:
+    ) -> Iterable[tuple[dict, bool]]:
         """
         Method to query a specific page from the data
         """
-        query_parameters = dict()
+        query_parameters = {}
         if limit:
             query_parameters["limit"] = limit
         if cursor:
             query_parameters["cursor"] = cursor
 
         response = self.http_client.post(
-            self.tabular_endpoint(resource_dto, "list"), params=query_parameters, content=filter_query
+            self.tabular_endpoint(resource_dto, "list"),
+            params=query_parameters,
+            content=filter_query,
+            headers={"Accept": "application/x-ndjson"},
+            stream=True,
         )
 
         try:
@@ -325,21 +361,14 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-        try:
-            if response.headers.get("Content-Type") == "application/json":
-                result = PaginatedSelectResultSet(**response.json())
-            elif response.headers.get("Content-Type") == "application/x-ndjson":
-                data = list(iter(NdJsonParser(response.text)))
-                data = convert_geometry(data, result_geometry)
-
-                result = PaginatedSelectResultSet(data=data)
+        for row in NdJsonParser(fp=response.iter_content(chunk_size=None)):
+            if len(row) == 1 and next(iter(row.keys())).startswith("@@"):
+                is_meta = True
             else:
-                raise ValueError("Invalid response content type")
-        except (JSONDecodeError, ValidationError, ValueError) as e:
-            print(f"Error decoding response: {e}")
-            result = PaginatedSelectResultSet(data=[])
+                is_meta = False
 
-        return result.data, result.next
+            row = convert_geometry(row, result_geometry)
+            yield row, is_meta
 
     def select_as_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict] = None) -> DataFrame:
         """
@@ -468,4 +497,4 @@ class OdpTabularStorageClient(BaseModel):
 
         data_list = data.values.tolist()
 
-        self.update(resource_dto, filter_query, data_list)
+        self.update(resource_dto, data_list, filter_query)

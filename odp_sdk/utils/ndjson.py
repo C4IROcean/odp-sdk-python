@@ -1,11 +1,12 @@
 import json
 from collections import deque
 from io import StringIO
-from typing import IO, Deque, Iterable, Optional, cast
+from typing import IO, Deque, Iterable, Optional, Sized, Union, cast
 from warnings import warn
 
 from .json import JsonParser, JsonType
 
+BacklogDataT = Union[Iterable[str], Sized]
 DEFAULT_JSON_PARSER = cast(JsonParser, json)
 
 
@@ -31,6 +32,7 @@ class NdJsonParser:
         self.json_parser = json_parser
         self.line = []
         self.delimiter_stack: Deque[str] = deque()
+        self.backlog: Optional[BacklogDataT] = None
 
         if s and fp:
             raise ValueError("Either 's' or 'fp' must be set, but now both")
@@ -59,24 +61,48 @@ class NdJsonParser:
 
         return obj
 
+    def _have_backlog(self) -> bool:
+        return self.backlog is not None
+
+    def _backlog_data(self, data: BacklogDataT):
+        self.backlog = data
+
+    def _consume_backlog(self) -> BacklogDataT:
+        if self.backlog is None:
+            raise ValueError("No backlog data to consume")
+        data = self.backlog
+        self.backlog = None
+        return data
+
+    def _load_next(self) -> BacklogDataT:
+        if self._have_backlog():
+            return self._consume_backlog()
+        ret = next(self.fb)
+        if isinstance(ret, bytes):
+            return ret.decode()
+        return ret
+
     def __iter__(self) -> Iterable[JsonType]:
         return cast(Iterable[JsonType], self)
 
     def __next__(self) -> JsonType:
         while True:
             try:
-                s = next(self.fb)
+                s = self._load_next()
             except StopIteration:
                 if len(self.line) > 0:
                     return self._consume_line()
                 raise
 
-            for c in s:
+            for idx, c in enumerate(s):
+                c = chr(c) if isinstance(c, int) else c
                 last_delimiter = self.delimiter_stack[-1] if self.delimiter_stack else None
 
                 in_quote = last_delimiter in {"'", '"', "\\"}
 
                 if c == "\n" and not in_quote:
+                    if idx + 1 < len(s):
+                        self.backlog = s[idx + 1 :]
                     return self._consume_line()
 
                 self.line.append(c)
