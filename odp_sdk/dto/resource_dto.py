@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -77,3 +77,29 @@ class ResourceDto(BaseModel):
 
     spec: Optional[dict] = None
     """Resource spec"""
+
+    def get_qualified_name(self) -> str:
+        """Get the resource qualified name
+
+        The qualified name is the kind and resource name joined by a slash: `{kind}/{metadata.name}`
+
+        Returns:
+            Qualified name
+        """
+        return f"{self.kind}/{self.metadata.name}"
+
+    def get_uuid(self) -> Optional[UUID]:
+        """Get the resource UUID
+
+        Returns:
+            Resource UUID if it is set, `None` otherwise
+        """
+        return self.metadata.uuid
+
+    def get_ref(self) -> Union[UUID, str]:
+        """Get a valid reference to the resource
+
+        Returns:
+            The resource UUID if it is set, the qualified name otherwise
+        """
+        return self.get_uuid() or self.get_qualified_name()

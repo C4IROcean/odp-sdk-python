@@ -15,7 +15,7 @@ def test_create_schema_success(tabular_storage_client, tabular_resource_dto, tab
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/schema",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
             body=table_spec.model_dump_json(),
             status=200,
             content_type="application/json",
@@ -31,7 +31,7 @@ def test_create_schema_fail_409(tabular_storage_client, tabular_resource_dto, ta
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/schema",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
             status=409,
         )
 
@@ -43,7 +43,7 @@ def test_get_schema_success(tabular_storage_client, tabular_resource_dto, table_
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/schema",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
             body=table_spec.model_dump_json(),
             status=200,
             content_type="application/json",
@@ -59,7 +59,7 @@ def test_get_schema_fail_404(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/schema",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
             status=404,
         )
 
@@ -68,7 +68,7 @@ def test_get_schema_fail_404(tabular_storage_client, tabular_resource_dto):
 
 
 def test_delete_schema_success(tabular_storage_client, tabular_resource_dto):
-    url = f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/schema?delete_data=False"
+    url = tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema") + "?delete_data=False"
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -86,7 +86,7 @@ def test_delete_schema_fail_404(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.DELETE,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/schema",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
             status=404,
         )
 
@@ -98,7 +98,7 @@ def test_create_stage_success(tabular_storage_client, tabular_resource_dto, tabl
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage"),
             body=table_stage.model_dump_json(),
             status=200,
             content_type="application/json",
@@ -113,7 +113,7 @@ def test_create_stage_fail_409(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage"),
             status=409,
         )
 
@@ -122,7 +122,7 @@ def test_create_stage_fail_409(tabular_storage_client, tabular_resource_dto):
 
 
 def test_commit_stage_success(tabular_storage_client, tabular_resource_dto, table_stage):
-    url = f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
+    url = tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -139,16 +139,14 @@ def test_get_stage_success(tabular_storage_client, tabular_resource_dto, table_s
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
-            f"/{table_stage.stage_id}",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage", str(table_stage.stage_id)),
             body=table_stage.model_dump_json(),
             status=200,
             content_type="application/json",
         )
         rsps.add(
             responses.GET,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
-            f"/{table_stage.stage_id}",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage", str(table_stage.stage_id)),
             body=table_stage.model_dump_json(),
             status=200,
             content_type="application/json",
@@ -165,8 +163,7 @@ def test_get_stage_fail_400(tabular_storage_client, tabular_resource_dto, table_
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
-            f"/{table_stage.stage_id}",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage", str(table_stage.stage_id)),
             status=400,
         )
 
@@ -178,7 +175,7 @@ def test_list_stage_success(tabular_storage_client, tabular_resource_dto, table_
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage"),
             body=f"[{table_stage.model_dump_json()}, {table_stage.model_dump_json()}]",
             status=200,
             content_type="application/json",
@@ -193,7 +190,7 @@ def test_list_stage_fail_400(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage"),
             status=400,
         )
 
@@ -203,8 +200,8 @@ def test_list_stage_fail_400(tabular_storage_client, tabular_resource_dto):
 
 def test_delete_stage_success(tabular_storage_client, tabular_resource_dto, table_stage):
     url = (
-        f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
-        f"/{table_stage.stage_id}?force_delete=False"
+        tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage", str(table_stage.stage_id))
+        + "?force_delete=False"
     )
 
     with responses.RequestsMock() as rsps:
@@ -223,8 +220,7 @@ def test_delete_stage_fail_400(tabular_storage_client, tabular_resource_dto, tab
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.DELETE,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/stage"
-            f"/{table_stage.stage_id}",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "stage", str(table_stage.stage_id)),
             status=400,
         )
 
@@ -236,7 +232,7 @@ def test_select_as_stream_success(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
             body='{"test_key1": "test_value"}\n{"test_key2": "test_value2"}',
             status=200,
             content_type="application/x-ndjson",
@@ -254,7 +250,7 @@ def test_select_as_list_success(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
             body='{"test_key1": "test_value"}\n{"test_key2": "test_value2"}\n{"@@end": true}',
             status=200,
             content_type="application/x-ndjson",
@@ -271,7 +267,7 @@ def test_select_as_list_wkt_success(tabular_storage_client, tabular_resource_dto
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
             body='{"test_key1": "POINT(0 0)"}\n{"test_key2": "POINT(0 1)"}\n{"@@end": true}',
             status=200,
             content_type="application/x-ndjson",
@@ -288,7 +284,7 @@ def test_select_as_list_wkb_success(tabular_storage_client, tabular_resource_dto
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
             body='{"test_key1": "010100000000000000000000000000000000000000"}\n'
             '{"test_key2": "01010000000000000000000000000000000000f03f"}\n{"@@end": true}',
             status=200,
@@ -306,7 +302,7 @@ def test_select_as_stream_fail_404(tabular_storage_client, tabular_resource_dto)
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
             status=404,
         )
 
@@ -319,7 +315,7 @@ def test_select_as_list_fail_404(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
             status=404,
         )
 
@@ -331,7 +327,7 @@ def test_select_as_dataframe(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/list",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
             body='{"test_key1": "test_value"}\n{"test_key2": "test_value2"}\n{"@@end": true}',
             status=200,
             content_type="application/x-ndjson",
@@ -345,7 +341,7 @@ def test_select_as_dataframe(tabular_storage_client, tabular_resource_dto):
 
 
 def test_write_small_success(tabular_storage_client, tabular_resource_dto):
-    url = f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}"
+    url = tabular_storage_client.tabular_endpoint(tabular_resource_dto)
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -365,7 +361,7 @@ def test_write_fail_404(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto),
             status=404,
         )
 
@@ -376,7 +372,7 @@ def test_write_fail_404(tabular_storage_client, tabular_resource_dto):
 
 
 def test_write_as_dataframe(tabular_storage_client, tabular_resource_dto):
-    url = f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}"
+    url = tabular_storage_client.tabular_endpoint(tabular_resource_dto)
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -393,7 +389,7 @@ def test_write_as_dataframe(tabular_storage_client, tabular_resource_dto):
 
 
 def test_delete_success(tabular_storage_client, tabular_resource_dto):
-    url = f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/delete"
+    url = tabular_storage_client.tabular_endpoint(tabular_resource_dto, "delete")
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -411,7 +407,7 @@ def test_delete_fail_400(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.POST,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}/delete",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "delete"),
             status=404,
         )
 
@@ -420,7 +416,7 @@ def test_delete_fail_400(tabular_storage_client, tabular_resource_dto):
 
 
 def test_update_success(tabular_storage_client, tabular_resource_dto):
-    url = f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}"
+    url = tabular_storage_client.tabular_endpoint(tabular_resource_dto)
 
     with responses.RequestsMock() as rsps:
         rsps.add(
@@ -440,7 +436,7 @@ def test_update_fail_404(tabular_storage_client, tabular_resource_dto):
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.PATCH,
-            f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}",
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto),
             status=404,
         )
 
@@ -451,7 +447,7 @@ def test_update_fail_404(tabular_storage_client, tabular_resource_dto):
 
 
 def test_update_dataframe_success(tabular_storage_client, tabular_resource_dto):
-    url = f"{tabular_storage_client.tabular_storage_url}/{tabular_resource_dto.metadata.uuid}"
+    url = tabular_storage_client.tabular_endpoint(tabular_resource_dto)
 
     with responses.RequestsMock() as rsps:
         rsps.add(
