@@ -39,10 +39,10 @@ def test_tabular_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     odp_client_test_uuid[0].tabular.write(resource_dto=my_dataset, data=test_data)
 
     our_data = odp_client_test_uuid[0].tabular.select_as_list(my_dataset)
-    assert our_data != []
+    assert len(our_data) == 2
 
-    our_data = odp_client_test_uuid[0].tabular.select_as_stream(my_dataset)
-    assert our_data != []
+    our_data = list(odp_client_test_uuid[0].tabular.select_as_stream(my_dataset))
+    assert len(our_data) == 2
 
     update_filters = {"#EQUALS": ["$Data", "Test"]}
     new_data = [{"Data": "Test Updated"}]
@@ -53,12 +53,12 @@ def test_tabular_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     )
 
     result = odp_client_test_uuid[0].tabular.select_as_list(my_dataset)
-    assert result != []
+    assert len(result) == 2
 
     delete_filters = {"#EQUALS": ["$Data", "Test1"]}
     odp_client_test_uuid[0].tabular.delete(resource_dto=my_dataset, filter_query=delete_filters)
     result = odp_client_test_uuid[0].tabular.select_as_list(my_dataset)
-    assert result != []
+    assert len(result) == 1
 
     odp_client_test_uuid[0].tabular.delete_schema(my_dataset)
 
