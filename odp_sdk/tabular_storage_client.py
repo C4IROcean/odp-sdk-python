@@ -264,6 +264,9 @@ class OdpTabularStorageClient(BaseModel):
         else:
             use_limit = self.chunked_encoding_page_size
 
+        if limit:
+            use_limit = min(use_limit, limit)
+
         num_rows = 0
 
         while True:
