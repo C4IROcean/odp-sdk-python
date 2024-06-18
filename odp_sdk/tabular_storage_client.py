@@ -371,22 +371,23 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
+        try:
+            dataset_schema = self.get_schema(resource_dto)
+        except OdpResourceNotFoundError:
+            print(f"Schema not found for resource {resource_dto.metadata.name}: geometry conversion skipped")
+            dataset_schema = None
+
         for row in NdJsonParser(fp=response.iter_content(chunk_size=None)):
             if len(row) == 1 and next(iter(row.keys())).startswith("@@"):
                 is_meta = True
             else:
                 is_meta = False
-
-            row = self._convert_geometry_with_schema(resource_dto, row, result_geometry)
+            if dataset_schema:
+                row = self._convert_geometry_with_schema(dataset_schema, row, result_geometry)
             yield row, is_meta
 
-    def _convert_geometry_with_schema(self, resource_dto: ResourceDto, row: dict, result_geometry: str) -> dict:
-        try:
-            dataset_schema = self.get_schema(resource_dto)
-        except OdpResourceNotFoundError:
-            print(f"Schema not found for resource {resource_dto.metadata.name}: geometry conversion skipped")
-            return row
-
+    @staticmethod
+    def _convert_geometry_with_schema(dataset_schema: TableSpec, row: dict, result_geometry: str) -> dict:
         geometry_cols = [
             column
             for column, column_data in dataset_schema.table_schema.items()
