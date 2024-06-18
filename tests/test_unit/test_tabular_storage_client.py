@@ -237,6 +237,11 @@ def test_select_as_stream_success(tabular_storage_client, tabular_resource_dto):
             status=200,
             content_type="application/x-ndjson",
         )
+        rsps.add(
+            responses.GET,
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
+            status=404,
+        )
 
         response = tabular_storage_client.select_as_stream(tabular_resource_dto, filter_query=None)
         response_as_list = list(response)
@@ -255,6 +260,12 @@ def test_select_as_list_success(tabular_storage_client, tabular_resource_dto):
             status=200,
             content_type="application/x-ndjson",
         )
+        rsps.add(
+            responses.GET,
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
+            json={"table_schema": {"test_key1": {"type": "string"}, "test_key2": {"type": "string"}}},
+            status=200,
+        )
 
         response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
 
@@ -268,16 +279,22 @@ def test_select_as_list_wkt_success(tabular_storage_client, tabular_resource_dto
         rsps.add(
             responses.POST,
             tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
-            body='{"test_key1": "POINT(0 0)"}\n{"test_key2": "POINT(0 1)"}\n{"@@end": true}',
+            body='{"test_key1": "POINT(0 0)"}\n{"test_key1": "POINT(0 1)"}\n{"@@end": true}',
             status=200,
             content_type="application/x-ndjson",
+        )
+        rsps.add(
+            responses.GET,
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
+            json={"table_schema": {"test_key1": {"type": "geometry"}}},
+            status=200,
         )
 
         response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
 
         assert len(response) == 2
         assert response[0]["test_key1"] == {"coordinates": [0.0, 0.0], "type": "Point"}
-        assert response[1]["test_key2"] == {"coordinates": [0.0, 1.0], "type": "Point"}
+        assert response[1]["test_key1"] == {"coordinates": [0.0, 1.0], "type": "Point"}
 
 
 def test_select_as_list_wkb_success(tabular_storage_client, tabular_resource_dto):
@@ -289,6 +306,12 @@ def test_select_as_list_wkb_success(tabular_storage_client, tabular_resource_dto
             '{"test_key2": "01010000000000000000000000000000000000f03f"}\n{"@@end": true}',
             status=200,
             content_type="application/x-ndjson",
+        )
+        rsps.add(
+            responses.GET,
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
+            json={"table_schema": {"test_key1": {"type": "geometry"}, "test_key2": {"type": "geometry"}}},
+            status=200,
         )
 
         response = tabular_storage_client.select_as_list(tabular_resource_dto, filter_query=None)
@@ -328,15 +351,20 @@ def test_select_as_dataframe(tabular_storage_client, tabular_resource_dto):
         rsps.add(
             responses.POST,
             tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
-            body='{"test_key1": "test_value"}\n{"test_key2": "test_value2"}\n{"@@end": true}',
+            body='{"test_key1": "Cameroonian Exclusive Economic Zone"}\n{"test_key2": "test_value2"}\n{"@@end": true}',
             status=200,
             content_type="application/x-ndjson",
+        )
+        rsps.add(
+            responses.GET,
+            tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
+            status=404,
         )
 
         response = tabular_storage_client.select_as_dataframe(tabular_resource_dto, filter_query=None)
 
         assert len(response) == 2
-        assert response["test_key1"][0] == "test_value"
+        assert response["test_key1"][0] == "Cameroonian Exclusive Economic Zone"
         assert response["test_key2"][1] == "test_value2"
 
 
@@ -427,7 +455,7 @@ def test_update_success(tabular_storage_client, tabular_resource_dto):
 
         data = [{"test_key1": "test_value"}, {"test_key2": "test_value2"}]
 
-        tabular_storage_client.update(tabular_resource_dto, filter_query=None, data=data)
+        tabular_storage_client.update(tabular_resource_dto, filter_query=dict(), data=data)
 
         assert rsps.assert_call_count(url, 1)
 
@@ -443,7 +471,7 @@ def test_update_fail_404(tabular_storage_client, tabular_resource_dto):
         data = [{"test_key1": "test_value"}, {"test_key2": "test_value2"}]
 
         with pytest.raises(OdpResourceNotFoundError):
-            tabular_storage_client.update(tabular_resource_dto, filter_query=None, data=data)
+            tabular_storage_client.update(tabular_resource_dto, filter_query=dict(), data=data)
 
 
 def test_update_dataframe_success(tabular_storage_client, tabular_resource_dto):
