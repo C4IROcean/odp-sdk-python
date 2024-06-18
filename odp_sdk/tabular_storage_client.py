@@ -1,14 +1,14 @@
 import re
-from typing import Dict, Iterable, Iterator, List, Optional
+from typing import Dict, Iterable, List, Optional
 from uuid import UUID
+from warnings import warn
 
 import requests
-from pydantic import BaseModel, ValidationError, field_validator
-from requests import JSONDecodeError
+from pydantic import BaseModel, field_validator
 
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
-from odp_sdk.dto.tabular_store import PaginatedSelectResultSet, TableStage
+from odp_sdk.dto.tabular_store import TableStage
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
 from odp_sdk.utils import convert_geometry
@@ -17,15 +17,28 @@ from odp_sdk.utils.ndjson import NdJsonParser
 try:
     from pandas import DataFrame
 except ImportError:
-    print("Pandas not installed. DataFrame support will not be available.")
+    DataFrame = ImportError
+    warn("Pandas not installed. DataFrame support will not be available.")
 
 
 class OdpTabularStorageClient(BaseModel):
     http_client: OdpHttpClient
-    tabular_storage_endpoint: str = "/data"
+    """HTTP-request client"""
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    tabular_storage_endpoint: str = "/data"
+    """Endpoint appended to base URL in order to interact with the ODP data-APIs"""
+
+    pagination_size: int = 10_000
+    """List-limit when paginating"""
+
+    chunked_encoding_page_size: int = 1_000_000
+    """List-limit when using chunked encoding"""
+
+    paginate_by_default: bool = False
+    """Whether to paginate by default"""
+
+    page_size_align_factor: int = 1000
+    """Page size alignment factor for pagination - ie. page size must be a multiple of this value"""
 
     @field_validator("tabular_storage_endpoint")
     def _endpoint_validator(cls, v: str):
@@ -34,21 +47,9 @@ class OdpTabularStorageClient(BaseModel):
             raise ValueError(f"Invalid endpoint: {v}")
         return v
 
-    @property
-    def tabular_storage_url(self) -> str:
-        """
-        The URL of the tabular storage endpoint, including the base URL.
-
-        Returns:
-            The tabular storage URL
-        """
-        return f"{self.http_client.base_url}{self.tabular_storage_endpoint}"
-
-    def _get_schema_url(self, resource_dto: ResourceDto):
-        if resource_dto.metadata.uuid:
-            return f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}/schema"
-        else:
-            return f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/schema"
+    def tabular_endpoint(self, dataset: ResourceDto, *path: str) -> str:
+        ret = f"{self.http_client.base_url}{self.tabular_storage_endpoint}/{dataset.get_ref()}"
+        return "/".join([ret, *path])
 
     def create_schema(self, resource_dto: ResourceDto, table_spec: TableSpec) -> TableSpec:
         """
@@ -65,8 +66,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceExistsError: If the schema already exists with the same identifier
         """
 
-        url = self._get_schema_url(resource_dto)
-        response = self.http_client.post(url, content=table_spec)
+        response = self.http_client.post(self.tabular_endpoint(resource_dto, "schema"), content=table_spec)
 
         try:
             response.raise_for_status()
@@ -91,8 +91,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self._get_schema_url(resource_dto)
-        response = self.http_client.get(url)
+        response = self.http_client.get(self.tabular_endpoint(resource_dto, "schema"))
 
         try:
             response.raise_for_status()
@@ -101,7 +100,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
 
-        return TableSpec(**response.json())
+        return TableSpec.parse_raw(response.text)
 
     def delete_schema(self, resource_dto: ResourceDto, delete_data=False):
         """
@@ -115,12 +114,9 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self._get_schema_url(resource_dto)
-
-        query_params = dict()
-        query_params["delete_data"] = delete_data
-
-        response = self.http_client.delete(url, params=query_params)
+        response = self.http_client.delete(
+            self.tabular_endpoint(resource_dto, "schema"), params={"delete_data": delete_data}
+        )
 
         try:
             response.raise_for_status()
@@ -128,12 +124,6 @@ class OdpTabularStorageClient(BaseModel):
             if response.status_code == 404:
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
-
-    def _get_stage_url(self, resource_dto: ResourceDto):
-        if resource_dto.metadata.uuid:
-            return f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}/stage"
-        else:
-            return f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}/stage"
 
     def create_stage_request(self, resource_dto: ResourceDto) -> TableStage:
         """
@@ -148,12 +138,8 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             Stage with the specified identifier already exists
         """
-
-        url = self._get_stage_url(resource_dto)
-
         stage_data = StageDataPoints(action="create", stage_id=None)
-
-        response = self.http_client.post(url, content=stage_data)
+        response = self.http_client.post(self.tabular_endpoint(resource_dto, "stage"), content=stage_data)
 
         try:
             response.raise_for_status()
@@ -172,21 +158,18 @@ class OdpTabularStorageClient(BaseModel):
             resource_dto: Dataset manifest
             table_stage: Stage specifications for the stage that is to be committed
         """
-
-        url = self._get_stage_url(resource_dto)
-
         stage_data = StageDataPoints(action="commit", stage_id=table_stage.stage_id)
 
-        response = self.http_client.post(url, content=stage_data)
+        response = self.http_client.post(self.tabular_endpoint(resource_dto, "stage"), content=stage_data)
         response.raise_for_status()
 
-    def get_stage_request(self, resource_dto: ResourceDto, table_stage_identifier: UUID | TableStage) -> TableStage:
+    def get_stage_request(self, resource_dto: ResourceDto, stage: UUID | TableStage) -> TableStage:
         """
         Get Stage
 
         Args:
             resource_dto: Dataset manifest
-            table_stage_identifier: Identifier for the stage
+            stage: Identifier for the stage
 
         Returns:
             Stage that is queried for
@@ -195,14 +178,8 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self._get_stage_url(resource_dto)
-
-        if isinstance(table_stage_identifier, TableStage):
-            url = f"{url}/{table_stage_identifier.stage_id}"
-        else:
-            url = f"{url}/{table_stage_identifier}"
-
-        response = self.http_client.get(url)
+        stage = str(stage.stage_id if isinstance(stage, TableStage) else stage)
+        response = self.http_client.get(self.tabular_endpoint(resource_dto, "stage", stage))
 
         try:
             response.raise_for_status()
@@ -226,10 +203,7 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
-
-        url = self._get_stage_url(resource_dto)
-
-        response = self.http_client.get(url)
+        response = self.http_client.get(self.tabular_endpoint(resource_dto, "stage"))
 
         try:
             response.raise_for_status()
@@ -238,7 +212,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
 
-        return [TableStage(**table_stage) for table_stage in response.json()]
+        return [TableStage.parse_obj(table_stage) for table_stage in response.json()]
 
     def delete_stage_request(self, resource_dto: ResourceDto, table_stage: TableStage, force_delete=False):
         """
@@ -253,12 +227,10 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = f"{self._get_stage_url(resource_dto)}/{table_stage.stage_id}"
-
-        query_params = dict()
-        query_params["force_delete"] = force_delete
-
-        response = self.http_client.delete(url, params=query_params)
+        response = self.http_client.delete(
+            self.tabular_endpoint(resource_dto, "stage", str(table_stage.stage_id)),
+            params={"force_delete": force_delete},
+        )
 
         try:
             response.raise_for_status()
@@ -267,14 +239,64 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
 
-    def _get_crud_url(self, resource_dto: ResourceDto):
-        if resource_dto.metadata.uuid:
-            return f"{self.tabular_storage_url}/{resource_dto.metadata.uuid}"
+    def select(
+        self,
+        resource_dto: ResourceDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+        paginate: Optional[bool] = None,
+    ) -> Iterable[dict]:
+        """Read data from tabular API
+
+        Args:
+            resource_dto: Dataset manifest
+            filter_query: Filter query in OQS format
+            limit: Limit for the number of rows returned
+            cursor: Pagination token for the next page
+            paginate: Whether or not to paginate the response or use chunked encoding
+
+        Yields:
+            Each row of the data
+        """
+
+        paginate = paginate if paginate is not None else self.paginate_by_default
+
+        if paginate is True:
+            use_limit = self.pagination_size
         else:
-            return f"{self.tabular_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}"
+            use_limit = self.chunked_encoding_page_size
+
+        if limit:
+            use_limit = min(use_limit, limit)
+
+        if use_limit % self.page_size_align_factor:
+            # Round up to the nearest multiple of the alignment factor
+            use_limit = (use_limit // self.page_size_align_factor + 1) * self.page_size_align_factor
+
+        num_rows = 0
+
+        while True:
+            rows = self._select_page(resource_dto, filter_query, use_limit, cursor)
+            rows = list(rows)
+            for row, is_meta in rows:
+                if is_meta:
+                    cursor = row.get("@@next")
+                    continue
+
+                yield row
+                num_rows += 1
+                if limit and num_rows >= limit:
+                    return
+
+            if not cursor:
+                break
 
     def select_as_stream(
-        self, resource_dto: ResourceDto, filter_query: Optional[dict] = None, limit: Optional[int] = None
+        self,
+        resource_dto: ResourceDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
     ) -> Iterable[dict]:
         """
         Select data from dataset
@@ -290,10 +312,7 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
-
-        row_iterator = self._select_stream(resource_dto, filter_query, limit)
-
-        yield from row_iterator
+        yield from self.select(resource_dto, filter_query, limit=limit)
 
     def select_as_list(
         self,
@@ -318,28 +337,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        row_iterator = self._select_stream(resource_dto, filter_query, limit, cursor)
-
-        if limit:
-            return list(row_iterator)
-        else:
-            return list(row_iterator)[:-1]
-
-    def _select_stream(
-        self,
-        resource_dto: ResourceDto,
-        filter_query: Optional[dict] = None,
-        limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-    ) -> Iterator[dict]:
-        """
-        Helper method to get data in chunks and to compile them
-        """
-        # Make sure the page size is a multiple of 1000 per API specs
-        if limit:
-            limit = (limit // 1000) * 1000
-        rows, cursor = self._select_page(resource_dto, filter_query, limit, cursor)
-        yield from rows
+        return list(self.select(resource_dto, filter_query, limit, cursor))
 
     def _select_page(
         self,
@@ -348,26 +346,23 @@ class OdpTabularStorageClient(BaseModel):
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
         result_geometry: Optional[str] = "geojson",
-    ) -> tuple[list[dict], Optional[str]]:
+    ) -> Iterable[tuple[dict, bool]]:
         """
         Method to query a specific page from the data
         """
-
-        url = f"{self._get_crud_url(resource_dto)}/list"
-
-        query_parameters = dict()
+        query_parameters = {}
         if limit:
             query_parameters["limit"] = limit
         if cursor:
             query_parameters["cursor"] = cursor
 
-        headers = dict()
-        headers["X-ODP-CHUNKED-ENCODING"] = "True"
-
-        if filter_query:
-            response = self.http_client.post(url, content=filter_query, params=query_parameters, headers=headers)
-        else:
-            response = self.http_client.post(url, params=query_parameters, headers=headers)
+        response = self.http_client.post(
+            self.tabular_endpoint(resource_dto, "list"),
+            params=query_parameters,
+            content=filter_query,
+            headers={"Accept": "application/x-ndjson"},
+            stream=True,
+        )
 
         try:
             response.raise_for_status()
@@ -376,21 +371,14 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-        try:
-            if response.headers.get("Content-Type") == "application/json":
-                result = PaginatedSelectResultSet(**response.json())
-            elif response.headers.get("Content-Type") == "application/x-ndjson":
-                data = list(iter(NdJsonParser(response.text)))
-                data = convert_geometry(data, result_geometry)
-
-                result = PaginatedSelectResultSet(data=data)
+        for row in NdJsonParser(fp=response.iter_content(chunk_size=None)):
+            if len(row) == 1 and next(iter(row.keys())).startswith("@@"):
+                is_meta = True
             else:
-                raise ValueError("Invalid response content type")
-        except (JSONDecodeError, ValidationError, ValueError) as e:
-            print(f"Error decoding response: {e}")
-            result = PaginatedSelectResultSet(data=[])
+                is_meta = False
 
-        return result.data, result.next
+            row = convert_geometry(row, result_geometry)
+            yield row, is_meta
 
     def select_as_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict] = None) -> DataFrame:
         """
@@ -424,8 +412,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        url = self._get_crud_url(resource_dto)
-        self._write_limited_size(url, data, table_stage)
+        self._write_limited_size(self.tabular_endpoint(resource_dto), data, table_stage)
 
     def _write_limited_size(self, url: str, data: List[Dict], table_stage: Optional[TableStage] = None):
         if len(data) < 1:
@@ -473,13 +460,7 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
-
-        url = f"{self._get_crud_url(resource_dto)}/delete"
-
-        if filter_query:
-            response = self.http_client.post(url, content=filter_query)
-        else:
-            response = self.http_client.post(url)
+        response = self.http_client.post(self.tabular_endpoint(resource_dto, "delete"), content=filter_query)
 
         try:
             response.raise_for_status()
@@ -500,14 +481,9 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
-
-        url = self._get_crud_url(resource_dto)
-
-        body = dict()
-        body["update_filters"] = filter_query
-        body["data"] = data
-
-        response = self.http_client.patch(url, content=body)
+        response = self.http_client.patch(
+            self.tabular_endpoint(resource_dto), content={"update_filters": filter_query, "data": data}
+        )
 
         try:
             response.raise_for_status()
@@ -531,4 +507,4 @@ class OdpTabularStorageClient(BaseModel):
 
         data_list = data.values.tolist()
 
-        self.update(resource_dto, filter_query, data_list)
+        self.update(resource_dto, data_list, filter_query)
