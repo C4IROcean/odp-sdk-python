@@ -1,9 +1,9 @@
 import json
-import re
 from contextlib import contextmanager
 from typing import Iterable, Literal, Optional
 
 import requests
+import validators
 from pydantic import BaseModel, field_validator
 
 from .auth import TokenProvider
@@ -18,12 +18,7 @@ class OdpHttpClient(BaseModel):
     @field_validator("base_url")
     @classmethod
     def _validate_url(cls, v: str) -> str:
-        m = re.match(
-            r"https?:\/\/(www\.|localhost)?[-a-zA-Z0-9@:%._\+~#=]"
-            r"{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*|:\d+)",
-            v,
-        )
-        if not m:
+        if not validators.url(v, simple_host=True):
             raise ValueError(f"Invalid base URL: {v}")
 
         return v.rstrip("/")

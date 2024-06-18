@@ -1083,10 +1083,21 @@ h2 = ["h2 (>=4,<5)"]
 socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
+[[package]]
+name = "validators"
+version = "0.28.3"
+description = "Python Data Validation for Humans™"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "validators-0.28.3-py3-none-any.whl", hash = "sha256:53cafa854f13850156259d9cc479b864ee901f6a96e6b109e6fc33f98f37d99f"},
+    {file = "validators-0.28.3.tar.gz", hash = "sha256:c6c79840bcde9ba77b19f6218f7738188115e27830cbaff43264bc4ed24c429d"},
+]
+
 [extras]
 pandas = ["pandas"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "7f2f1dc95409f1dc3990264c049d51ef09c5612363b509cd1c47191fa772517f"
+content-hash = "b3b89bdedbbcda87ced19fe9698ce27b67d333bf03639d4b98fca9fc8672b67e"
