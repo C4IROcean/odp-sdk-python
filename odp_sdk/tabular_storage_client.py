@@ -37,6 +37,9 @@ class OdpTabularStorageClient(BaseModel):
     paginate_by_default: bool = False
     """Whether to paginate by default"""
 
+    page_size_align_factor: int = 1000
+    """Page size alignment factor for pagination - ie. page size must be a multiple of this value"""
+
     @field_validator("tabular_storage_endpoint")
     def _endpoint_validator(cls, v: str):
         m = re.match(r"^/\w+(?<!/)", v)
@@ -266,6 +269,10 @@ class OdpTabularStorageClient(BaseModel):
 
         if limit:
             use_limit = min(use_limit, limit)
+
+        if use_limit % self.page_size_align_factor:
+            # Round up to the nearest multiple of the alignment factor
+            use_limit = (use_limit // self.page_size_align_factor + 1) * self.page_size_align_factor
 
         num_rows = 0
 
