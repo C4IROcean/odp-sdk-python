@@ -84,9 +84,3 @@ def test_http_client_url(mock_token_provider: TokenProvider, url: str, expected:
         assert http_client.base_url == url and expected
     except ValueError:
         assert not expected
-
-
-def test_http_client_invalid_url(mock_token_provider: TokenProvider):
-    with pytest.raises(ValueError):
-        http_client = OdpHttpClient(base_url="localhost:8888", token_provider=mock_token_provider)
-        assert http_client.base_url == "localhost:8888"
