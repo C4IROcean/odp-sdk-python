@@ -1,4 +1,8 @@
+import pytest
 import responses
+
+from odp_sdk.auth import TokenProvider
+from odp_sdk.http_client import OdpHttpClient
 
 
 def test_request_relative(http_client):
@@ -62,3 +66,27 @@ def test_custom_user_agent(http_client):
 
         assert res.status_code == 200
         assert rsps.calls[0].request.headers["User-Agent"] == custom_user_agent
+
+
+@pytest.mark.parametrize(
+    "url, expected",
+    [
+        ("http://localhost:8888", True),
+        ("localhost:8888", False),
+        ("foo.bar", False),
+        ("https://foo.bar.com", True),
+        ("not a valid url", False),
+    ],
+)
+def test_http_client_url(mock_token_provider: TokenProvider, url: str, expected: bool):
+    try:
+        http_client = OdpHttpClient(base_url=url, token_provider=mock_token_provider)
+        assert http_client.base_url == url and expected
+    except ValueError:
+        assert not expected
+
+
+def test_http_client_invalid_url(mock_token_provider: TokenProvider):
+    with pytest.raises(ValueError):
+        http_client = OdpHttpClient(base_url="localhost:8888", token_provider=mock_token_provider)
+        assert http_client.base_url == "localhost:8888"
