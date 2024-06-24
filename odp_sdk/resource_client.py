@@ -1,5 +1,5 @@
 import re
-from typing import Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 
 import requests
@@ -34,7 +34,7 @@ class OdpResourceClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.resource_endpoint}"
 
-    def get(self, ref: UUID | str) -> ResourceDto:
+    def get(self, ref: Union[UUID, str]) -> ResourceDto:
         """Get a resource by reference.
 
         The reference can be either a UUID or a qualified name.
@@ -62,7 +62,7 @@ class OdpResourceClient(BaseModel):
 
         return ResourceDto(**res.json())
 
-    def list(self, oqs_filter: Optional[dict] = None, cursor: Optional[str] = None) -> Iterable[ResourceDto]:
+    def list(self, oqs_filter: Optional[Dict[str, Any]] = None, cursor: Optional[str] = None) -> Iterable[ResourceDto]:
         """List all resources based on the provided filter
 
         Args:
@@ -83,7 +83,7 @@ class OdpResourceClient(BaseModel):
         oqs_filter: Optional[dict] = None,
         cursor: Optional[str] = None,
         limit: int = 1000,
-    ) -> tuple[List[ResourceDto], str]:
+    ) -> Tuple[List[ResourceDto], str]:
         """List a page of resources based on the provided filter
 
         Args:
@@ -97,7 +97,6 @@ class OdpResourceClient(BaseModel):
         Raises:
             OdpValidationError: Invalid input
         """
-
         params = {}
         body = None
 
@@ -146,7 +145,7 @@ class OdpResourceClient(BaseModel):
 
         return ResourceDto(**res.json())
 
-    def update(self, manifest_update: ResourceDto | dict, ref: Optional[str | UUID] = None) -> ResourceDto:
+    def update(self, manifest_update: Union[ResourceDto, dict], ref: Union[str, UUID, None] = None) -> ResourceDto:
         """Update a resource from a manifest
 
         Args:
@@ -181,7 +180,7 @@ class OdpResourceClient(BaseModel):
 
         return ResourceDto(**res.json())
 
-    def delete(self, ref: UUID | str | ResourceDto):
+    def delete(self, ref: Union[UUID, str, ResourceDto]):
         """Delete a resource by reference.
 
         Args:

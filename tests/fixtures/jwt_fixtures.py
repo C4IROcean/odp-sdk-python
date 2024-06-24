@@ -1,6 +1,7 @@
 import json
 import random
 import time
+from typing import Union
 
 import jwt
 import pytest
@@ -95,7 +96,7 @@ def jwt_response(mock, rsa_public_key: rsa.RSAPublicKey):
 
 
 def auth_response(mock, rsa_private_key: rsa.RSAPrivateKey):
-    def token_callback(request: requests.Request) -> tuple[int, dict, str | bytes]:
+    def token_callback(request: requests.Request) -> tuple[int, dict, Union[str, bytes]]:
         t = int(time.time())
         claims = {
             "sub": "123",

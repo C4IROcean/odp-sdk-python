@@ -8,7 +8,7 @@ import sys
 import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 import jwt
 import msal
@@ -67,7 +67,7 @@ class OdpWorkspaceTokenProvider(TokenProvider):
 class HardcodedTokenProvider(TokenProvider):
     """Token provider for hardcoded tokens"""
 
-    _token: PrivateAttr()
+    _token: str = PrivateAttr()
 
     def __init__(self, token: str, **data):
         super().__init__(**data)
@@ -95,12 +95,12 @@ class JwtTokenProvider(TokenProvider, ABC):
 
     _access_token: str = PrivateAttr(None)
     _refresh_token: Optional[str] = PrivateAttr(None)
-    _claims: dict[str, int | str] = PrivateAttr(None)
-    _jwks: dict[str, str] = PrivateAttr(None)
+    _claims: Dict[str, Union[int, str]] = PrivateAttr(None)
+    _jwks: Dict[str, str] = PrivateAttr(None)
     _expiry: int = PrivateAttr(0)
 
     @abstractmethod
-    def authenticate(self) -> dict[str, str]:
+    def authenticate(self) -> Dict[str, str]:
         """Authenticate against the IDP and return the token
 
         Returns:
@@ -176,7 +176,7 @@ class JwtTokenProvider(TokenProvider, ABC):
 
         return access_token
 
-    def _parse_token(self, token_response: dict[str, str]) -> str:
+    def _parse_token(self, token_response: Dict[str, str]) -> str:
         """Parse the token from the token response
 
         Args:
@@ -194,7 +194,7 @@ class JwtTokenProvider(TokenProvider, ABC):
             return self._parse_novalidate(access_token)
         return self._parse_and_validate(access_token)
 
-    def _get_jwk(self, kid: str) -> dict:
+    def _get_jwk(self, kid: str) -> Dict:
         jwks = self._get_jwks()
         for jwk in jwks["keys"]:
             if jwk.get("kid") == kid:
@@ -202,7 +202,7 @@ class JwtTokenProvider(TokenProvider, ABC):
 
         raise OdpAuthError("Invalid token: Invalid KID")
 
-    def _get_jwks(self) -> dict:
+    def _get_jwks(self) -> Dict:
         if self._jwks:
             return self._jwks
 
@@ -263,7 +263,7 @@ class AzureTokenProvider(JwtTokenProvider):
     def get_jwks_uri(self) -> str:
         return self.jwks_uri
 
-    def authenticate(self) -> dict[str, str]:
+    def authenticate(self) -> Dict[str, str]:
         res = requests.post(
             self.token_uri,
             data={
@@ -294,7 +294,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
     )
     """IDP token Authority"""
 
-    scope: list[str] = ["https://oceandataplatform.onmicrosoft.com/odcat/API_ACCESS"]
+    scope: List[str] = ["https://oceandataplatform.onmicrosoft.com/odcat/API_ACCESS"]
     """IDP token scope"""
 
     jwks_uri: str = "https://oceandataplatform.b2clogin.com/oceandataplatform.onmicrosoft.com/b2c_1a_signup_signin_custom/discovery/v2.0/keys"  # noqa: E501
@@ -324,7 +324,7 @@ class InteractiveTokenProvider(JwtTokenProvider):
     def get_jwks_uri(self) -> str:
         return self.jwks_uri
 
-    def authenticate(self) -> dict[str, str]:
+    def authenticate(self) -> Dict[str, str]:
         accounts = self._app.get_accounts()
         if accounts and len(accounts) == 1:
             account = accounts[0]

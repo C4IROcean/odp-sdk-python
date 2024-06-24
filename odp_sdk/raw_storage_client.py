@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import requests
 from pydantic import BaseModel
@@ -30,18 +30,18 @@ class OdpRawStorageClient(BaseModel):
             return f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}{endpoint}"
 
     def get_file_metadata(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto) -> FileMetadataDto:
-        """
-                Get file metadata by reference.
+        """Get file metadata by reference.
 
-                Args:
-                    resource_dto: Dataset manifest
-                    file_metadata_dto: File metadata to retrieve
+        Args:
+            resource_dto: Dataset manifest
+            file_metadata_dto: File metadata to retrieve
 
-                Returns:
-                    The metadata of the file corresponding to the reference
-        requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
-                Raises:
-                    OdpFileNotFoundError: If the file does not exist
+        Returns:
+            The metadata of the file corresponding to the reference
+                requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
+
+        Raises:
+            OdpFileNotFoundError: If the file does not exist
         """
 
         url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}/metadata")
@@ -56,9 +56,10 @@ class OdpRawStorageClient(BaseModel):
 
         return FileMetadataDto(**response.json())
 
-    def list(self, resource_dto: ResourceDto, metadata_filter: dict[str, any] = None) -> Iterable[FileMetadataDto]:
-        """
-        List all files in a dataset.
+    def list(
+        self, resource_dto: ResourceDto, metadata_filter: Optional[Dict[str, Any]] = None
+    ) -> Iterable[FileMetadataDto]:
+        """List all files in a dataset.
 
         Args:
             resource_dto: Dataset manifest
@@ -77,12 +78,11 @@ class OdpRawStorageClient(BaseModel):
     def list_paginated(
         self,
         resource_dto: ResourceDto,
-        metadata_filter: Optional[dict[str, any]] = None,
+        metadata_filter: Optional[Dict[str, Any]] = None,
         cursor: Optional[str] = None,
         limit: int = 1000,
-    ) -> tuple[List[FileMetadataDto], str]:
-        """
-        List page
+    ) -> Tuple[List[FileMetadataDto], str]:
+        """List page
 
         Args:
             resource_dto: Dataset manifest
@@ -118,11 +118,10 @@ class OdpRawStorageClient(BaseModel):
         self,
         resource_dto: ResourceDto,
         file_metadata_dto: FileMetadataDto,
-        contents: bytes | BytesIO,
+        contents: Union[bytes, BytesIO],
         overwrite: bool = False,
     ) -> FileMetadataDto:
-        """
-        Upload data to a file.
+        """Upload data to a file.
 
         Args:
             resource_dto: Dataset manifest
@@ -158,10 +157,9 @@ class OdpRawStorageClient(BaseModel):
         self,
         resource_dto: ResourceDto,
         file_metadata_dto: FileMetadataDto,
-        contents: Optional[bytes | BytesIO] = None,
+        contents: Union[bytes, BytesIO, None] = None,
     ) -> FileMetadataDto:
-        """
-        Create a new file.
+        """Create a new file.
 
         Args:
             resource_dto: Dataset manifest
@@ -200,17 +198,15 @@ class OdpRawStorageClient(BaseModel):
         self,
         resource_dto: ResourceDto,
         file_metadata_dto: FileMetadataDto,
-        save_path: str = None,
+        save_path: Optional[str] = None,
     ):
-        """
-        Download a file.
+        """Download a file.
 
         Args:
             resource_dto: Dataset manifest
             file_metadata_dto: File metadata of file
             save_path: File path to save the downloaded file to
         """
-
         url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}")
 
         response = self.http_client.get(url)
@@ -228,15 +224,14 @@ class OdpRawStorageClient(BaseModel):
             return response.content
 
     def delete_file(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto):
-        """
-        Delete a file. Raises exception if any issues.
+        """Delete a file. Raises exception if any issues.
 
         Args:
             resource_dto: Dataset manifest
             file_metadata_dto: File metadata og file to delete.
 
         Returns:
-            True if the file was deleted, False otherwise
+            `True` if the file was deleted, `False` otherwise
         """
         url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}")
 

@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 from warnings import warn
 
@@ -48,12 +48,20 @@ class OdpTabularStorageClient(BaseModel):
         return v
 
     def tabular_endpoint(self, dataset: ResourceDto, *path: str) -> str:
+        """Get actual tabular endpoint given a dataset
+
+        Args:
+            dataset: Dataset to be used
+            path: Path-components to be added to the endpoint
+
+        Returns:
+            Tabular endpoint given `dataset`
+        """
         ret = f"{self.http_client.base_url}{self.tabular_storage_endpoint}/{dataset.get_ref()}"
         return "/".join([ret, *path])
 
     def create_schema(self, resource_dto: ResourceDto, table_spec: TableSpec) -> TableSpec:
-        """
-        Create Schema
+        """Create Schema
 
         Args:
             resource_dto: Dataset manifest
@@ -62,7 +70,7 @@ class OdpTabularStorageClient(BaseModel):
         Returns:
             Specifications of the schema that is being created
 
-        Raises
+        Raises:
             OdpResourceExistsError: If the schema already exists with the same identifier
         """
 
@@ -78,8 +86,7 @@ class OdpTabularStorageClient(BaseModel):
         return TableSpec(**response.json())
 
     def get_schema(self, resource_dto: ResourceDto) -> TableSpec:
-        """
-        Get schema
+        """Get schema
 
         Args:
             resource_dto: Dataset manifest
@@ -90,7 +97,6 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
-
         response = self.http_client.get(self.tabular_endpoint(resource_dto, "schema"))
 
         try:
@@ -102,9 +108,8 @@ class OdpTabularStorageClient(BaseModel):
 
         return TableSpec.parse_raw(response.text)
 
-    def delete_schema(self, resource_dto: ResourceDto, delete_data=False):
-        """
-        Delete schema
+    def delete_schema(self, resource_dto: ResourceDto, delete_data: bool = False):
+        """Delete schema
 
         Args:
             resource_dto: Dataset manifest
@@ -126,8 +131,7 @@ class OdpTabularStorageClient(BaseModel):
             raise
 
     def create_stage_request(self, resource_dto: ResourceDto) -> TableStage:
-        """
-        Create Stage
+        """Create Stage
 
         Args:
             resource_dto: Dataset manifest
@@ -151,8 +155,7 @@ class OdpTabularStorageClient(BaseModel):
         return TableStage(**response.json())
 
     def commit_stage_request(self, resource_dto: ResourceDto, table_stage: TableStage):
-        """
-        Commit Stage
+        """Commit Stage
 
         Args:
             resource_dto: Dataset manifest
@@ -163,9 +166,8 @@ class OdpTabularStorageClient(BaseModel):
         response = self.http_client.post(self.tabular_endpoint(resource_dto, "stage"), content=stage_data)
         response.raise_for_status()
 
-    def get_stage_request(self, resource_dto: ResourceDto, stage: UUID | TableStage) -> TableStage:
-        """
-        Get Stage
+    def get_stage_request(self, resource_dto: ResourceDto, stage: Union[UUID, TableStage]) -> TableStage:
+        """Get Stage
 
         Args:
             resource_dto: Dataset manifest
@@ -177,9 +179,8 @@ class OdpTabularStorageClient(BaseModel):
         Raises
             OdpResourceNotFoundError: If the schema cannot be found
         """
-
-        stage = str(stage.stage_id if isinstance(stage, TableStage) else stage)
-        response = self.http_client.get(self.tabular_endpoint(resource_dto, "stage", stage))
+        stage = stage.stage_id if isinstance(stage, TableStage) else stage
+        response = self.http_client.get(self.tabular_endpoint(resource_dto, "stage", str(stage)))
 
         try:
             response.raise_for_status()
@@ -191,8 +192,7 @@ class OdpTabularStorageClient(BaseModel):
         return TableStage(**response.json())
 
     def list_stage_request(self, resource_dto: ResourceDto) -> List[TableStage]:
-        """
-        List Stages for a dataset
+        """List Stages for a dataset
 
         Args:
             resource_dto: Dataset manifest
@@ -215,8 +215,7 @@ class OdpTabularStorageClient(BaseModel):
         return [TableStage.parse_obj(table_stage) for table_stage in response.json()]
 
     def delete_stage_request(self, resource_dto: ResourceDto, table_stage: TableStage, force_delete=False):
-        """
-        Delete Stage
+        """Delete Stage
 
         Args:
             resource_dto: Dataset manifest
@@ -298,8 +297,7 @@ class OdpTabularStorageClient(BaseModel):
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
     ) -> Iterable[dict]:
-        """
-        Select data from dataset
+        """Select data from dataset
 
         Args:
             resource_dto: Dataset manifest
@@ -321,8 +319,7 @@ class OdpTabularStorageClient(BaseModel):
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> list[dict]:
-        """
-        Select data from dataset
+        """Select data from dataset
 
         Args:
             resource_dto: Dataset manifest
@@ -346,10 +343,8 @@ class OdpTabularStorageClient(BaseModel):
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
         result_geometry: Optional[str] = "geojson",
-    ) -> Iterable[tuple[dict, bool]]:
-        """
-        Method to query a specific page from the data
-        """
+    ) -> Iterable[Tuple[dict, bool]]:
+        """Method to query a specific page from the data"""
         query_parameters = {}
         if limit:
             query_parameters["limit"] = limit

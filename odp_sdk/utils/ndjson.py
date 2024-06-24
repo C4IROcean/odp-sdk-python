@@ -18,7 +18,7 @@ class NdJsonParser:
 
     def __init__(
         self,
-        s: Optional[str | bytes] = None,
+        s: Union[str, bytes, None] = None,
         fp: Optional[IO] = None,
         json_parser: JsonParser = DEFAULT_JSON_PARSER,
     ):
@@ -155,7 +155,7 @@ def load(fp: IO, json_parser: JsonParser = DEFAULT_JSON_PARSER) -> Iterable[Json
     return iter(NdJsonParser(fp=fp, json_parser=json_parser))
 
 
-def loads(s: str | bytes, json_parser: JsonParser = DEFAULT_JSON_PARSER) -> Iterable[JsonType]:
+def loads(s: Union[str, bytes], json_parser: JsonParser = DEFAULT_JSON_PARSER) -> Iterable[JsonType]:
     """Load NDJSON from a string
 
     Args:
