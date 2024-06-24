@@ -1,11 +1,14 @@
 import json
+from typing import Optional, Union
 
 import geojson
 from shapely import wkb, wkt
 from shapely.geometry import shape
 
 
-def convert_geometry(data: str | dict | list | bytes, result_geometry: str, rounding_precision: int = None):
+def convert_geometry(
+    data: Union[str, dict, list, bytes], result_geometry: str, rounding_precision: Optional[int] = None
+):
     if result_geometry == "wkb":
         return _convert_geometry_to_wkb(data)
     elif result_geometry == "wkt":
@@ -16,7 +19,7 @@ def convert_geometry(data: str | dict | list | bytes, result_geometry: str, roun
         return _convert_geometry_to_geojson(data)
 
 
-def _convert_geometry_to_wkb(data: str | dict | list):
+def _convert_geometry_to_wkb(data: Union[str, dict, list]):
     if _is_geojson(data):
         return _convert_geojson_to_wkb(data)
     if isinstance(data, str):
@@ -37,7 +40,7 @@ def _convert_geometry_to_wkb(data: str | dict | list):
     return data
 
 
-def _convert_geometry_to_wkt(data: str | dict | list | bytes, rounding_precision: int = None):
+def _convert_geometry_to_wkt(data: Union[str, dict, list, bytes], rounding_precision: Optional[int] = None):
     if _is_geojson(data):
         return _convert_geojson_to_wkt(data)
     if isinstance(data, (str, bytes)):
@@ -58,7 +61,7 @@ def _convert_geometry_to_wkt(data: str | dict | list | bytes, rounding_precision
     return data
 
 
-def _convert_geometry_to_geojson(data: str | dict | list | bytes):
+def _convert_geometry_to_geojson(data: Union[str, dict, list, bytes]):
     if isinstance(data, str):
         try:
             if _is_wkt(data):
@@ -85,26 +88,26 @@ def _convert_geometry_to_geojson(data: str | dict | list | bytes):
     return data
 
 
-def _convert_geojson_to_wkb(geojson_data: dict | str) -> bytes:
+def _convert_geojson_to_wkb(geojson_data: Union[dict, str]) -> bytes:
     if isinstance(geojson_data, dict):
         geojson_data = json.dumps(geojson_data)
     geo = geojson.loads(geojson_data)
     return shape(geo).wkb
 
 
-def _convert_geojson_to_wkt(geojson_data: dict | str) -> str:
+def _convert_geojson_to_wkt(geojson_data: Union[dict, str]) -> str:
     if isinstance(geojson_data, dict):
         geojson_data = json.dumps(geojson_data)
     geo = geojson.loads(geojson_data)
     return shape(geo).wkt
 
 
-def _convert_wkb_to_geojson(wkb_data: bytes | str) -> dict:
+def _convert_wkb_to_geojson(wkb_data: Union[bytes, str]) -> dict:
     geo = wkb.loads(wkb_data)
     return geojson.Feature(geometry=geo, properties={}).geometry
 
 
-def _convert_wkb_to_wkt(wkb_data: bytes | str, rounding_precision: int = None) -> str:
+def _convert_wkb_to_wkt(wkb_data: Union[bytes, str], rounding_precision: Optional[int] = None) -> str:
     if rounding_precision:
         return wkt.dumps(wkb.loads(wkb_data), rounding_precision=rounding_precision)
     return wkt.dumps(wkb.loads(wkb_data))

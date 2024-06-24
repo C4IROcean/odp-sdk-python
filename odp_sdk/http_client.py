@@ -1,6 +1,6 @@
 import json
 from contextlib import contextmanager
-from typing import Iterable, Literal, Optional
+from typing import Any, Dict, Iterable, Literal, Optional, Union
 
 import requests
 import validators
@@ -9,11 +9,15 @@ from pydantic import BaseModel, field_validator
 from .auth import TokenProvider
 from .exc import OdpForbiddenError, OdpUnauthorizedError
 
+ParamT = Optional[Dict[str, Any]]
+HeaderT = Optional[Dict[str, Any]]
+ContentT = Union[bytes, str, dict, list, BaseModel, None]
+
 
 class OdpHttpClient(BaseModel):
     base_url: str = "https://api.hubocean.earth"
     token_provider: TokenProvider
-    custom_user_agent: str = None
+    custom_user_agent: Optional[str] = None
 
     @field_validator("base_url")
     @classmethod
@@ -26,11 +30,11 @@ class OdpHttpClient(BaseModel):
     def get(
         self,
         url: str,
-        params: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: ParamT = None,
+        headers: HeaderT = None,
         timeout: Optional[float] = None,
         stream: bool = False,
-    ):
+    ) -> requests.Response:
         """Make a GET request
 
         Args:
@@ -48,12 +52,12 @@ class OdpHttpClient(BaseModel):
     def post(
         self,
         url: str,
-        params: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: ParamT = None,
+        headers: HeaderT = None,
         timeout: Optional[float] = None,
-        content: Optional[bytes | str | dict | list | BaseModel] = None,
+        content: ContentT = None,
         stream: bool = False,
-    ):
+    ) -> requests.Response:
         """Make a POST request
 
         Args:
@@ -80,12 +84,12 @@ class OdpHttpClient(BaseModel):
     def patch(
         self,
         url: str,
-        params: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: ParamT = None,
+        headers: HeaderT = None,
         timeout: Optional[float] = None,
-        content: Optional[bytes | str | dict | list | BaseModel] = None,
+        content: ContentT = None,
         stream: bool = False,
-    ):
+    ) -> requests.Response:
         """Make a PATCH request
 
         Args:
@@ -112,12 +116,12 @@ class OdpHttpClient(BaseModel):
     def put(
         self,
         url: str,
-        params: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: ParamT = None,
+        headers: HeaderT = None,
         timeout: Optional[float] = None,
-        content: Optional[bytes | str | dict | list | BaseModel] = None,
+        content: ContentT = None,
         stream: bool = False,
-    ):
+    ) -> requests.Response:
         """Make a PUT request
 
         Args:
@@ -144,11 +148,11 @@ class OdpHttpClient(BaseModel):
     def delete(
         self,
         url: str,
-        params: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: ParamT = None,
+        headers: HeaderT = None,
         timeout: Optional[float] = None,
         stream: bool = False,
-    ):
+    ) -> requests.Response:
         """Make a DELETE request
 
         Args:
@@ -189,10 +193,10 @@ class OdpHttpClient(BaseModel):
         self,
         method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"],
         url: str,
-        params: Optional[dict] = None,
-        headers: Optional[dict] = None,
+        params: ParamT = None,
+        headers: HeaderT = None,
         timeout: Optional[float] = None,
-        content: Optional[bytes | str | dict | list | BaseModel] = None,
+        content: ContentT = None,
         stream: bool = False,
     ) -> requests.Response:
         """Make an HTTP request
