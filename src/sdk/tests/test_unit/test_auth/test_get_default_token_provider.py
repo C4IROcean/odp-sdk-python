@@ -1,5 +1,4 @@
 import pytest
-
 from odp_sdk.auth import (
     AzureTokenProvider,
     HardcodedTokenProvider,

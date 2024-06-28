@@ -20,17 +20,16 @@ jobs:
           python -m pip install --upgrade pip build poetry
           python -m pip install --upgrade --upgrade-strategy eager -e .
 
-
       - name: Build a binary wheel and a source tarball
         run: |
-          poetry version $(git describe --tags --abbrev=0)
-          poetry build
+          make version
+          make build
 
       - name: Publish build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: built-package
-          path: "./dist"
+          path: "./src/**/dist"
 
   publish-release:
     name: Publish release to PyPI
@@ -43,7 +42,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: built-package
-          path: "./dist"
 
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

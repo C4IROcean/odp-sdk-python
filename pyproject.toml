@@ -1,32 +1,14 @@
 [tool.poetry]
-name = "odp-sdk"
-version = "0.4.10"
-description = "ODP Python SDK"
+description = "ODP Python SDK project"
 authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "odp_sdk"}]
+packages = []
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pydantic = "^2.4.2"
-cryptography = ">=41.0.5,<43.0.0"
-pyjwt = "^2.8.0"
-msal = "^1.24.1"
-msal-extensions = "^1.1.0"
-pandas = { version = "^2.1.4", optional = true}
-shapely = "^2.0.4"
-geojson = "^3.1.0"
-validators = "^0.28.3"
-
-
-[tool.poetry.group.dev.dependencies]
-python-dotenv = "^1.0.1"
-pytest = "^7.4.3"
-coverage = "^7.3.2"
-flake8-pyproject = "^1.2.2"
-responses = "^0.23.1"
-pandas = "^2.1.4"
+odp-sdk = { path = "./src/sdk", develop = true }
 
 [build-system]
 requires = ["poetry-core"]
@@ -37,12 +19,12 @@ build-backend = "poetry.core.masonry.api"
 log_cli = "true"
 asyncio_mode = "auto"
 testpaths = [
-    "tests"
+    "src/sdk/tests",
 ]
 
 [tool.flake8]
 ignore = ["E203", "E731", "W503"]
-per-file-ignores = ["*/__init__.py:F401", "tests/*:F841"]
+per-file-ignores = ["*/__init__.py:F401", "tests/*:F841", "*/tests/*:F841"]
 max-line-length = 120
 count = true
 

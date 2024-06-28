@@ -2,7 +2,6 @@ import datetime
 from uuid import uuid4
 
 import pytest
-
 from odp_sdk.dto import MetadataDto, ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
 

@@ -1,5 +1,4 @@
 import responses
-
 from odp_sdk.auth import AzureTokenProvider
 
 

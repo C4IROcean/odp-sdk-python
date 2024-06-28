@@ -4,11 +4,10 @@ from typing import Callable, Tuple
 
 import pytest
 from dotenv import load_dotenv
-from pydantic import SecretStr
-
 from odp_sdk.auth import AzureTokenProvider
 from odp_sdk.client import OdpClient
 from odp_sdk.exc import OdpResourceNotFoundError
+from pydantic import SecretStr
 
 
 @pytest.fixture(scope="session")

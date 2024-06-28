@@ -4,8 +4,6 @@ from uuid import UUID
 from warnings import warn
 
 import requests
-from pydantic import BaseModel, field_validator
-
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
 from odp_sdk.dto.tabular_store import TableStage
@@ -13,6 +11,7 @@ from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.http_client import OdpHttpClient
 from odp_sdk.utils import convert_geometry
 from odp_sdk.utils.ndjson import NdJsonParser
+from pydantic import BaseModel, field_validator
 
 try:
     from pandas import DataFrame

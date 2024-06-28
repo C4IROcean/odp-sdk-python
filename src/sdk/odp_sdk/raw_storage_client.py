@@ -2,12 +2,11 @@ from io import BytesIO
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import requests
-from pydantic import BaseModel
-
 from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.file_dto import FileMetadataDto
 from odp_sdk.exc import OdpFileAlreadyExistsError, OdpFileNotFoundError, OdpValidationError
 from odp_sdk.http_client import OdpHttpClient
+from pydantic import BaseModel
 
 
 class OdpRawStorageClient(BaseModel):
