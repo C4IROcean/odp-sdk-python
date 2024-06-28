@@ -36,4 +36,4 @@ jobs:
 
       - name: Run tests
         run: |
-          poetry run pytest tests/test_unit
+          poetry run pytest src/sdk/tests
