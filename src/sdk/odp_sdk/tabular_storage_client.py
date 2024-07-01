@@ -276,7 +276,6 @@ class OdpTabularStorageClient(BaseModel):
 
         while True:
             rows = self._select_page(resource_dto, filter_query, use_limit, cursor)
-            rows = list(rows)
             for row, is_meta in rows:
                 if is_meta:
                     cursor = row.get("@@next")
