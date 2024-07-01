@@ -4,7 +4,6 @@ from uuid import UUID, uuid4
 
 import pytest
 import responses
-
 from odp_sdk.dto.resource_dto import MetadataDto, ResourceDto, ResourceStatusDto
 from odp_sdk.resource_client import OdpResourceClient
 

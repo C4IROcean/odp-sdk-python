@@ -1,6 +1,5 @@
 import pytest
 import responses
-
 from odp_sdk.auth import TokenProvider
 from odp_sdk.http_client import OdpHttpClient
 

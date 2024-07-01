@@ -494,6 +494,29 @@ files = [
 ]
 
 [[package]]
+name = "odp-sdk"
+version = "0.4.10"
+description = "ODP Python SDK"
+optional = false
+python-versions = "^3.9"
+files = []
+develop = true
+
+[package.dependencies]
+cryptography = ">=41.0.5,<43.0.0"
+geojson = "^3.1.0"
+msal = "^1.24.1"
+msal-extensions = "^1.1.0"
+pydantic = "^2.4.2"
+pyjwt = "^2.8.0"
+shapely = "^2.0.4"
+validators = "^0.28.3"
+
+[package.source]
+type = "directory"
+url = "src/sdk"
+
+[[package]]
 name = "packaging"
 version = "24.1"
 description = "Core utilities for Python packages"
@@ -1100,9 +1123,9 @@ files = [
 ]
 
 [extras]
-pandas = ["pandas"]
+pandas = []
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "fe1c24267f5a8e4701108cd7e76b6d560442f9f1fee2f35819a97b3eb23e94ce"
+content-hash = "54749ea6d6bd60dfc82e28f00cf3f66fad644638b41037523ff81cbaa6ca3f68"

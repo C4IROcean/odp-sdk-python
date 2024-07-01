@@ -9,7 +9,6 @@ import requests
 import responses
 from cryptography.hazmat.primitives.asymmetric import rsa
 from jwt.utils import to_base64url_uint
-
 from odp_sdk.auth import JwtTokenProvider
 
 __all__ = [

@@ -1,9 +1,8 @@
 import pytest
 import responses
-from pandas import DataFrame
-
 from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
 from odp_sdk.tabular_storage_client import OdpTabularStorageClient
+from pandas import DataFrame
 
 
 @pytest.fixture()
