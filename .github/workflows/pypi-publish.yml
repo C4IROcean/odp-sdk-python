@@ -35,6 +35,10 @@ jobs:
     needs: [build]
     environment: "prod"
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package_path:
+          - "src/sdk"
 
     steps:
       - name: Download build artifacts
@@ -42,6 +46,14 @@ jobs:
         with:
           name: built-package
           path: "./dist"
+
+      - name: List out files
+        run: |
+          ls -lA ./dist
+
+      - name: List out files
+        run: |
+          ls -lA ./dist/{{ matrix.package_path }}
 
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
