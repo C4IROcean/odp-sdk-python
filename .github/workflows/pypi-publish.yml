@@ -45,19 +45,19 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: built-package
-          path: "./dist"
+          path: "./build"
 
       - name: List out files
         run: |
-          ls -lA ./dist
+          ls -lA ./build
 
       - name: List out files
         run: |
-          ls -lA ./dist/${{ matrix.package_path }}/dist
+          ls -lA ./build/${{ matrix.package_path }}/dist
 
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
-          packages-dir: "./dist/${{ matrix.package_path }}/dist"
+          packages-dir: "./build/${{ matrix.package_path }}/dist"
           verbose: true

@@ -3,6 +3,7 @@ name = "odp-sdk"
 version = "0.4.10"
 description = "ODP Python SDK"
 authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
+license = "MIT"
 packages = [
     {include="odp_sdk"},
 ]
