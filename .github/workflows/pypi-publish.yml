@@ -53,10 +53,11 @@ jobs:
 
       - name: List out files
         run: |
-          ls -lA ./dist/{{ matrix.package_path }}
+          ls -lA ./dist/${{ matrix.package_path }}
 
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
+          packages-dir: "./dist/${{ matrix.package_path }}"
           verbose: true
