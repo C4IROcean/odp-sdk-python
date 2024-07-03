@@ -133,7 +133,7 @@ class OdpResourceClient(BaseModel):
             OdpResourceExistsError: Resource already exists
         """
 
-        res = self.http_client.post(self.resource_endpoint, content=manifest.model_dump())
+        res = self.http_client.post(self.resource_endpoint, content=manifest)
         try:
             res.raise_for_status()
         except requests.HTTPError as e:
