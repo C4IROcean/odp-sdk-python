@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         package_path:
-          - "src/sdk"
+          - "sdk"
 
     steps:
       - name: Download build artifacts
