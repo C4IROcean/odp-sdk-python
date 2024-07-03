@@ -19,7 +19,7 @@ class NdJsonParser:
     def __init__(
         self,
         s: Union[str, bytes, None] = None,
-        fp: Optional[IO] = None,
+        fp: Union[IO, Iterable[bytes], None] = None,
         json_parser: JsonParser = DEFAULT_JSON_PARSER,
     ):
         """Initialize the parser

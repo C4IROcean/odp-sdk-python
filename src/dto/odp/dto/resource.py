@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Annotated, Generic, Optional, TypeVar
+from typing import Annotated, Generic, Optional, TypeVar, Union
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -29,15 +29,41 @@ class ResourceDto(BaseModel, Generic[T]):
     metadata: Metadata
     """metadata is the metadata of the resource."""
 
-    status: Optional[ResourceStatus]
+    status: Optional[ResourceStatus] = None
     """status is the status of the resource."""
 
     spec: T
 
     @property
     def qualified_name(self) -> str:
-        return f"{self.kind}/{self.metadata.name}"
+        return self.get_qualified_name()
 
     @property
     def uuid(self) -> UUID:
+        return self.get_uuid()
+
+    def get_qualified_name(self) -> str:
+        """Get the resource qualified name
+
+        The qualified name is the kind and resource name joined by a slash: `{kind}/{metadata.name}`
+
+        Returns:
+            Qualified name
+        """
+        return f"{self.kind}/{self.metadata.name}"
+
+    def get_uuid(self) -> Optional[UUID]:
+        """Get the resource UUID
+
+        Returns:
+            Resource UUID if it is set, `None` otherwise
+        """
         return self.metadata.uuid
+
+    def get_ref(self) -> Union[UUID, str]:
+        """Get a valid reference to the resource
+
+        Returns:
+            The resource UUID if it is set, the qualified name otherwise
+        """
+        return self.get_uuid() or self.get_qualified_name()

@@ -3,9 +3,9 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 
 import requests
+from odp.dto import ResourceDto
 from pydantic import BaseModel, field_validator
 
-from .dto import ResourceDto
 from .exc import OdpResourceExistsError, OdpResourceNotFoundError, OdpValidationError
 from .http_client import OdpHttpClient
 

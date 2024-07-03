@@ -2,7 +2,7 @@ import datetime
 from uuid import uuid4
 
 import pytest
-from odp_sdk.dto import MetadataDto, ResourceDto
+from odp.dto import Metadata, ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
 
 __all__ = [
@@ -24,7 +24,7 @@ def raw_resource_dto():
     return ResourceDto(
         kind=kind,
         version=version,
-        metadata=MetadataDto(name=name, uuid=uuid),
+        metadata=Metadata(name=name, uuid=uuid),
         spec=dict(
             storage_class="registry.hubocean.io/storageClass/raw",
             maintainer={"organization": "HUB Ocean"},
@@ -35,11 +35,11 @@ def raw_resource_dto():
 
 
 @pytest.fixture()
-def tabular_resource_dto():
+def tabular_resource_dto() -> ResourceDto:
     name = "test_dataset"
     uuid = uuid4()
-    return ResourceDto(
-        metadata=MetadataDto(name=name, uuid=uuid),
+    return ResourceDto[dict](
+        kind="test.hubocean.io/testType", version="v1alpha1", metadata=Metadata(name=name, uuid=uuid), spec={}
     )
 
 
