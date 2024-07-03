@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "odp-dto"
+version = "0.4.10"
+description = "ODP Data Transfer Object"
+authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    {include="odp"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "^2.4.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
