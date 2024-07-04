@@ -14,7 +14,7 @@ class ResourceSpecABC(BaseModel, ABC):
     """ResourceSpecABC is an abstract base class for resource specification."""
 
 
-ResourceSpecT = Union[ResourceSpecABC, dict]
+ResourceSpecT = Union[dict, ResourceSpecABC]
 
 T = TypeVar("T", bound=ResourceSpecT)
 

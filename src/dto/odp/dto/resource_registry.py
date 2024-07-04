@@ -1,12 +1,12 @@
-from typing import Annotated, Callable, Dict, Type, TypeVar, cast
+from typing import Annotated, Callable, Dict, Optional, Tuple, Type, TypeVar, cast
 
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import BeforeValidator
 
-from .resource import Metadata, ResourceDto, ResourceSpecABC
+from .resource import Metadata, ResourceDto, ResourceSpecABC, ResourceSpecT, ResourceStatus
 from .validators import validate_resource_kind, validate_resource_version
 
-T = TypeVar("T", bound=ResourceSpecABC)
+T = TypeVar("T", bound=ResourceSpecT)
 
 
 class ResourceRegistryEntry(BaseModel):
@@ -82,6 +82,18 @@ class ResourceRegistry(BaseModel):
             raise ValueError(f"Expected type {t.__name__}, got {type(ret).__name__}")
         return cast(T, self.factory(kind, version, data))
 
+    def _resource_factory_prototype(self, manifest: dict) -> Tuple[str, str, Metadata, Optional[ResourceStatus], dict]:
+        try:
+            kind = manifest["kind"]
+            version = manifest["version"]
+            metadata = manifest["metadata"]
+            status = manifest.get("status")
+            spec = manifest["spec"]
+        except KeyError as e:
+            raise ValueError("Invalid resource manifest") from e
+
+        return (kind, version, Metadata.parse_obj(metadata), ResourceStatus.parse_obj(status) if status else None, spec)
+
     def resource_factory(self, manifest: dict, raise_unknown: bool = True) -> ResourceDto:
         """Convert a manifest to a ResourceDto object.
 
@@ -92,23 +104,16 @@ class ResourceRegistry(BaseModel):
         Returns:
             Parsed ResourceDto object.
         """
-        try:
-            version = manifest["version"]
-            mkind = manifest["kind"]
-            metadata = manifest["metadata"]
-            data = manifest["spec"]
-            status = manifest.get("status")
-        except KeyError as e:
-            raise ValueError("Invalid resource manifest") from e
+        kind, version, metadata, status, spec_dict = self._resource_factory_prototype(manifest)
 
         try:
-            spec = self.factory(mkind, version, data)
+            spec = self.factory(kind, version, spec_dict)
         except KeyError:
             if raise_unknown:
                 raise
-            spec = data
+            spec = spec_dict
 
-        return ResourceDto(kind=mkind, version=version, metadata=Metadata.parse_obj(metadata), status=status, spec=spec)
+        return ResourceDto(kind=kind, version=version, metadata=Metadata.parse_obj(metadata), status=status, spec=spec)
 
     def resource_factory_cast(
         self, t: Type[ResourceDto[T]], manifest: dict, raise_unknown: bool = True, assert_type: bool = True
@@ -121,9 +126,19 @@ class ResourceRegistry(BaseModel):
             raise_unknown: Whether to raise an exception if the resource kind is unknown.
             assert_type: Whether to assert the type before returning
         """
-        ret = self.resource_factory(manifest, raise_unknown)
-        if assert_type and not isinstance(ret.spec, t.spec_tp):
-            raise ValueError(f"Expected type {t.spec_tp.__name__}, got {type(ret.spec).__name__}")
+        kind, version, metadata, status, spec_dict = self._resource_factory_prototype(manifest)
+
+        try:
+            spec = self.factory_cast(t.spec_tp, kind, version, spec_dict)
+        except KeyError:
+            if raise_unknown:
+                raise
+            elif issubclass(t.spec_tp, ResourceSpecABC):
+                spec = t.spec_tp.parse_obj(spec_dict)
+            else:
+                spec = spec_dict
+
+        ret = ResourceDto(kind=kind, version=version, metadata=metadata, status=status, spec=spec)
         return cast(ResourceDto[T], ret)
 
 
@@ -132,7 +147,10 @@ DEFAULT_RESOURCE_REGISTRY = ResourceRegistry()
 
 
 def kind(
-    resource_group: str, resource_type: str, resource_version: str
+    resource_group: str,
+    resource_type: str,
+    resource_version: str,
+    registry: ResourceRegistry = DEFAULT_RESOURCE_REGISTRY,
 ) -> Callable[[Type[ResourceSpecABC]], Type[ResourceSpecABC]]:
     """kind is a decorator for resource specification classes to register them in the resource registry.
 
@@ -140,13 +158,14 @@ def kind(
         resource_group: resource_group is the group of the resource.
         resource_type: resource_type is the kind of the resource.
         resource_version: resource_version is the version of the resource. in the form v<major>(alpha|beta)<minor>
+        registry: registry is the resource registry to register the resource in.
 
     Returns:
         Callable[[Type[ResourceSpecABC]], Type[ResourceSpecABC]]: a decorator function.
     """
 
     def inner(cls: Type[ResourceSpecABC]) -> Type[ResourceSpecABC]:
-        DEFAULT_RESOURCE_REGISTRY.add(
+        registry.add(
             ResourceRegistryEntry(resource_kind=f"{resource_group}/{resource_type}", resource_version=resource_version),
             cls,
         )
