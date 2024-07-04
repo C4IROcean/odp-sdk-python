@@ -3,7 +3,7 @@ from typing import Annotated, Callable, Dict, Optional, Tuple, Type, TypeVar, ca
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import BeforeValidator
 
-from .resource import Metadata, ResourceDto, ResourceSpecABC, ResourceSpecT, ResourceStatus
+from .resource import Metadata, ResourceDto, ResourceSpecABC, ResourceSpecT, ResourceStatus, get_resource_spec_type
 from .validators import validate_resource_kind, validate_resource_version
 
 T = TypeVar("T", bound=ResourceSpecT)
@@ -128,13 +128,14 @@ class ResourceRegistry(BaseModel):
         """
         kind, version, metadata, status, spec_dict = self._resource_factory_prototype(manifest)
 
+        spec_tp = get_resource_spec_type(t)
         try:
-            spec = self.factory_cast(t.spec_tp, kind, version, spec_dict)
+            spec = self.factory_cast(spec_tp, kind, version, spec_dict)
         except KeyError:
             if raise_unknown:
                 raise
-            elif issubclass(t.spec_tp, ResourceSpecABC):
-                spec = t.spec_tp.parse_obj(spec_dict)
+            elif issubclass(spec_tp, ResourceSpecABC):
+                spec = spec_tp.parse_obj(spec_dict)
             else:
                 spec = spec_dict
 

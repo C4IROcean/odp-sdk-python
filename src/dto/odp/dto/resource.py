@@ -37,14 +37,8 @@ class ResourceDto(BaseModel, Generic[T]):
     spec: T
 
     @classmethod
-    @property
-    def spec_tp(cls) -> Type[T]:
-        tp = cls.model_fields["spec"].annotation
-        return cast(Type[T], tp)
-
-    @classmethod
     def is_generic(cls) -> bool:
-        return isinstance(cls.spec_tp, dict)
+        return isinstance(get_resource_spec_type(cls), dict)
 
     @property
     def qualified_name(self) -> str:
@@ -79,6 +73,22 @@ class ResourceDto(BaseModel, Generic[T]):
             The resource UUID if it is set, the qualified name otherwise
         """
         return self.get_uuid() or self.get_qualified_name()
+
+
+def get_resource_spec_type(cls: Union[Type[ResourceDto[T]], ResourceDto[T]]) -> Type[T]:
+    """Get the resource spec type
+
+    Args:
+        cls: ResourceDto class or instance
+
+    Returns:
+        The resource spec type
+    """
+    if isinstance(cls, type) and issubclass(cls, ResourceDto):
+        tp = cls.model_fields["spec"].annotation
+    else:
+        tp = type(cls.spec)
+    return cast(Type[T], tp)
 
 
 GenericResourceDto = ResourceDto[dict]

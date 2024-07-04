@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Un
 from uuid import UUID
 
 import requests
-from odp.dto import DEFAULT_RESOURCE_REGISTRY, ResourceDto, ResourceRegistry, ResourceSpecT
+from odp.dto import DEFAULT_RESOURCE_REGISTRY, ResourceDto, ResourceRegistry, ResourceSpecT, get_resource_spec_type
 from pydantic import BaseModel, field_validator
 
 from .exc import OdpResourceExistsError, OdpResourceNotFoundError, OdpValidationError
@@ -198,7 +198,7 @@ class OdpResourceClient(BaseModel):
             raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
         return self.resource_registry.resource_factory_cast(
-            manifest.spec_tp, res.json(), assert_type, raise_unknown_kind
+            ResourceDto[get_resource_spec_type(manifest)], res.json(), assert_type, raise_unknown_kind
         )
 
     def update(
@@ -228,7 +228,7 @@ class OdpResourceClient(BaseModel):
         if isinstance(manifest_update, ResourceDto) and tp:
             raise ValueError("Cannot cast the updated resource to a specific type if the manifest is a ResourceDto")
         elif isinstance(manifest_update, ResourceDto):
-            tp = ResourceDto[manifest_update.spec_tp]
+            tp = ResourceDto[get_resource_spec_type(manifest_update)]
 
         if ref:
             if isinstance(ref, UUID):

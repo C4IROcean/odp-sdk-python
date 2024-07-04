@@ -109,7 +109,7 @@ def test_create_resource(resource_client):
         kind="test.hubocean.io/testType",
         version="v1alpha1",
         metadata=Metadata(name="foobar"),
-        spec={},
+        spec=dict(),
     )
 
     with responses.RequestsMock() as rsps:
