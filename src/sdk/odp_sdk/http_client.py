@@ -238,7 +238,7 @@ class OdpHttpClient(BaseModel):
             body = json.dumps(content)
             headers["Content-Type"] = "application/json"
         elif isinstance(content, BaseModel):
-            body = content.model_dump_json()
+            body = content.model_dump_json().encode("utf-8")
             headers["Content-Type"] = "application/json"
         elif isinstance(content, (bytes, str)):
             body = content
