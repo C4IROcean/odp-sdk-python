@@ -2,7 +2,7 @@
 
 ## Documentation
 
-https://docs.hubocea.earth
+https://docs.hubocean.earth
 
 ## Installation
 
