@@ -3,8 +3,8 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.dto import DatasetDto
 from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
 
 
 def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
@@ -13,9 +13,9 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     observable_filter = {"#EQUALS": ["$kind", "catalog.hubocean.io/observable"]}
 
     for item in catalog_client.list(observable_filter):
-        assert isinstance(item, ResourceDto)
+        assert isinstance(item, DatasetDto)
 
-    observable_manifest = ResourceDto(
+    observable_manifest = DatasetDto(
         **{
             "kind": "catalog.hubocean.io/observable",
             "version": "v1alpha2",
@@ -34,10 +34,10 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     )
 
     observable_manifest = catalog_client.create(observable_manifest)
-    assert isinstance(observable_manifest, ResourceDto)
+    assert isinstance(observable_manifest, DatasetDto)
 
     fetched_manifest = catalog_client.get(observable_manifest.metadata.uuid)
-    assert isinstance(fetched_manifest, ResourceDto)
+    assert isinstance(fetched_manifest, DatasetDto)
 
     observable_geometry_filter = {
         "#AND": [
@@ -63,10 +63,10 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     }
 
     for item in catalog_client.list(observable_geometry_filter):
-        assert isinstance(item, ResourceDto)
+        assert isinstance(item, DatasetDto)
     assert [observable for observable in catalog_client.list(observable_geometry_filter)] != []
 
-    static_manifest_small = ResourceDto(
+    static_manifest_small = DatasetDto(
         **{
             "kind": "catalog.hubocean.io/observable",
             "version": "v1alpha2",
@@ -86,7 +86,7 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
 
     catalog_client.create(static_manifest_small)
 
-    static_manifest_large = ResourceDto(
+    static_manifest_large = DatasetDto(
         **{
             "kind": "catalog.hubocean.io/observable",
             "version": "v1alpha2",
@@ -115,7 +115,7 @@ def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):
 
     list_observables = []
     for item in catalog_client.list(observable_range_filter):
-        assert isinstance(item, ResourceDto)
+        assert isinstance(item, DatasetDto)
         list_observables.append(item)
 
     assert list_observables != []

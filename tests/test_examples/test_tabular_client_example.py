@@ -3,14 +3,14 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.dto import DatasetDto
 from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
 from odp_sdk.exc import OdpResourceNotFoundError
 
 
 def test_tabular_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
-    my_dataset = ResourceDto(
+    my_dataset = DatasetDto(
         **{
             "kind": "catalog.hubocean.io/dataset",
             "version": "v1alpha3",
@@ -27,7 +27,7 @@ def test_tabular_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     )
 
     my_dataset = odp_client_test_uuid[0].catalog.create(my_dataset)
-    assert isinstance(my_dataset, ResourceDto)
+    assert isinstance(my_dataset, DatasetDto)
 
     table_schema = {"Data": {"type": "string"}}
     my_table_spec = TableSpec(table_schema=table_schema)

@@ -3,7 +3,7 @@ from typing import Annotated, Callable, Dict, Type, TypeVar, cast
 from pydantic import BaseModel, Field
 from pydantic.functional_validators import BeforeValidator
 
-from .resource import ResourceSpecABC
+from .resource import Metadata, ResourceDto, ResourceSpecABC
 from .validators import validate_resource_kind, validate_resource_version
 
 T = TypeVar("T", bound=ResourceSpecABC)
@@ -23,6 +23,8 @@ class ResourceRegistryEntry(BaseModel):
 
 
 class ResourceRegistry(BaseModel):
+    """Registry used to register and lookup resource definitions."""
+
     entries: Dict[ResourceRegistryEntry, Type[ResourceSpecABC]] = Field(default_factory=dict)
     """entries is a list of resource registry entries."""
 
@@ -62,7 +64,7 @@ class ResourceRegistry(BaseModel):
         cls = self.get_resource_cls(kind, version)
         return cls(**data)
 
-    def factory_cast(self, t: T, kind: str, version: str, data: dict, assert_type: bool = True) -> T:
+    def factory_cast(self, t: Type[T], kind: str, version: str, data: dict, assert_type: bool = True) -> T:
         """Convenience method to create a resource spec object and cast it to the given type.
 
         Args:
@@ -76,9 +78,53 @@ class ResourceRegistry(BaseModel):
             T: the resource spec object.
         """
         ret = self.factory(kind, version, data)
-        if assert_type and not isinstance(ret, type(t)):
-            raise ValueError(f"Expected type {type(t).__name__}, got {type(ret).__name__}")
+        if assert_type and not isinstance(ret, t):
+            raise ValueError(f"Expected type {t.__name__}, got {type(ret).__name__}")
         return cast(T, self.factory(kind, version, data))
+
+    def resource_factory(self, manifest: dict, raise_unknown: bool = True) -> ResourceDto:
+        """Convert a manifest to a ResourceDto object.
+
+        Args:
+            manifest: Resource manifest.
+            raise_unknown: Whether to raise an exception if the resource kind is unknown.
+
+        Returns:
+            Parsed ResourceDto object.
+        """
+        try:
+            version = manifest["version"]
+            mkind = manifest["kind"]
+            metadata = manifest["metadata"]
+            data = manifest["spec"]
+            status = manifest.get("status")
+        except KeyError as e:
+            raise ValueError("Invalid resource manifest") from e
+
+        try:
+            spec = self.factory(mkind, version, data)
+        except KeyError:
+            if raise_unknown:
+                raise
+            spec = data
+
+        return ResourceDto(kind=mkind, version=version, metadata=Metadata.parse_obj(metadata), status=status, spec=spec)
+
+    def resource_factory_cast(
+        self, t: Type[ResourceDto[T]], manifest: dict, raise_unknown: bool = True, assert_type: bool = True
+    ) -> ResourceDto[T]:
+        """Convenience method to create a ResourceDto object and cast it to the given type.
+
+        Args:
+            t: Type to cast to.
+            manifest: manifest is the resource data.
+            raise_unknown: Whether to raise an exception if the resource kind is unknown.
+            assert_type: Whether to assert the type before returning
+        """
+        ret = self.resource_factory(manifest, raise_unknown)
+        if assert_type and not isinstance(ret.spec, t.spec_tp):
+            raise ValueError(f"Expected type {t.spec_tp.__name__}, got {type(ret.spec).__name__}")
+        return cast(ResourceDto[T], ret)
 
 
 DEFAULT_RESOURCE_REGISTRY = ResourceRegistry()

@@ -3,13 +3,13 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.dto import DatasetDto
 from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
 from odp_sdk.dto.table_spec import TableSpec
 
 
 def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):
-    manifest = ResourceDto(
+    manifest = DatasetDto(
         **{
             "kind": "catalog.hubocean.io/dataset",
             "version": "v1alpha3",

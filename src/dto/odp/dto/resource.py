@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Annotated, Generic, Optional, TypeVar, Union
+from typing import Annotated, Generic, Optional, Type, TypeVar, Union, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -14,7 +14,9 @@ class ResourceSpecABC(BaseModel, ABC):
     """ResourceSpecABC is an abstract base class for resource specification."""
 
 
-T = TypeVar("T", bound=ResourceSpecABC)
+ResourceSpecT = Union[ResourceSpecABC, dict]
+
+T = TypeVar("T", bound=ResourceSpecT)
 
 
 class ResourceDto(BaseModel, Generic[T]):
@@ -33,6 +35,16 @@ class ResourceDto(BaseModel, Generic[T]):
     """status is the status of the resource."""
 
     spec: T
+
+    @classmethod
+    @property
+    def spec_tp(cls) -> Type[T]:
+        tp = cls.model_fields["spec"].annotation
+        return cast(Type[T], tp)
+
+    @classmethod
+    def is_generic(cls) -> bool:
+        return isinstance(cls.spec_tp, dict)
 
     @property
     def qualified_name(self) -> str:
@@ -67,3 +79,6 @@ class ResourceDto(BaseModel, Generic[T]):
             The resource UUID if it is set, the qualified name otherwise
         """
         return self.get_uuid() or self.get_qualified_name()
+
+
+GenericResourceDto = ResourceDto[dict]
