@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Annotated, Generic, Optional, Type, TypeVar, Union, cast
+from typing import Annotated, ClassVar, Generic, Optional, Type, TypeVar, Union, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -12,6 +12,9 @@ from .validators import validate_resource_kind, validate_resource_version
 
 class ResourceSpecABC(BaseModel, ABC):
     """ResourceSpecABC is an abstract base class for resource specification."""
+
+    __kind__: ClassVar[str]
+    __manifest_version__: ClassVar[str]
 
 
 ResourceSpecT = Union[dict, ResourceSpecABC]
@@ -35,6 +38,16 @@ class ResourceDto(BaseModel, Generic[T]):
     """status is the status of the resource."""
 
     spec: T
+
+    def __init__(self, **data):
+        spec = data.pop("spec")
+
+        if hasattr(spec, "__kind__") and "kind" not in data:
+            data["kind"] = spec.__kind__
+        if hasattr(spec, "__manifest_version__") and "version" not in data:
+            data["version"] = spec.__manifest_version__
+
+        super().__init__(**data, spec=spec)
 
     @classmethod
     def is_generic(cls) -> bool:

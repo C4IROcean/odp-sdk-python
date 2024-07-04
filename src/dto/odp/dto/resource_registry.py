@@ -166,8 +166,13 @@ def kind(
     """
 
     def inner(cls: Type[ResourceSpecABC]) -> Type[ResourceSpecABC]:
+        kind = f"{resource_group}/{resource_type}"
+
+        cls.__kind__ = kind
+        cls.__manifest_version__ = resource_version
+
         registry.add(
-            ResourceRegistryEntry(resource_kind=f"{resource_group}/{resource_type}", resource_version=resource_version),
+            ResourceRegistryEntry(resource_kind=kind, resource_version=resource_version),
             cls,
         )
 

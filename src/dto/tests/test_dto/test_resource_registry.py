@@ -1,56 +1,8 @@
-from typing import Annotated
-
 import pytest
-from odp.dto.resource import Metadata, ResourceDto, ResourceSpecABC
+from odp.dto.resource import Metadata, ResourceDto
 from odp.dto.resource_registry import ResourceRegistry, ResourceRegistryEntry
-from pydantic import Field
-from pydantic.functional_validators import BeforeValidator
 
-
-def _validate_starts_with(s: str, p: str) -> str:
-    if not s.startswith(p):
-        raise ValueError(f"string does not start with {p}")
-    return s
-
-
-class MockSpec(ResourceSpecABC):
-    pass
-
-
-class SimpleSpec(ResourceSpecABC):
-    some_str: str
-    some_int: int = Field(..., ge=1)
-
-
-class UnregisteredSpec(ResourceSpecABC):
-    some_float: float
-    some_validated_str: Annotated[str, BeforeValidator(lambda s: _validate_starts_with(s, "foo"))]
-
-
-@pytest.fixture
-def empty_resource_registry() -> ResourceRegistry:
-    return ResourceRegistry()
-
-
-@pytest.fixture
-def resource_registry(empty_resource_registry: ResourceRegistry) -> ResourceRegistry:
-    empty_resource_registry.add(
-        ResourceRegistryEntry(
-            resource_kind="test.hubocean.io/mock",
-            resource_version="v1alpha1",
-        ),
-        MockSpec,
-    )
-
-    empty_resource_registry.add(
-        ResourceRegistryEntry(
-            resource_kind="test.hubocean.io/simple",
-            resource_version="v1alpha1",
-        ),
-        SimpleSpec,
-    )
-
-    return empty_resource_registry
+from .utils import MockSpec, SimpleSpec, UnregisteredSpec
 
 
 def test_add_get():
