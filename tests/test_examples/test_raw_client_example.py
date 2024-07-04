@@ -4,7 +4,7 @@ import string
 from typing import Tuple
 from uuid import UUID
 
-from odp.dto import DatasetDto
+from odp.dto import DatasetDto, DatasetSpec
 from odp_sdk.client import OdpClient
 from odp_sdk.dto.file_dto import FileMetadataDto
 
@@ -27,7 +27,7 @@ def test_raw_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     )
 
     my_dataset = odp_client_test_uuid[0].catalog.create(my_dataset)
-    assert isinstance(my_dataset, DatasetDto)
+    assert isinstance(my_dataset.spec, DatasetSpec)
 
     file_dto = odp_client_test_uuid[0].raw.create_file(
         resource_dto=my_dataset,

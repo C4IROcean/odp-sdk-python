@@ -35,7 +35,7 @@ class Attribute(BaseModel):
     """
 
 
-@kind(CATALOG_RESOURCE_GROUP, "dataset", "v1alpha1")
+@kind(CATALOG_RESOURCE_GROUP, "dataset", "v1alpha3")
 class DatasetSpec(ResourceSpecABC):
     """Dataset specification model"""
 

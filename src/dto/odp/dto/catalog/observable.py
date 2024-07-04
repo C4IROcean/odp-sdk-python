@@ -5,7 +5,7 @@ from ..resource_registry import kind
 from ._rg import CATALOG_RESOURCE_GROUP
 
 
-@kind(CATALOG_RESOURCE_GROUP, "observable", "v1alpha1")
+@kind(CATALOG_RESOURCE_GROUP, "observable", "v1alpha2")
 class ObservableSpec(ResourceSpecABC):
     observable_class: str
     """Observable class"""

@@ -3,7 +3,7 @@ import string
 from typing import Tuple
 from uuid import UUID
 
-from odp.dto import DatasetDto, ResourceDto
+from odp.dto import DatasetDto, DatasetSpec, ResourceDto
 from odp_sdk.client import OdpClient
 from odp_sdk.resource_client import OdpResourceClient
 
@@ -32,7 +32,7 @@ def test_catalog_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     )
 
     manifest = catalog_client.create(manifest)
-    assert isinstance(manifest, DatasetDto)
+    assert isinstance(manifest.spec, DatasetSpec)
 
-    fetched_manifest = catalog_client.get(manifest.metadata.uuid)
-    assert isinstance(fetched_manifest, DatasetDto)
+    fetched_manifest = catalog_client.get(manifest.metadata.uuid, tp=DatasetDto)
+    assert isinstance(fetched_manifest.spec, DatasetSpec)
