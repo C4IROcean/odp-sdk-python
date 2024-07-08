@@ -7,7 +7,7 @@ TAR := tar
 GIT := git
 
 # Subprojects
-SUBPROJECTS := src/sdk
+SUBPROJECTS := src/sdk src/dto
 DIST_DIRS := $(SUBPROJECTS:%=%/dist)
 PYPROJECTS := $(SUBPROJECTS:%=%/pyproject.toml)
 MD5S := $(DIST_DIRS:%=%/md5.published)
