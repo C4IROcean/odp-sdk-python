@@ -39,6 +39,7 @@ jobs:
       matrix:
         package_path:
           - "sdk"
+          - "dto"
 
     steps:
       - name: Download build artifacts
