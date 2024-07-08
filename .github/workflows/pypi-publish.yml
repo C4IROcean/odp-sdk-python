@@ -18,6 +18,7 @@ jobs:
       - name: Install packages
         run: |
           python -m pip install --upgrade pip build poetry
+          python -m poetry install --only helper-scripts
 
       - name: Build a binary wheel and a source tarball
         run: |
