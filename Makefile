@@ -5,6 +5,7 @@ POETRY := poetry
 MD5SUM := md5sum
 TAR := tar
 GIT := git
+PYTHON := python3
 
 # Subprojects
 SUBPROJECTS := src/sdk src/dto
@@ -36,6 +37,7 @@ CURRENT_VERSION := $(shell $(GIT) describe --tags --abbrev=0)
 # Update the version in the pyproject.toml
 %/version.txt: %/pyproject.toml
 	echo "Poetry version: $(CURRENT_VERSION)"
+	$(POETRY) run python scripts/migrate_local_deps.py $(CURRENT_VERSION) $< --overwrite
 	cd $(dir $<) && $(POETRY) version $(CURRENT_VERSION)
 	echo $(CURRENT_VERSION) > $@
 

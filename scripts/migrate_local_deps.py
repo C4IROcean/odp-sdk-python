@@ -92,8 +92,6 @@ def migrate(
             typer.echo("No poetry section found in the source file")
             raise typer.Exit(code=1)
 
-        typer.echo("Data: {}".format(list(poetry_base.keys())))
-
         for key in ["dependencies", "dev-dependencies", "optional-dependencies"]:
             if key in poetry_base:
                 poetry_base[key] = _update_local_version(poetry_base[key], version_overrides, default_version_tag)
@@ -109,7 +107,7 @@ def migrate(
     if dry_run:
         typer.echo("Dry-run mode, not writing to file")
         typer.echo(tomli_w.dumps(data))
-        typer.Exit(code=0)
+        raise typer.Exit(code=0)
 
     with dest_file.open("wb+") as f:
         tomli_w.dump(data, f)
