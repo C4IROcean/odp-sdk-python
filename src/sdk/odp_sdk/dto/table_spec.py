@@ -1,8 +1,9 @@
 from typing import List, Literal, Optional
 from uuid import UUID
 
-from odp_sdk.dto.tabular_store import TablePartitioningSpec
 from pydantic import BaseModel, model_validator
+
+from .tabular_store import TablePartitioningSpec
 
 
 class TableSpec(BaseModel):

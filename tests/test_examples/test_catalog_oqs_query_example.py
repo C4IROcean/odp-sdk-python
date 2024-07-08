@@ -1,5 +1,5 @@
+from odp.dto import ResourceDto
 from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
 
 
 def test_catalog_oqs_query(odp_client: OdpClient):

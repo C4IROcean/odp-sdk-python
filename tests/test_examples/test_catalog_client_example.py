@@ -3,8 +3,8 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.dto import DatasetDto, DatasetSpec, ResourceDto
 from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
 from odp_sdk.resource_client import OdpResourceClient
 
 
@@ -15,7 +15,7 @@ def test_catalog_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     for item in catalog_client.list():
         assert isinstance(item, ResourceDto)
 
-    manifest = ResourceDto(
+    manifest = DatasetDto(
         **{
             "kind": "catalog.hubocean.io/dataset",
             "version": "v1alpha3",
@@ -32,7 +32,7 @@ def test_catalog_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     )
 
     manifest = catalog_client.create(manifest)
-    assert isinstance(manifest, ResourceDto)
+    assert isinstance(manifest.spec, DatasetSpec)
 
-    fetched_manifest = catalog_client.get(manifest.metadata.uuid)
-    assert isinstance(fetched_manifest, ResourceDto)
+    fetched_manifest = catalog_client.get(manifest.metadata.uuid, tp=DatasetDto)
+    assert isinstance(fetched_manifest.spec, DatasetSpec)

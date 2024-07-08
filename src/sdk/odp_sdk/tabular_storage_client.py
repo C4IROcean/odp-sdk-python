@@ -4,14 +4,15 @@ from uuid import UUID
 from warnings import warn
 
 import requests
-from odp_sdk.dto import ResourceDto
-from odp_sdk.dto.table_spec import StageDataPoints, TableSpec
-from odp_sdk.dto.tabular_store import TableStage
-from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
-from odp_sdk.http_client import OdpHttpClient
-from odp_sdk.utils import convert_geometry
-from odp_sdk.utils.ndjson import NdJsonParser
+from odp.dto import DatasetDto
 from pydantic import BaseModel, field_validator
+
+from .dto.table_spec import StageDataPoints, TableSpec
+from .dto.tabular_store import TableStage
+from .exc import OdpResourceExistsError, OdpResourceNotFoundError
+from .http_client import OdpHttpClient
+from .utils import convert_geometry
+from .utils.ndjson import NdJsonParser
 
 try:
     from pandas import DataFrame
@@ -46,7 +47,7 @@ class OdpTabularStorageClient(BaseModel):
             raise ValueError(f"Invalid endpoint: {v}")
         return v
 
-    def tabular_endpoint(self, dataset: ResourceDto, *path: str) -> str:
+    def tabular_endpoint(self, dataset: DatasetDto, *path: str) -> str:
         """Get actual tabular endpoint given a dataset
 
         Args:
@@ -59,7 +60,7 @@ class OdpTabularStorageClient(BaseModel):
         ret = f"{self.http_client.base_url}{self.tabular_storage_endpoint}/{dataset.get_ref()}"
         return "/".join([ret, *path])
 
-    def create_schema(self, resource_dto: ResourceDto, table_spec: TableSpec) -> TableSpec:
+    def create_schema(self, resource_dto: DatasetDto, table_spec: TableSpec) -> TableSpec:
         """Create Schema
 
         Args:
@@ -84,7 +85,7 @@ class OdpTabularStorageClient(BaseModel):
 
         return TableSpec(**response.json())
 
-    def get_schema(self, resource_dto: ResourceDto) -> TableSpec:
+    def get_schema(self, resource_dto: DatasetDto) -> TableSpec:
         """Get schema
 
         Args:
@@ -107,7 +108,7 @@ class OdpTabularStorageClient(BaseModel):
 
         return TableSpec.parse_raw(response.text)
 
-    def delete_schema(self, resource_dto: ResourceDto, delete_data: bool = False):
+    def delete_schema(self, resource_dto: DatasetDto, delete_data: bool = False):
         """Delete schema
 
         Args:
@@ -129,7 +130,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Schema not found") from e
             raise
 
-    def create_stage_request(self, resource_dto: ResourceDto) -> TableStage:
+    def create_stage_request(self, resource_dto: DatasetDto) -> TableStage:
         """Create Stage
 
         Args:
@@ -153,7 +154,7 @@ class OdpTabularStorageClient(BaseModel):
 
         return TableStage(**response.json())
 
-    def commit_stage_request(self, resource_dto: ResourceDto, table_stage: TableStage):
+    def commit_stage_request(self, resource_dto: DatasetDto, table_stage: TableStage):
         """Commit Stage
 
         Args:
@@ -165,7 +166,7 @@ class OdpTabularStorageClient(BaseModel):
         response = self.http_client.post(self.tabular_endpoint(resource_dto, "stage"), content=stage_data)
         response.raise_for_status()
 
-    def get_stage_request(self, resource_dto: ResourceDto, stage: Union[UUID, TableStage]) -> TableStage:
+    def get_stage_request(self, resource_dto: DatasetDto, stage: Union[UUID, TableStage]) -> TableStage:
         """Get Stage
 
         Args:
@@ -190,7 +191,7 @@ class OdpTabularStorageClient(BaseModel):
 
         return TableStage(**response.json())
 
-    def list_stage_request(self, resource_dto: ResourceDto) -> List[TableStage]:
+    def list_stage_request(self, resource_dto: DatasetDto) -> List[TableStage]:
         """List Stages for a dataset
 
         Args:
@@ -213,7 +214,7 @@ class OdpTabularStorageClient(BaseModel):
 
         return [TableStage.parse_obj(table_stage) for table_stage in response.json()]
 
-    def delete_stage_request(self, resource_dto: ResourceDto, table_stage: TableStage, force_delete=False):
+    def delete_stage_request(self, resource_dto: DatasetDto, table_stage: TableStage, force_delete=False):
         """Delete Stage
 
         Args:
@@ -239,7 +240,7 @@ class OdpTabularStorageClient(BaseModel):
 
     def select(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
@@ -291,7 +292,7 @@ class OdpTabularStorageClient(BaseModel):
 
     def select_as_stream(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
     ) -> Iterable[dict]:
@@ -312,7 +313,7 @@ class OdpTabularStorageClient(BaseModel):
 
     def select_as_list(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
@@ -336,7 +337,7 @@ class OdpTabularStorageClient(BaseModel):
 
     def _select_page(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
         cursor: Optional[str] = None,
@@ -393,7 +394,7 @@ class OdpTabularStorageClient(BaseModel):
                 continue
         return row
 
-    def select_as_dataframe(self, resource_dto: ResourceDto, filter_query: Optional[dict] = None) -> DataFrame:
+    def select_as_dataframe(self, resource_dto: DatasetDto, filter_query: Optional[dict] = None) -> DataFrame:
         """
         Select data from dataset as a DataFrame
 
@@ -412,7 +413,7 @@ class OdpTabularStorageClient(BaseModel):
 
         return DataFrame(data)
 
-    def write(self, resource_dto: ResourceDto, data: List[Dict], table_stage: Optional[TableStage] = None):
+    def write(self, resource_dto: DatasetDto, data: List[Dict], table_stage: Optional[TableStage] = None):
         """
         Write data to dataset
 
@@ -445,7 +446,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
-    def write_dataframe(self, resource_dto: ResourceDto, data: DataFrame, table_stage: Optional[TableStage] = None):
+    def write_dataframe(self, resource_dto: DatasetDto, data: DataFrame, table_stage: Optional[TableStage] = None):
         """
         Write data to dataset in DataFrame format
 
@@ -462,7 +463,7 @@ class OdpTabularStorageClient(BaseModel):
 
         self.write(resource_dto, data_list, table_stage)
 
-    def delete(self, resource_dto: ResourceDto, filter_query: Optional[dict] = None):
+    def delete(self, resource_dto: DatasetDto, filter_query: Optional[dict] = None):
         """
         Delete data from dataset
 
@@ -482,7 +483,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-    def update(self, resource_dto: ResourceDto, data: List[Dict], filter_query: dict):
+    def update(self, resource_dto: DatasetDto, data: List[Dict], filter_query: dict):
         """
         Update data from dataset
 
@@ -505,7 +506,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-    def update_dataframe(self, resource_dto: ResourceDto, data: DataFrame, filter_query: Optional[dict] = None):
+    def update_dataframe(self, resource_dto: DatasetDto, data: DataFrame, filter_query: Optional[dict] = None):
         """
         Update data from dataset in DataFrame format
 

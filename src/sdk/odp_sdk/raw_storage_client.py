@@ -2,11 +2,12 @@ from io import BytesIO
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import requests
-from odp_sdk.dto import ResourceDto
-from odp_sdk.dto.file_dto import FileMetadataDto
-from odp_sdk.exc import OdpFileAlreadyExistsError, OdpFileNotFoundError, OdpValidationError
-from odp_sdk.http_client import OdpHttpClient
+from odp.dto import DatasetDto
 from pydantic import BaseModel
+
+from .dto.file_dto import FileMetadataDto
+from .exc import OdpFileAlreadyExistsError, OdpFileNotFoundError, OdpValidationError
+from .http_client import OdpHttpClient
 
 
 class OdpRawStorageClient(BaseModel):
@@ -22,13 +23,13 @@ class OdpRawStorageClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.raw_storage_endpoint}"
 
-    def _construct_url(self, resource_dto: ResourceDto, endpoint: str = "") -> str:
+    def _construct_url(self, resource_dto: DatasetDto, endpoint: str = "") -> str:
         if resource_dto.metadata.uuid:
             return f"{self.raw_storage_url}/{resource_dto.metadata.uuid}{endpoint}"
         else:
             return f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}{endpoint}"
 
-    def get_file_metadata(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto) -> FileMetadataDto:
+    def get_file_metadata(self, resource_dto: DatasetDto, file_metadata_dto: FileMetadataDto) -> FileMetadataDto:
         """Get file metadata by reference.
 
         Args:
@@ -56,7 +57,7 @@ class OdpRawStorageClient(BaseModel):
         return FileMetadataDto(**response.json())
 
     def list(
-        self, resource_dto: ResourceDto, metadata_filter: Optional[Dict[str, Any]] = None
+        self, resource_dto: DatasetDto, metadata_filter: Optional[Dict[str, Any]] = None
     ) -> Iterable[FileMetadataDto]:
         """List all files in a dataset.
 
@@ -76,7 +77,7 @@ class OdpRawStorageClient(BaseModel):
 
     def list_paginated(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         metadata_filter: Optional[Dict[str, Any]] = None,
         cursor: Optional[str] = None,
         limit: int = 1000,
@@ -115,7 +116,7 @@ class OdpRawStorageClient(BaseModel):
 
     def upload_file(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         file_metadata_dto: FileMetadataDto,
         contents: Union[bytes, BytesIO],
         overwrite: bool = False,
@@ -154,7 +155,7 @@ class OdpRawStorageClient(BaseModel):
 
     def create_file(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         file_metadata_dto: FileMetadataDto,
         contents: Union[bytes, BytesIO, None] = None,
     ) -> FileMetadataDto:
@@ -195,7 +196,7 @@ class OdpRawStorageClient(BaseModel):
 
     def download_file(
         self,
-        resource_dto: ResourceDto,
+        resource_dto: DatasetDto,
         file_metadata_dto: FileMetadataDto,
         save_path: Optional[str] = None,
     ):
@@ -222,7 +223,7 @@ class OdpRawStorageClient(BaseModel):
         else:
             return response.content
 
-    def delete_file(self, resource_dto: ResourceDto, file_metadata_dto: FileMetadataDto):
+    def delete_file(self, resource_dto: DatasetDto, file_metadata_dto: FileMetadataDto):
         """Delete a file. Raises exception if any issues.
 
         Args:

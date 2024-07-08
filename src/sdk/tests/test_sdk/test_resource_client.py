@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 
 import pytest
 import responses
-from odp_sdk.dto.resource_dto import MetadataDto, ResourceDto, ResourceStatusDto
+from odp.dto import Metadata, ResourceDto, ResourceStatus
 from odp_sdk.resource_client import OdpResourceClient
 
 
@@ -26,8 +26,8 @@ def test_get_resource_by_uuid(resource_client):
             body=ResourceDto(
                 kind=kind,
                 version=version,
-                metadata=MetadataDto(name=name, uuid=uuid),
-                status=ResourceStatusDto(
+                metadata=Metadata(name=name, uuid=uuid),
+                status=ResourceStatus(
                     num_updates=0,
                     created_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
                     created_by=uuid4(),
@@ -60,8 +60,8 @@ def test_get_resource_by_qname(resource_client):
             body=ResourceDto(
                 kind=kind,
                 version=version,
-                metadata=MetadataDto(name=name, uuid=uuid),
-                status=ResourceStatusDto(
+                metadata=Metadata(name=name, uuid=uuid),
+                status=ResourceStatus(
                     num_updates=0,
                     created_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
                     created_by=uuid4(),
@@ -108,8 +108,8 @@ def test_create_resource(resource_client):
     resource_manifest = ResourceDto(
         kind="test.hubocean.io/testType",
         version="v1alpha1",
-        metadata=MetadataDto(name="foobar"),
-        spec={},
+        metadata=Metadata(name="foobar"),
+        spec=dict(),
     )
 
     with responses.RequestsMock() as rsps:

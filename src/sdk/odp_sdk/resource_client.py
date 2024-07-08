@@ -1,13 +1,15 @@
 import re
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 from uuid import UUID
 
 import requests
+from odp.dto import DEFAULT_RESOURCE_REGISTRY, ResourceDto, ResourceRegistry, ResourceSpecT, get_resource_spec_type
 from pydantic import BaseModel, field_validator
 
-from .dto import ResourceDto
 from .exc import OdpResourceExistsError, OdpResourceNotFoundError, OdpValidationError
 from .http_client import OdpHttpClient
+
+T = TypeVar("T", bound=ResourceSpecT)
 
 
 class OdpResourceClient(BaseModel):
@@ -15,6 +17,7 @@ class OdpResourceClient(BaseModel):
 
     http_client: OdpHttpClient
     resource_endpoint: str
+    resource_registry: ResourceRegistry = DEFAULT_RESOURCE_REGISTRY
 
     @field_validator("resource_endpoint")
     @classmethod
@@ -34,13 +37,22 @@ class OdpResourceClient(BaseModel):
         """
         return f"{self.http_client.base_url}{self.resource_endpoint}"
 
-    def get(self, ref: Union[UUID, str]) -> ResourceDto:
+    def get(
+        self,
+        ref: Union[UUID, str],
+        tp: Optional[Type[ResourceDto[T]]] = None,
+        assert_type: bool = False,
+        raise_unknown_kind: bool = False,
+    ) -> ResourceDto[T]:
         """Get a resource by reference.
 
         The reference can be either a UUID or a qualified name.
 
         Args:
             ref: Resource reference
+            tp: Optionally cast the fetched resource to a specific type
+            assert_type: Whether to assert that the fetched resource is of the expected type, must be used with `tp`
+            raise_unknown_kind: Whether to raise an error if the kind of the resource is not known
 
         Returns:
             The manifest of the resource corresponding to the reference
@@ -60,20 +72,40 @@ class OdpResourceClient(BaseModel):
                 raise OdpResourceNotFoundError(f"Resource not found: {ref}") from e
             raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
-        return ResourceDto(**res.json())
+        if not tp:
+            return self.resource_registry.resource_factory(res.json(), raise_unknown_kind)
 
-    def list(self, oqs_filter: Optional[Dict[str, Any]] = None, cursor: Optional[str] = None) -> Iterable[ResourceDto]:
+        return self.resource_registry.resource_factory_cast(tp, res.json(), assert_type, raise_unknown_kind)
+
+    def list(
+        self,
+        oqs_filter: Optional[Dict[str, Any]] = None,
+        cursor: Optional[str] = None,
+        tp: Optional[Type[ResourceDto[T]]] = None,
+        assert_type: bool = False,
+        raise_unknown_kind: bool = False,
+    ) -> Iterable[ResourceDto[T]]:
         """List all resources based on the provided filter
 
         Args:
             oqs_filter: OQS filter
             cursor: Optional cursor for pagination
+            tp: Optionally cast the fetched resource to a specific type
+            assert_type: Whether to assert that the fetched resource is of the expected type, must be used with `tp`
+            raise_unknown_kind: Whether to raise an error if the kind of the resource is not known
 
         Yields:
             Resources matching the provided filter
         """
         while True:
-            page, cursor = self.list_paginated(oqs_filter=oqs_filter, cursor=cursor)
+            page, cursor = self.list_paginated(
+                oqs_filter=oqs_filter,
+                cursor=cursor,
+                tp=tp,
+                assert_type=assert_type,
+                raise_unknown_kind=raise_unknown_kind,
+            )
+
             yield from page
             if not cursor:
                 break
@@ -83,13 +115,19 @@ class OdpResourceClient(BaseModel):
         oqs_filter: Optional[dict] = None,
         cursor: Optional[str] = None,
         limit: int = 1000,
-    ) -> Tuple[List[ResourceDto], str]:
+        tp: Optional[Type[ResourceDto[T]]] = None,
+        assert_type: bool = False,
+        raise_unknown_kind: bool = False,
+    ) -> Tuple[List[ResourceDto[T]], Optional[str]]:
         """List a page of resources based on the provided filter
 
         Args:
             oqs_filter: OQS filter
             cursor: Cursor for pagination
             limit: Maximum number of resources to return
+            tp: Optionally cast the fetched resource to a specific type
+            assert_type: Whether to assert that the fetched resource is of the expected type, must be used with `tp`
+            raise_unknown_kind: Whether to raise an error if the kind of the resource is not known
 
         Returns:
             A page of resources
@@ -117,13 +155,29 @@ class OdpResourceClient(BaseModel):
             raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
         content = res.json()
-        return [ResourceDto(**item) for item in content["results"]], content.get("next")
 
-    def create(self, manifest: ResourceDto) -> ResourceDto:
+        if not tp:
+            ret = [self.resource_registry.resource_factory(item, raise_unknown_kind) for item in content["results"]]
+        else:
+            ret = [
+                self.resource_registry.resource_factory_cast(tp, item, assert_type, raise_unknown_kind)
+                for item in content["results"]
+            ]
+
+        return ret, content.get("next")
+
+    def create(
+        self,
+        manifest: ResourceDto[T],
+        assert_type: bool = False,
+        raise_unknown_kind: bool = False,
+    ) -> ResourceDto[T]:
         """Create a resource from a manifest
 
         Args:
             manifest: Resource manifest
+            assert_type: Whether to assert the type of the object returned by the API
+            raise_unknown_kind: Whether to raise an error if the kind of the resource is not known
 
         Returns:
             The manifest of the created resource, populated with uuid and status
@@ -143,14 +197,26 @@ class OdpResourceClient(BaseModel):
                 raise OdpResourceExistsError("Resource already exists") from e
             raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
-        return ResourceDto(**res.json())
+        return self.resource_registry.resource_factory_cast(
+            ResourceDto[get_resource_spec_type(manifest)], res.json(), assert_type, raise_unknown_kind
+        )
 
-    def update(self, manifest_update: Union[ResourceDto, dict], ref: Union[str, UUID, None] = None) -> ResourceDto:
+    def update(
+        self,
+        manifest_update: Union[ResourceDto[T], dict],
+        ref: Union[str, UUID, None] = None,
+        tp: Optional[Type[ResourceDto[T]]] = None,
+        assert_type: bool = False,
+        raise_unknown_kind: bool = False,
+    ) -> ResourceDto:
         """Update a resource from a manifest
 
         Args:
             manifest_update: Resource manifest or JSON patch
             ref: Optional reference to the resource to update.
+            tp: Optionally cast the fetched resource to a specific type. Can only be used if `ref` is a UUID.
+            assert_type: Whether to assert the type of the object returned by the API
+            raise_unknown_kind: Whether to raise an error if the kind of the resource is not known
 
         Returns:
             The manifest of the updated resource, populated with the updated fields
@@ -159,6 +225,11 @@ class OdpResourceClient(BaseModel):
             OdpValidationError: Invalid input
             OdpResourceNotFoundError: Resource not found
         """
+        if isinstance(manifest_update, ResourceDto) and tp:
+            raise ValueError("Cannot cast the updated resource to a specific type if the manifest is a ResourceDto")
+        elif isinstance(manifest_update, ResourceDto):
+            tp = ResourceDto[get_resource_spec_type(manifest_update)]
+
         if ref:
             if isinstance(ref, UUID):
                 params = {"either_id": str(ref)}
@@ -178,7 +249,9 @@ class OdpResourceClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise requests.HTTPError(f"HTTP Error - {res.status_code}: {res.text}")
 
-        return ResourceDto(**res.json())
+        if tp:
+            return self.resource_registry.resource_factory_cast(tp, res.json(), assert_type, raise_unknown_kind)
+        return self.resource_registry.resource_factory(res.json(), raise_unknown_kind)
 
     def delete(self, ref: Union[UUID, str, ResourceDto]):
         """Delete a resource by reference.

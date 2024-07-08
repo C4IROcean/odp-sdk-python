@@ -62,11 +62,12 @@ def odp_client_test_uuid(odp_client: OdpClient) -> Tuple[OdpClient, uuid.UUID]:
 
     # Clean up
     for manifest in odp_client.catalog.list({"#EQUALS": ["$metadata.labels.test_uuid", str(test_uuid)]}):
-        if "raw" in manifest.spec.get("storage_class", ""):
+        storage_class = getattr(manifest.spec, "storage_class", "")
+        if "raw" in storage_class:
             for file in odp_client.raw.list(manifest):
                 delete_element(odp_client.raw.delete_file, manifest, file)
                 if os.path.exists(file.name):
                     os.remove(file.name)
-        if "tabular" in manifest.spec.get("storage_class", ""):
+        if "tabular" in storage_class:
             delete_element(odp_client.tabular.delete_schema, manifest, True)
         delete_element(odp_client.catalog.delete, manifest.metadata.uuid)
