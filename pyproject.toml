@@ -19,6 +19,14 @@ flake8-pyproject = "^1.2.2"
 responses = "^0.23.1"
 pandas = "^2.1.4"
 
+[tool.poetry.group.helper-scripts]
+optional = true
+
+[tool.poetry.group.helper-scripts.dependencies]
+typer = "^0.12.3"
+tomli = "^2.0.1"
+tomli-w = "^1.0.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
