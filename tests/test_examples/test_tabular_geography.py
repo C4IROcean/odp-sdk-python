@@ -3,9 +3,9 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.client import OdpClient
+from odp.client.dto.table_spec import TableSpec
 from odp.dto import DatasetDto
-from odp_sdk.client import OdpClient
-from odp_sdk.dto.table_spec import TableSpec
 
 
 def test_tabular_geography(odp_client_test_uuid: Tuple[OdpClient, UUID]):

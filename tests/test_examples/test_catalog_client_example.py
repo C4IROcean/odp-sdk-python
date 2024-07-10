@@ -3,9 +3,9 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.client import OdpClient
+from odp.client.resource_client import OdpResourceClient
 from odp.dto import DatasetDto, DatasetSpec, ResourceDto
-from odp_sdk.client import OdpClient
-from odp_sdk.resource_client import OdpResourceClient
 
 
 def test_catalog_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):

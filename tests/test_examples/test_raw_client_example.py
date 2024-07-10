@@ -4,9 +4,9 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.client import OdpClient
+from odp.client.dto.file_dto import FileMetadataDto
 from odp.dto import DatasetDto, DatasetSpec
-from odp_sdk.client import OdpClient
-from odp_sdk.dto.file_dto import FileMetadataDto
 
 
 def test_raw_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
