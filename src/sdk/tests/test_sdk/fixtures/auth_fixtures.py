@@ -28,7 +28,9 @@ def odp_workspace_token_provider() -> OdpWorkspaceTokenProvider:
         rsps.add(
             responses.POST,
             MOCK_SIDECAR_URL,
-            json={"token": "test"},
+            json={
+                "token": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImVTMEtuOHRWNkpweHVnVGRXWVJTX2x5VlBpTFBPRHhxNmxjNlI0clE4NmsifQ.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwNDk5NjAyZDIiLCJuYW1lIjoiSm9obiBEb2UiLCJpYXQiOjE1MTYyMzkwMjJ9.tky9z3_WE0YSbg7mXUq-Wl9b0Xo_Hrd6nVVHfRGSHNI"  # noqa: E501
+            },  # noqa: E501
         )
 
         yield OdpWorkspaceTokenProvider(token_uri=MOCK_SIDECAR_URL)

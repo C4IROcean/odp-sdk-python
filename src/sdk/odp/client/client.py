@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -29,7 +30,7 @@ class OdpClient(BaseModel):
         self._tabular_storage_client = OdpTabularStorageClient(http_client=self._http_client)
 
     def personalize_name(self, name: str, fmt: Optional[str] = None) -> str:
-        """Personalize a name by adding a prefix unique to the user
+        """Personalize a name by adding a postfix unique to the user
 
         Args:
             name: The name to personalize
@@ -39,8 +40,15 @@ class OdpClient(BaseModel):
         Returns:
             The personalized name
         """
-        fmt = fmt or "{uid}__{name}"
+        fmt = fmt or "{name}-{uid}"
         uid = self.token_provider.get_user_id()
+
+        # Attempt to simplify the UID by only using the node part of the UUID
+        try:
+            uid = UUID(uid).node
+        except ValueError:
+            # User ID is not a valid UUID, use it as-is
+            pass
 
         return fmt.format(uid=uid, name=name)
 
