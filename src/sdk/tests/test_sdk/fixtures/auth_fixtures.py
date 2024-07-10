@@ -6,7 +6,7 @@ import jwt
 import pytest
 import responses
 from cryptography.hazmat.primitives.asymmetric import rsa
-from odp_sdk.auth import AzureTokenProvider, OdpWorkspaceTokenProvider
+from odp.client.auth import AzureTokenProvider, OdpWorkspaceTokenProvider
 from pydantic import SecretStr
 
 __all__ = ["odp_workspace_token_provider", "azure_token_provider", "mock_token_response_body"]

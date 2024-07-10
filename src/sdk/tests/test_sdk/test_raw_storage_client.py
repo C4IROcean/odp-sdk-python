@@ -4,9 +4,9 @@ from datetime import datetime
 
 import pytest
 import responses
-from odp_sdk.dto.file_dto import FileMetadataDto
-from odp_sdk.exc import OdpFileNotFoundError
-from odp_sdk.raw_storage_client import OdpRawStorageClient
+from odp.client.dto.file_dto import FileMetadataDto
+from odp.client.exc import OdpFileNotFoundError
+from odp.client.raw_storage_client import OdpRawStorageClient
 
 
 @pytest.fixture()

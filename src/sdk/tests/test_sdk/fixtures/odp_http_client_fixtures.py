@@ -1,6 +1,6 @@
 import pytest
-from odp_sdk.auth import TokenProvider
-from odp_sdk.http_client import OdpHttpClient
+from odp.client.auth import TokenProvider
+from odp.client.http_client import OdpHttpClient
 
 __all__ = [
     "mock_odp_endpoint",

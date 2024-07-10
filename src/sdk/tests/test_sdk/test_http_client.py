@@ -1,7 +1,7 @@
 import pytest
 import responses
-from odp_sdk.auth import TokenProvider
-from odp_sdk.http_client import OdpHttpClient
+from odp.client.auth import TokenProvider
+from odp.client.http_client import OdpHttpClient
 
 
 def test_request_relative(http_client):

@@ -4,8 +4,8 @@ from uuid import UUID, uuid4
 
 import pytest
 import responses
+from odp.client.resource_client import OdpResourceClient
 from odp.dto import Metadata, ResourceDto, ResourceStatus
-from odp_sdk.resource_client import OdpResourceClient
 
 
 @pytest.fixture()

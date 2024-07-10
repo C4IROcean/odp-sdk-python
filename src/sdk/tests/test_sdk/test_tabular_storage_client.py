@@ -1,7 +1,7 @@
 import pytest
 import responses
-from odp_sdk.exc import OdpResourceExistsError, OdpResourceNotFoundError
-from odp_sdk.tabular_storage_client import OdpTabularStorageClient
+from odp.client.exc import OdpResourceExistsError, OdpResourceNotFoundError
+from odp.client.tabular_storage_client import OdpTabularStorageClient
 from pandas import DataFrame
 
 
