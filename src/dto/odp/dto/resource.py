@@ -3,7 +3,7 @@ from typing import Annotated, ClassVar, Generic, Optional, Type, TypeVar, Union,
 from uuid import UUID
 
 from pydantic import BaseModel
-from pydantic.functional_validators import BeforeValidator
+from pydantic.functional_validators import AfterValidator
 
 from .metadata import Metadata
 from .resource_status import ResourceStatus
@@ -25,10 +25,10 @@ T = TypeVar("T", bound=ResourceSpecT)
 class ResourceDto(BaseModel, Generic[T]):
     """Resource Data Transmission Object (DTO) representing a resource manifest"""
 
-    kind: Annotated[str, BeforeValidator(validate_resource_kind)]
+    kind: Annotated[str, AfterValidator(validate_resource_kind)] = None
     """kind is the kind of the resource."""
 
-    version: Annotated[str, BeforeValidator(validate_resource_version)]
+    version: Annotated[str, AfterValidator(validate_resource_version)] = None
     """version is the version of the resource."""
 
     metadata: Metadata
