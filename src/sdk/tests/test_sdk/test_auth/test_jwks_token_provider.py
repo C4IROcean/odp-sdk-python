@@ -1,4 +1,4 @@
-from odp_sdk.auth import JwtTokenProvider
+from odp.client.auth import JwtTokenProvider
 
 
 def test_authenticate(jwt_token_provider: JwtTokenProvider):

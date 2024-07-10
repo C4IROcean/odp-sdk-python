@@ -2,8 +2,9 @@ import datetime
 from uuid import uuid4
 
 import pytest
+from odp.client.dto.table_spec import TableSpec
+from odp.client.dto.tabular_store import TableStage
 from odp.dto import Metadata, ResourceDto
-from odp_sdk.dto.table_spec import TableSpec
 
 __all__ = [
     "raw_resource_dto",
@@ -11,8 +12,6 @@ __all__ = [
     "table_spec",
     "table_stage",
 ]
-
-from odp_sdk.dto.tabular_store import TableStage
 
 
 @pytest.fixture()

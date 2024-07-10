@@ -1,4 +1,4 @@
-from odp_sdk.utils import convert_geometry
+from odp.client.utils import convert_geometry
 
 
 def test_geojson_str_to_wkb():

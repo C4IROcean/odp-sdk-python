@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from odp_sdk.utils.ndjson import NdJsonParser
+from odp.client.utils.ndjson import NdJsonParser
 
 
 def test_parse_ndjson_simple():

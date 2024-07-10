@@ -1,3 +1,6 @@
+from typing import Optional
+from uuid import UUID
+
 from pydantic import BaseModel, Field, PrivateAttr
 
 from .auth import TokenProvider, get_default_token_provider
@@ -25,6 +28,29 @@ class OdpClient(BaseModel):
         self._catalog_client = OdpResourceClient(http_client=self._http_client, resource_endpoint="/catalog")
         self._raw_storage_client = OdpRawStorageClient(http_client=self._http_client)
         self._tabular_storage_client = OdpTabularStorageClient(http_client=self._http_client)
+
+    def personalize_name(self, name: str, fmt: Optional[str] = None) -> str:
+        """Personalize a name by adding a postfix unique to the user
+
+        Args:
+            name: The name to personalize
+            fmt: Used to override the default format string. Should be a python format-string with placeholders
+                for the variables `uid` and `name`. For example: `"{uid}-{name}"`
+
+        Returns:
+            The personalized name
+        """
+        fmt = fmt or "{name}-{uid}"
+        uid = self.token_provider.get_user_id()
+
+        # Attempt to simplify the UID by only using the node part of the UUID
+        try:
+            uid = UUID(uid).node
+        except ValueError:
+            # User ID is not a valid UUID, use it as-is
+            pass
+
+        return fmt.format(uid=uid, name=name)
 
     @property
     def resource_store(self):

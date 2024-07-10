@@ -1,5 +1,5 @@
 import responses
-from odp_sdk.auth import AzureTokenProvider
+from odp.client.auth import AzureTokenProvider
 
 
 def test_get_token(azure_token_provider: AzureTokenProvider, mock_token_response_body: str):

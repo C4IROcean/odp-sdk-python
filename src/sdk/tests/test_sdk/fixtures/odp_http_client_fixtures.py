@@ -1,6 +1,8 @@
+from uuid import UUID
+
 import pytest
-from odp_sdk.auth import TokenProvider
-from odp_sdk.http_client import OdpHttpClient
+from odp.client.auth import TokenProvider
+from odp.client.http_client import OdpHttpClient
 
 __all__ = [
     "mock_odp_endpoint",
@@ -22,6 +24,9 @@ def mock_token_provider() -> TokenProvider:
 
         def get_token(self) -> str:
             return "Bearer abc"
+
+        def get_user_id(self) -> str:
+            return str(UUID(int=1234567890))
 
     return MockTokenProvider()
 

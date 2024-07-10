@@ -1,13 +1,13 @@
 import pytest
-from odp_sdk.auth import (
+from odp.client.auth import (
     AzureTokenProvider,
     HardcodedTokenProvider,
     InteractiveTokenProvider,
     OdpWorkspaceTokenProvider,
     get_default_token_provider,
 )
-from odp_sdk.exc import OdpAuthError
-from odp_sdk.utils import get_version
+from odp.client.exc import OdpAuthError
+from odp.client.utils import get_version
 
 
 @pytest.fixture(scope="function")

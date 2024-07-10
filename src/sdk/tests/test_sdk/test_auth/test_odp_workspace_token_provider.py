@@ -1,4 +1,4 @@
-from odp_sdk.auth import OdpWorkspaceTokenProvider
+from odp.client.auth import OdpWorkspaceTokenProvider
 
 
 def test_get_token(odp_workspace_token_provider: OdpWorkspaceTokenProvider):

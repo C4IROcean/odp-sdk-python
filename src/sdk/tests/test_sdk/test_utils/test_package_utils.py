@@ -1,6 +1,6 @@
 import re
 
-from odp_sdk.utils import get_version
+from odp.client.utils import get_version
 
 
 def test_get_version():

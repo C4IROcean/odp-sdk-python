@@ -3,8 +3,8 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+from odp.client import OdpClient
 from odp.dto import ObservableDto, ObservableSpec
-from odp_sdk.client import OdpClient
 
 
 def test_observables(odp_client_test_uuid: Tuple[OdpClient, UUID]):

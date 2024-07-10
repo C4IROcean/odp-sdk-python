@@ -39,7 +39,18 @@ class TokenProvider(AuthBase, BaseModel, ABC):
             str: The token to be used for authentication
 
         Raises:
+            OdpAuthError: If the token cannot be retrieved
+        """
 
+    @abstractmethod
+    def get_user_id(self) -> str:
+        """Returns the user id to be used for authentication
+
+        Returns:
+            str: The user id to be used for authentication
+
+        Raises:
+            OdpAuthError: If user currently not authenticated
         """
 
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
@@ -53,15 +64,28 @@ class OdpWorkspaceTokenProvider(TokenProvider):
     token_uri: str = "http://localhost:8000/access_token"
     """Token endpoint."""
 
+    user_id_claim: str = "sub"
+    """The claim to use as the user ID"""
+
     def __init__(self, **data):
         super().__init__(**data)
         self.user_agent = self.user_agent + " (Workspaces)"
+        self._user_id: Optional[str] = None
 
     def get_token(self) -> str:
         res = requests.post(self.token_uri)
         res.raise_for_status()
 
+        token = res.json()["token"]
+        claims = jwt.decode(token[7:], options={"verify_signature": False})  # skip "Bearer "-prefix
+        self._user_id = claims[self.user_id_claim]
+
         return "Bearer " + res.json()["token"]
+
+    def get_user_id(self) -> str:
+        if self._user_id is None:
+            self.get_token()  # This will set the user_id
+        return self._user_id
 
 
 class HardcodedTokenProvider(TokenProvider):
@@ -73,9 +97,27 @@ class HardcodedTokenProvider(TokenProvider):
         super().__init__(**data)
         self._token = token
         self.user_agent = self.user_agent + " (Hardcoded)"
+        self._user_id: Optional[str] = None
 
     def get_token(self) -> str:
         return self._token
+
+    def get_user_id(self) -> str:
+        if self._user_id is None:
+            self._user_id = self._obtain_user_id()
+
+        return self._user_id
+
+    def _obtain_user_id(self) -> str:
+        token = self.get_token()
+        if token.startswith("Bearer "):
+            token = token[7:]
+        try:
+            claims = jwt.decode(token, options={"verify_signature": False})
+        except jwt.exceptions.PyJWTError as e:
+            raise OdpAuthError("Unable to obtain user ID from token") from e
+
+        return claims["sub"]
 
 
 class JwtTokenProvider(TokenProvider, ABC):
@@ -93,11 +135,15 @@ class JwtTokenProvider(TokenProvider, ABC):
     token_exp_lee_way: int = 300
     """Number of seconds before token expiry we should refresh the token"""
 
+    user_id_claim: str = "sub"
+    """The claim to use as the user ID"""
+
     _access_token: str = PrivateAttr(None)
     _refresh_token: Optional[str] = PrivateAttr(None)
     _claims: Dict[str, Union[int, str]] = PrivateAttr(None)
     _jwks: Dict[str, str] = PrivateAttr(None)
     _expiry: int = PrivateAttr(0)
+    _user_id: Optional[str] = PrivateAttr(None)
 
     @abstractmethod
     def authenticate(self) -> Dict[str, str]:
@@ -133,8 +179,17 @@ class JwtTokenProvider(TokenProvider, ABC):
         else:
             auth_response = self.authenticate()
             access_token = self._parse_token(auth_response)
+            self._user_id = self._claims[self.user_id_claim]
 
         return "Bearer {}".format(access_token)
+
+    def get_user_id(self) -> str:
+        if not self._user_id:
+            self.get_token()  # This will set the user_id
+            if not self._user_id:
+                raise OdpAuthError("Unable to obtain user ID")
+
+        return self._user_id
 
     def _parse_and_validate(self, access_token: str) -> str:
         token_components = [self._base64_decode(x) for x in access_token.split(".")]

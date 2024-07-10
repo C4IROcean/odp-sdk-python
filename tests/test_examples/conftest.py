@@ -4,9 +4,9 @@ from typing import Callable, Tuple
 
 import pytest
 from dotenv import load_dotenv
-from odp_sdk.auth import AzureTokenProvider
-from odp_sdk.client import OdpClient
-from odp_sdk.exc import OdpResourceNotFoundError
+from odp.client import OdpClient
+from odp.client.auth import AzureTokenProvider
+from odp.client.exc import OdpResourceNotFoundError
 from pydantic import SecretStr
 
 
