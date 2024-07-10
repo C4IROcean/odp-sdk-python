@@ -1,45 +1,62 @@
-from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
-from odp_sdk.dto.file_dto import FileMetadataDto
+from odp.client import OdpClient
+from odp.client.dto.file_dto import FileMetadataDto
+from odp.dto import Metadata
+from odp.dto.catalog import DatasetDto, DatasetSpec
+from odp.dto.common.contact_info import ContactInfo
 
-# export ODP_ACCESS_TOKEN=Bearer thisismyaccesstoken <-- Omit this to run interactive auth
-
+# Instantiate the client without specifying a token provider.
+#   The token provider will be set based on the environment.
 client = OdpClient()
 
-my_dataset = ResourceDto(
-    **{
-        "kind": "catalog.hubocean.io/dataset",
-        "version": "v1alpha3",
-        "metadata": {
-            "name": "sdk-raw-example",
-        },
-        "spec": {
-            "storage_controller": "registry.hubocean.io/storageController/storage-raw-cdffs",
-            "storage_class": "registry.hubocean.io/storageClass/raw",
-            "maintainer": {"contact": "Just Me <raw_client_example@hubocean.earth>"},  # <-- strict syntax here
-        },
-    }
+# Declare a dataset manifest to add to the catalog
+
+print("Creating sample dataset")
+
+dataset = DatasetDto(
+    metadata=Metadata(
+        name=client.personalize_name("sdk-raw-example"),
+        display_name="SDK Raw Example",
+        description="A test dataset for raw data",
+        labels={"hubocean.io/test": True},
+    ),
+    spec=DatasetSpec(
+        storage_controller="registry.hubocean.io/storageController/storage-raw-cdffs",
+        storage_class="registry.hubocean.io/storageClass/raw",
+        maintainer=ContactInfo(
+            contact="User McUsername <user.mcusername@emailprovider.com>",
+            organization="Organization Name",
+        ),
+    ),
 )
 
 # The dataset is created in the catalog.
-my_dataset = client.catalog.create(my_dataset)
+dataset = client.catalog.create(dataset)
 
 # Creating and uploading a file.
 file_dto = client.raw.create_file(
-    resource_dto=my_dataset,
-    file_metadata_dto=FileMetadataDto(**{"name": "test.txt", "mime_type": "text/plain"}),
+    resource_dto=dataset,
+    file_metadata_dto=FileMetadataDto(
+        name="test.txt",
+        mime_type="text/plain",
+    ),
     contents=b"Hello, World!",
 )
-print("-------FILES IN DATASET--------")
 
-for file in client.raw.list(my_dataset):
+print("List of files in the dataset:")
+
+for file in client.raw.list(dataset):
     print(file)
 
 # Download file
-client.raw.download_file(my_dataset, file_dto, "test.txt")
+print("Downloading the file:")
+
+client.raw.download_file(dataset, file_dto, "test.txt")
 
 
 # Clean up
-client.raw.delete_file(my_dataset, file_dto)
+print("Cleaning up")
 
-client.catalog.delete(my_dataset)
+client.raw.delete_file(dataset, file_dto)
+client.catalog.delete(dataset)
+
+print("Done")

@@ -1,38 +1,45 @@
-from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
+from odp.client import OdpClient
+from odp.dto import Metadata
+from odp.dto.catalog import DatasetDto, DatasetSpec
+from odp.dto.common.contact_info import ContactInfo
 
+# Instantiate the client without specifying a token provider.
+#   The token provider will be set based on the environment.
 client = OdpClient()
 
-catalog_client = client.catalog
+print("Datasets in the catalog:")
 
 # List all resources in the catalog
-for item in catalog_client.list():
+for item in client.catalog.list():
     print(item)
 
-print("-------")
-
-# Create a new manifest to add to the catalog
-manifest = ResourceDto(
-    **{
-        "kind": "catalog.hubocean.io/dataset",
-        "version": "v1alpha3",
-        "metadata": {
-            "name": "sdk-manifest-creation-example",
-        },
-        "spec": {
-            "storage_controller": "registry.hubocean.io/storageController/storage-tabular",
-            "storage_class": "registry.hubocean.io/storageClass/tabular",
-            "maintainer": {"contact": "Just Me <raw_client_example@hubocean.earth>"},  # <-- strict syntax here
-        },
-    }
+# Declare a dataset manifest to add to the catalog
+manifest = DatasetDto(
+    metadata=Metadata(
+        name=client.personalize_name("sdk-manifest-creation-example"),
+    ),
+    spec=DatasetSpec(
+        storage_controller="registry.hubocean.io/storageController/storage-tabular",
+        storage_class="registry.hubocean.io/storageClass/tabular",
+        maintainer=ContactInfo(
+            contact="User McUsername <user.mcusername@emailprovider.com>",
+            organization="Organization Name",
+        ),
+    ),
 )
 
 # The dataset is created in the catalog.
-manifest = catalog_client.create(manifest)
+manifest = client.catalog.create(manifest)
 
 # Fetch the manifest from the catalog using the UUID
-fetched_manifest = catalog_client.get(manifest.metadata.uuid)
+print("Fetching the manifest from the catalog using the UUID")
+
+fetched_manifest = client.catalog.get(manifest.metadata.uuid)
 print(fetched_manifest)
 
 # Clean up
-catalog_client.delete(manifest)
+print("Cleaning up")
+
+client.catalog.delete(manifest)
+
+print("Done")

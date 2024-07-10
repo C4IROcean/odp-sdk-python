@@ -1,37 +1,43 @@
-from odp_sdk.client import OdpClient
-from odp_sdk.dto import ResourceDto
-from odp_sdk.dto.table_spec import TableSpec
+from odp.client import OdpClient
+from odp.client.dto.table_spec import TableSpec
+from odp.client.dto.tabular_store import TablePartitioningSpec
+from odp.dto import Metadata
+from odp.dto.catalog import DatasetDto, DatasetSpec
+from odp.dto.common.contact_info import ContactInfo
 
 client = OdpClient()
 
 # Create a new manifest to add to the catalog
-manifest = ResourceDto(
-    **{
-        "kind": "catalog.hubocean.io/dataset",
-        "version": "v1alpha3",
-        "metadata": {
-            "name": "st_within_example",
-        },
-        "spec": {
-            "storage_controller": "registry.hubocean.io/storageController/storage-tabular",
-            "storage_class": "registry.hubocean.io/storageClass/tabular",
-            "maintainer": {"contact": "Just Me <raw_client_example@hubocean.earth>"},  # <-- strict syntax here
-        },
-    }
+dataset = DatasetDto(
+    metadata=Metadata(
+        name=client.personalize_name("st_within_example"),
+        display_name="ST_WITHIN Example",
+        description="A test dataset for ST_WITHIN query",
+        labels={"hubocean.io/test": True},
+    ),
+    spec=DatasetSpec(
+        storage_controller="registry.hubocean.io/storageController/storage-tabular",
+        storage_class="registry.hubocean.io/storageClass/tabular",
+        maintainer=ContactInfo(
+            contact="User McUsername <user.mcusername@emailprovider.com>",
+            organization="Organization Name",
+        ),
+    ),
 )
 
 # The dataset is created in the catalog.
-manifest = client.catalog.create(manifest)
+dataset = client.catalog.create(dataset)
 
-print("Manifest created successfully")
+print("Dataset created successfully")
 
 table_schema = {"name": {"type": "string"}, "location": {"type": "geometry"}}
-
-partitioning = [{"columns": ["location"], "transformer_name": "geohash", "args": [2]}]
+partitioning = [TablePartitioningSpec(columns=["location"], transformer_name="geohash", args=[2])]
 
 my_table_spec = TableSpec(table_schema=table_schema, partitioning=partitioning)
 
-my_table_spec = client.tabular.create_schema(resource_dto=manifest, table_spec=my_table_spec)
+client.tabular.create_schema(
+    resource_dto=dataset, table_spec=TableSpec(table_schema=table_schema, partitioning=partitioning)
+)
 
 print("Table spec created successfully")
 
@@ -76,13 +82,13 @@ data = [
     {"name": "Bogotá", "location": {"type": "Point", "coordinates": [-74.072092, 4.710989]}},
 ]
 
-print("Inserting data into the table")
-client.tabular.write(resource_dto=manifest, data=data)
+print(f"Inserting {len(data)} rows into the table")
+client.tabular.write(resource_dto=dataset, data=data)
 print("Data inserted and partitioned")
 
-print("Querying for cities in europe")
+print("Querying for cities in Europe")
 europe_list = client.tabular.select_as_list(
-    resource_dto=manifest,
+    resource_dto=dataset,
     filter_query={
         "#ST_WITHIN": [
             "$location",  # <- Name of column to perform geographic query against.
@@ -102,9 +108,14 @@ europe_list = client.tabular.select_as_list(
     },
 )
 
+print("Cities in Europe:")
 for city in europe_list:
     print(city.get("name"))
 
 # Clean up
-client.tabular.delete_schema(manifest)
-client.catalog.delete(manifest)
+print("Cleaning up")
+
+client.tabular.delete_schema(dataset)
+client.catalog.delete(dataset)
+
+print("Done")
