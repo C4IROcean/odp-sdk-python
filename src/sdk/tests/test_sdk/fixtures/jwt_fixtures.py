@@ -133,11 +133,11 @@ def encode_token(payload: dict, private_key: rsa.RSAPrivateKey) -> str:
 
 @pytest.fixture()
 def jwt_token_provider(
+    request_mock: responses.RequestsMock,
     rsa_public_key: rsa.RSAPublicKey,
     rsa_private_key: rsa.RSAPrivateKey,
 ) -> JwtTokenProvider:
-    with responses.RequestsMock(assert_all_requests_are_fired=False) as mock:
-        auth_response(mock, rsa_private_key)
-        jwt_response(mock, rsa_public_key)
+    auth_response(request_mock, rsa_private_key)
+    jwt_response(request_mock, rsa_public_key)
 
-        yield MockTokenProvider()
+    yield MockTokenProvider()

@@ -1,6 +1,7 @@
 import json
 import random
 import time
+from typing import Callable
 
 import jwt
 import pytest
@@ -9,7 +10,12 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from odp.client.auth import AzureTokenProvider, OdpWorkspaceTokenProvider
 from pydantic import SecretStr
 
-__all__ = ["odp_workspace_token_provider", "azure_token_provider", "mock_token_response_body"]
+__all__ = [
+    "odp_workspace_token_provider",
+    "azure_token_provider",
+    "mock_token_response_body",
+    "mock_token_response_callback",
+]
 
 ALGORITHM = "RS256"
 PUBLIC_KEY_ID = "sample-key-id"
@@ -48,24 +54,32 @@ def encode_token(payload: dict, private_key: rsa.RSAPrivateKey) -> str:
 
 
 @pytest.fixture()
-def mock_token_response_body(rsa_private_key) -> str:
-    t = int(time.time())
-    claims = {
-        "sub": "123",
-        "iss": MOCK_ISSUER,
-        "aud": MOCK_AUDIENCE,
-        "iat": t,
-        "exp": t + 3600,
-        "nonce": random.randint(0, 1000000),
-    }
-
-    token = encode_token(claims, rsa_private_key)
-
-    return json.dumps(
-        {
-            "access_token": token,
+def mock_token_response_callback(rsa_private_key) -> Callable[[], str]:
+    def _cb():
+        t = int(time.time())
+        claims = {
+            "sub": "123",
+            "iss": MOCK_ISSUER,
+            "aud": MOCK_AUDIENCE,
+            "iat": t,
+            "exp": t + 3600,
+            "nonce": random.randint(0, 1000000),
         }
-    )
+
+        token = encode_token(claims, rsa_private_key)
+
+        return json.dumps(
+            {
+                "access_token": token,
+            }
+        )
+
+    return _cb
+
+
+@pytest.fixture()
+def mock_token_response_body(mock_token_response_callback: Callable[[], str]) -> str:
+    return mock_token_response_callback()
 
 
 @pytest.fixture()

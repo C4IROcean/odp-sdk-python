@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 from odp.client.dto.table_spec import TableSpec
 from odp.client.dto.tabular_store import TableStage
-from odp.dto import Metadata, ResourceDto
+from odp.dto import DatasetDto, DatasetSpec, Metadata
 
 __all__ = [
     "raw_resource_dto",
@@ -13,32 +13,41 @@ __all__ = [
     "table_stage",
 ]
 
+from odp.dto.common.contact_info import ContactInfo
+
 
 @pytest.fixture()
-def raw_resource_dto():
+def raw_resource_dto() -> DatasetDto:
     name = "test_dataset"
-    kind = "catalog.hubocean.io/dataset"
-    version = "v1alpha3"
     uuid = uuid4()
-    return ResourceDto(
-        kind=kind,
-        version=version,
+    return DatasetDto(
         metadata=Metadata(name=name, uuid=uuid),
-        spec=dict(
+        spec=DatasetSpec(
             storage_class="registry.hubocean.io/storageClass/raw",
-            maintainer={"organization": "HUB Ocean"},
+            maintainer=ContactInfo(
+                organization="HUB Ocean", contact="Name McNameson <name.mcnameson@emailprovider.com>"
+            ),
             documentation=["https://oceandata.earth"],
-            tags=["test", "hubocean"],
+            tags={"test", "hubocean"},
         ),
     )
 
 
 @pytest.fixture()
-def tabular_resource_dto() -> ResourceDto:
+def tabular_resource_dto() -> DatasetDto:
     name = "test_dataset"
     uuid = uuid4()
-    return ResourceDto[dict](
-        kind="test.hubocean.io/testType", version="v1alpha1", metadata=Metadata(name=name, uuid=uuid), spec={}
+
+    return DatasetDto(
+        metadata=Metadata(name=name, uuid=uuid),
+        spec=DatasetSpec(
+            storage_class="registry.hubocean.io/storageClass/tabular",
+            maintainer=ContactInfo(
+                organization="HUB Ocean", contact="Name McNameson <name.mcnameson@emailprovider.com>"
+            ),
+            documentation=["https://oceandata.earth"],
+            tags={"test", "hubocean"},
+        ),
     )
 
 

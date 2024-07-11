@@ -1,12 +1,9 @@
-from uuid import UUID
-
 import pytest
 from odp.client.auth import TokenProvider
 from odp.client.http_client import OdpHttpClient
 
 __all__ = [
     "mock_odp_endpoint",
-    "mock_token_provider",
     "http_client",
 ]
 
@@ -16,21 +13,6 @@ def mock_odp_endpoint() -> str:
     return "http://odp.local"
 
 
-@pytest.fixture(scope="session")
-def mock_token_provider() -> TokenProvider:
-    class MockTokenProvider(TokenProvider):
-        def __init__(self):
-            super().__init__()
-
-        def get_token(self) -> str:
-            return "Bearer abc"
-
-        def get_user_id(self) -> str:
-            return str(UUID(int=1234567890))
-
-    return MockTokenProvider()
-
-
-@pytest.fixture(scope="session")
-def http_client(mock_odp_endpoint: str, mock_token_provider: TokenProvider) -> OdpHttpClient:
-    return OdpHttpClient(base_url=mock_odp_endpoint, token_provider=mock_token_provider)
+@pytest.fixture
+def http_client(mock_odp_endpoint: str, jwt_token_provider: TokenProvider) -> OdpHttpClient:
+    return OdpHttpClient(base_url=mock_odp_endpoint, token_provider=jwt_token_provider)

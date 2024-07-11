@@ -13,77 +13,84 @@ def resource_client(http_client) -> OdpResourceClient:
     return OdpResourceClient(http_client=http_client, resource_endpoint="/foobar")
 
 
-def test_get_resource_by_uuid(resource_client):
+def test_get_resource_by_uuid(
+    resource_client: OdpResourceClient,
+    request_mock: responses.RequestsMock,
+):
     kind = "test.hubocean.io/tesType"
     version = "v1alpha1"
     name = "test"
     uuid = uuid4()
 
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.GET,
-            f"{resource_client.resource_url}/{uuid}",
-            body=ResourceDto(
-                kind=kind,
-                version=version,
-                metadata=Metadata(name=name, uuid=uuid),
-                status=ResourceStatus(
-                    num_updates=0,
-                    created_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
-                    created_by=uuid4(),
-                    updated_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
-                    updated_by=uuid4(),
-                ),
-                spec={},
-            ).model_dump_json(),
-            status=200,
-            content_type="application/json",
-        )
+    request_mock.add(
+        responses.GET,
+        f"{resource_client.resource_url}/{uuid}",
+        body=ResourceDto(
+            kind=kind,
+            version=version,
+            metadata=Metadata(name=name, uuid=uuid),
+            status=ResourceStatus(
+                num_updates=0,
+                created_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
+                created_by=uuid4(),
+                updated_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
+                updated_by=uuid4(),
+            ),
+            spec={},
+        ).model_dump_json(),
+        status=200,
+        content_type="application/json",
+    )
 
-        manifest = resource_client.get(uuid)
+    manifest = resource_client.get(uuid)
 
-        assert manifest.kind == kind
-        assert manifest.version == version
-        assert manifest.metadata.name == name
+    assert manifest.kind == kind
+    assert manifest.version == version
+    assert manifest.metadata.name == name
 
 
-def test_get_resource_by_qname(resource_client):
+def test_get_resource_by_qname(
+    resource_client: OdpResourceClient,
+    request_mock: responses.RequestsMock,
+):
     kind = "test.hubocean.io/tesType"
     version = "v1alpha1"
     name = "test"
     uuid = uuid4()
 
-    with responses.RequestsMock() as rsps:
-        rsps.add(
-            responses.GET,
-            f"{resource_client.resource_url}/{kind}/{name}",
-            body=ResourceDto(
-                kind=kind,
-                version=version,
-                metadata=Metadata(name=name, uuid=uuid),
-                status=ResourceStatus(
-                    num_updates=0,
-                    created_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
-                    created_by=uuid4(),
-                    updated_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
-                    updated_by=uuid4(),
-                ),
-                spec={},
-            ).model_dump_json(),
-            status=200,
-            content_type="application/json",
-        )
+    request_mock.add(
+        responses.GET,
+        f"{resource_client.resource_url}/{kind}/{name}",
+        body=ResourceDto(
+            kind=kind,
+            version=version,
+            metadata=Metadata(name=name, uuid=uuid),
+            status=ResourceStatus(
+                num_updates=0,
+                created_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
+                created_by=uuid4(),
+                updated_time=datetime.fromisoformat("2021-01-01T00:00:00+00:00"),
+                updated_by=uuid4(),
+            ),
+            spec={},
+        ).model_dump_json(),
+        status=200,
+        content_type="application/json",
+    )
 
-        manifest = resource_client.get(f"{kind}/{name}")
+    manifest = resource_client.get(f"{kind}/{name}")
 
-        assert manifest.kind == kind
-        assert manifest.version == version
-        assert manifest.metadata.name == name
-        assert manifest.metadata.uuid == uuid
-        assert manifest.metadata.uuid == uuid
+    assert manifest.kind == kind
+    assert manifest.version == version
+    assert manifest.metadata.name == name
+    assert manifest.metadata.uuid == uuid
+    assert manifest.metadata.uuid == uuid
 
 
-def test_create_resource(resource_client):
+def test_create_resource(
+    resource_client: OdpResourceClient,
+    request_mock: responses.RequestsMock,
+):
     def _on_create_request(request):
         manifest = json.loads(request.body)
 
@@ -112,19 +119,18 @@ def test_create_resource(resource_client):
         spec=dict(),
     )
 
-    with responses.RequestsMock() as rsps:
-        rsps.add_callback(
-            responses.POST,
-            f"{resource_client.resource_url}",
-            callback=_on_create_request,
-            content_type="application/json",
-        )
+    request_mock.add_callback(
+        responses.POST,
+        f"{resource_client.resource_url}",
+        callback=_on_create_request,
+        content_type="application/json",
+    )
 
-        populated_manifest = resource_client.create(resource_manifest)
+    populated_manifest = resource_client.create(resource_manifest)
 
-        assert isinstance(populated_manifest, ResourceDto)
-        assert populated_manifest.metadata.uuid is not None
-        assert populated_manifest.status is not None
-        assert populated_manifest.status.num_updates == 0
-        assert populated_manifest.kind == resource_manifest.kind
-        assert populated_manifest.metadata.name == resource_manifest.metadata.name
+    assert isinstance(populated_manifest, ResourceDto)
+    assert populated_manifest.metadata.uuid is not None
+    assert populated_manifest.status is not None
+    assert populated_manifest.status.num_updates == 0
+    assert populated_manifest.kind == resource_manifest.kind
+    assert populated_manifest.metadata.name == resource_manifest.metadata.name
