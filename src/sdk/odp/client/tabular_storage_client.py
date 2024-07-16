@@ -31,15 +31,6 @@ class OdpTabularStorageClient(BaseModel):
     pagination_size: int = 10_000
     """List-limit when paginating"""
 
-    chunked_encoding_page_size: int = 1_000_000
-    """List-limit when using chunked encoding"""
-
-    paginate_by_default: bool = False
-    """Whether to paginate by default"""
-
-    page_size_align_factor: int = 1000
-    """Page size alignment factor for pagination - ie. page size must be a multiple of this value"""
-
     @field_validator("tabular_storage_endpoint")
     def _endpoint_validator(cls, v: str):
         m = re.match(r"^/\w+(?<!/)", v)
@@ -243,8 +234,6 @@ class OdpTabularStorageClient(BaseModel):
         resource_dto: DatasetDto,
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-        paginate: Optional[bool] = None,
     ) -> Iterable[dict]:
         """Read data from tabular API
 
@@ -252,31 +241,15 @@ class OdpTabularStorageClient(BaseModel):
             resource_dto: Dataset manifest
             filter_query: Filter query in OQS format
             limit: Limit for the number of rows returned
-            cursor: Pagination token for the next page
-            paginate: Whether or not to paginate the response or use chunked encoding
 
         Yields:
             Each row of the data
         """
-
-        paginate = paginate if paginate is not None else self.paginate_by_default
-
-        if paginate is True:
-            use_limit = self.pagination_size
-        else:
-            use_limit = self.chunked_encoding_page_size
-
-        if limit:
-            use_limit = min(use_limit, limit)
-
-        if use_limit % self.page_size_align_factor:
-            # Round up to the nearest multiple of the alignment factor
-            use_limit = (use_limit // self.page_size_align_factor + 1) * self.page_size_align_factor
-
         num_rows = 0
 
+        cursor = None
         while True:
-            rows = self._select_page(resource_dto, filter_query, use_limit, cursor)
+            rows = self._select_page(resource_dto, filter_query, limit, cursor)
             for row, is_meta in rows:
                 if is_meta:
                     cursor = row.get("@@next")
@@ -333,7 +306,7 @@ class OdpTabularStorageClient(BaseModel):
             OdpResourceNotFoundError: If the schema cannot be found
         """
 
-        return list(self.select(resource_dto, filter_query, limit, cursor))
+        return list(self.select(resource_dto, filter_query, limit))
 
     def _select_page(
         self,
