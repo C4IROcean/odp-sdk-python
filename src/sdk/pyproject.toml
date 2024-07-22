@@ -6,6 +6,7 @@ authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
 license = "MIT"
 readme = "README.md"
 packages = [
+    {include="odp"},
     {include="odp_sdk"},
 ]
 
