@@ -43,7 +43,7 @@ CURRENT_VERSION := $(shell $(GIT) describe --tags --abbrev=0)
 
 # Update the version in all subprojects
 version: $(VERSIONS)
-	$(POETRY) lock
+	$(POETRY) update odp-sdk odp-dto
 
 # Build all subprojects
 build: $(DIST_DIRS)
