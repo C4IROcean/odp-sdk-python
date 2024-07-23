@@ -76,8 +76,8 @@ class OdpWorkspaceTokenProvider(TokenProvider):
         res = requests.post(self.token_uri)
         res.raise_for_status()
 
-        token = res.json()["token"]
-        claims = jwt.decode(token[7:], options={"verify_signature": False})  # skip "Bearer "-prefix
+        token: str = res.json()["token"]
+        claims = jwt.decode(token.replace("Bearer ", ""), options={"verify_signature": False})
         self._user_id = claims[self.user_id_claim]
 
         return "Bearer " + res.json()["token"]
