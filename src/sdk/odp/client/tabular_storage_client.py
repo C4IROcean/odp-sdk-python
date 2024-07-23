@@ -245,6 +245,9 @@ class OdpTabularStorageClient(BaseModel):
         Yields:
             Each row of the data
         """
+        if limit and limit < 0:
+            raise ValueError("Limit should be a positive")
+
         cursor = None
         while True:
             rows = self._select_page(resource_dto, filter_query, limit, cursor)
@@ -257,7 +260,7 @@ class OdpTabularStorageClient(BaseModel):
                 yield row
                 if limit:
                     limit -= 1
-                    if limit == 0:
+                    if limit <= 0:
                         return
 
             if not cursor:
