@@ -245,20 +245,23 @@ class OdpTabularStorageClient(BaseModel):
         Yields:
             Each row of the data
         """
-        num_rows = 0
+        if limit and limit < 0:
+            raise ValueError("Limit should be a positive")
 
         cursor = None
         while True:
             rows = self._select_page(resource_dto, filter_query, limit, cursor)
+
             for row, is_meta in rows:
                 if is_meta:
                     cursor = row.get("@@next")
                     continue
 
                 yield row
-                num_rows += 1
-                if limit and num_rows >= limit:
-                    return
+                if limit:
+                    limit -= 1
+                    if limit <= 0:
+                        return
 
             if not cursor:
                 break
