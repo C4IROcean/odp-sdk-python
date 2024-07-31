@@ -1,10 +1,30 @@
 import json
+import re
 from collections import deque
 from io import StringIO
 from typing import IO, Deque, Iterable, Optional, Sized, Union, cast
 from warnings import warn
 
 from .json import JsonParser, JsonType
+
+RE = re.compile(b'(.*?)\r?\n\r?')
+
+
+def parse_ndjson(iter: Iterable[bytes]) -> Iterable:
+    """
+    Parse NDJSON from an iterable of bytes
+    returns an iterator of parsed JSON objects
+    """
+    buf = b''
+    for s in iter:
+        if s is None:
+            break
+        buf += s
+        lines = buf.split(b'\n')
+        buf = lines[-1]
+        for line in lines[:-1]:
+            yield json.loads(line)
+
 
 BacklogDataT = Union[Iterable[str], Sized]
 DEFAULT_JSON_PARSER = cast(JsonParser, json)
@@ -17,10 +37,10 @@ class NdJsonParser:
     """
 
     def __init__(
-        self,
-        s: Union[str, bytes, None] = None,
-        fp: Union[IO, Iterable[bytes], None] = None,
-        json_parser: JsonParser = DEFAULT_JSON_PARSER,
+            self,
+            s: Union[str, bytes, None] = None,
+            fp: Union[IO, Iterable[bytes], None] = None,
+            json_parser: JsonParser = DEFAULT_JSON_PARSER,
     ):
         """Initialize the parser
 
@@ -102,7 +122,7 @@ class NdJsonParser:
 
                 if c == "\n" and not in_quote:
                     if idx + 1 < len(s):
-                        self.backlog = s[idx + 1 :]
+                        self.backlog = s[idx + 1:]
                     return self._consume_line()
 
                 self.line.append(c)

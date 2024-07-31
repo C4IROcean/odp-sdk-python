@@ -12,7 +12,7 @@ from .dto.tabular_store import TableStage
 from .exc import OdpResourceExistsError, OdpResourceNotFoundError
 from .http_client import OdpHttpClient
 from .utils import convert_geometry
-from .utils.ndjson import NdJsonParser
+from .utils.ndjson import parse_ndjson
 
 try:
     from pandas import DataFrame
@@ -230,10 +230,10 @@ class OdpTabularStorageClient(BaseModel):
             raise
 
     def select(
-        self,
-        resource_dto: DatasetDto,
-        filter_query: Optional[dict] = None,
-        limit: Optional[int] = None,
+            self,
+            resource_dto: DatasetDto,
+            filter_query: Optional[dict] = None,
+            limit: Optional[int] = None,
     ) -> Iterable[dict]:
         """Read data from tabular API
 
@@ -248,10 +248,15 @@ class OdpTabularStorageClient(BaseModel):
         if limit and limit < 0:
             raise ValueError("Limit should be a positive")
 
+        try:
+            dataset_schema = self.get_schema(resource_dto)
+        except OdpResourceNotFoundError:
+            print(f"Schema not found for resource {resource_dto.metadata.name}: geometry conversion skipped")
+            dataset_schema = None
+
         cursor = None
         while True:
-            rows = self._select_page(resource_dto, filter_query, limit, cursor)
-
+            rows = self._select_page(dataset_schema, resource_dto, filter_query, limit, cursor)
             for row, is_meta in rows:
                 if is_meta:
                     cursor = row.get("@@next")
@@ -267,10 +272,10 @@ class OdpTabularStorageClient(BaseModel):
                 break
 
     def select_as_stream(
-        self,
-        resource_dto: DatasetDto,
-        filter_query: Optional[dict] = None,
-        limit: Optional[int] = None,
+            self,
+            resource_dto: DatasetDto,
+            filter_query: Optional[dict] = None,
+            limit: Optional[int] = None,
     ) -> Iterable[dict]:
         """Select data from dataset
 
@@ -288,10 +293,10 @@ class OdpTabularStorageClient(BaseModel):
         yield from self.select(resource_dto, filter_query, limit=limit)
 
     def select_as_list(
-        self,
-        resource_dto: DatasetDto,
-        filter_query: Optional[dict] = None,
-        limit: Optional[int] = None,
+            self,
+            resource_dto: DatasetDto,
+            filter_query: Optional[dict] = None,
+            limit: Optional[int] = None,
     ) -> list[dict]:
         """Select data from dataset
 
@@ -310,12 +315,13 @@ class OdpTabularStorageClient(BaseModel):
         return list(self.select(resource_dto, filter_query, limit))
 
     def _select_page(
-        self,
-        resource_dto: DatasetDto,
-        filter_query: Optional[dict] = None,
-        limit: Optional[int] = None,
-        cursor: Optional[str] = None,
-        result_geometry: Optional[str] = "geojson",
+            self,
+            dataset_schema: TableSpec,
+            resource_dto: DatasetDto,
+            filter_query: Optional[dict] = None,
+            limit: Optional[int] = None,
+            cursor: Optional[str] = None,
+            result_geometry: Optional[str] = "geojson",
     ) -> Iterable[Tuple[dict, bool]]:
         """Method to query a specific page from the data"""
         query_parameters = {}
@@ -339,13 +345,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-        try:
-            dataset_schema = self.get_schema(resource_dto)
-        except OdpResourceNotFoundError:
-            print(f"Schema not found for resource {resource_dto.metadata.name}: geometry conversion skipped")
-            dataset_schema = None
-
-        for row in NdJsonParser(fp=response.iter_content(chunk_size=None)):
+        for row in parse_ndjson(response.iter_content(chunk_size=None)):
             if len(row) == 1 and next(iter(row.keys())).startswith("@@"):
                 is_meta = True
             else:
