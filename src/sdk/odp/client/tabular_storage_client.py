@@ -230,10 +230,10 @@ class OdpTabularStorageClient(BaseModel):
             raise
 
     def select(
-            self,
-            resource_dto: DatasetDto,
-            filter_query: Optional[dict] = None,
-            limit: Optional[int] = None,
+        self,
+        resource_dto: DatasetDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
     ) -> Iterable[dict]:
         """Read data from tabular API
 
@@ -272,10 +272,10 @@ class OdpTabularStorageClient(BaseModel):
                 break
 
     def select_as_stream(
-            self,
-            resource_dto: DatasetDto,
-            filter_query: Optional[dict] = None,
-            limit: Optional[int] = None,
+        self,
+        resource_dto: DatasetDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
     ) -> Iterable[dict]:
         """Select data from dataset
 
@@ -293,10 +293,10 @@ class OdpTabularStorageClient(BaseModel):
         yield from self.select(resource_dto, filter_query, limit=limit)
 
     def select_as_list(
-            self,
-            resource_dto: DatasetDto,
-            filter_query: Optional[dict] = None,
-            limit: Optional[int] = None,
+        self,
+        resource_dto: DatasetDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
     ) -> list[dict]:
         """Select data from dataset
 
@@ -315,13 +315,13 @@ class OdpTabularStorageClient(BaseModel):
         return list(self.select(resource_dto, filter_query, limit))
 
     def _select_page(
-            self,
-            dataset_schema: TableSpec,
-            resource_dto: DatasetDto,
-            filter_query: Optional[dict] = None,
-            limit: Optional[int] = None,
-            cursor: Optional[str] = None,
-            result_geometry: Optional[str] = "geojson",
+        self,
+        dataset_schema: TableSpec,
+        resource_dto: DatasetDto,
+        filter_query: Optional[dict] = None,
+        limit: Optional[int] = None,
+        cursor: Optional[str] = None,
+        result_geometry: Optional[str] = "geojson",
     ) -> Iterable[Tuple[dict, bool]]:
         """Method to query a specific page from the data"""
         query_parameters = {}
