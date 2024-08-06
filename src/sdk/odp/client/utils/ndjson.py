@@ -6,6 +6,24 @@ from warnings import warn
 
 from .json import JsonParser, JsonType
 
+
+def parse_ndjson(iter: Iterable[bytes]) -> Iterable:
+    """
+    Parse NDJSON from an iterable of bytes
+    returns an iterator of parsed JSON objects
+    """
+    buf = b""
+    for s in iter:
+        buf += s
+        lines = buf.split(b"\n")
+        buf = lines[-1]
+        for line in lines[:-1]:
+            yield json.loads(line)
+
+    if buf:
+        yield json.loads(buf)
+
+
 BacklogDataT = Union[Iterable[str], Sized]
 DEFAULT_JSON_PARSER = cast(JsonParser, json)
 

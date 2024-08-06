@@ -12,7 +12,7 @@ from .dto.tabular_store import TableStage
 from .exc import OdpResourceExistsError, OdpResourceNotFoundError
 from .http_client import OdpHttpClient
 from .utils import convert_geometry
-from .utils.ndjson import NdJsonParser
+from .utils.ndjson import parse_ndjson
 
 try:
     from pandas import DataFrame
@@ -248,10 +248,15 @@ class OdpTabularStorageClient(BaseModel):
         if limit and limit < 0:
             raise ValueError("Limit should be a positive")
 
+        try:
+            dataset_schema = self.get_schema(resource_dto)
+        except OdpResourceNotFoundError:
+            print(f"Schema not found for resource {resource_dto.metadata.name}: geometry conversion skipped")
+            dataset_schema = None
+
         cursor = None
         while True:
-            rows = self._select_page(resource_dto, filter_query, limit, cursor)
-
+            rows = self._select_page(dataset_schema, resource_dto, filter_query, limit, cursor)
             for row, is_meta in rows:
                 if is_meta:
                     cursor = row.get("@@next")
@@ -311,6 +316,7 @@ class OdpTabularStorageClient(BaseModel):
 
     def _select_page(
         self,
+        dataset_schema: TableSpec,
         resource_dto: DatasetDto,
         filter_query: Optional[dict] = None,
         limit: Optional[int] = None,
@@ -339,13 +345,7 @@ class OdpTabularStorageClient(BaseModel):
                 raise OdpResourceNotFoundError("Resource not found") from e
             raise
 
-        try:
-            dataset_schema = self.get_schema(resource_dto)
-        except OdpResourceNotFoundError:
-            print(f"Schema not found for resource {resource_dto.metadata.name}: geometry conversion skipped")
-            dataset_schema = None
-
-        for row in NdJsonParser(fp=response.iter_content(chunk_size=None)):
+        for row in parse_ndjson(response.iter_content(chunk_size=None)):
             if len(row) == 1 and next(iter(row.keys())).startswith("@@"):
                 is_meta = True
             else:
