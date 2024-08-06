@@ -399,6 +399,11 @@ def test_select_as_stream_fail_404(
     request_mock: responses.RequestsMock,
 ):
     request_mock.add(
+        responses.GET,
+        tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
+        status=404,
+    )
+    request_mock.add(
         responses.POST,
         tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
         status=404,
@@ -414,6 +419,11 @@ def test_select_as_list_fail_404(
     tabular_resource_dto: DatasetDto,
     request_mock: responses.RequestsMock,
 ):
+    request_mock.add(
+        responses.GET,
+        tabular_storage_client.tabular_endpoint(tabular_resource_dto, "schema"),
+        status=404,
+    )
     request_mock.add(
         responses.POST,
         tabular_storage_client.tabular_endpoint(tabular_resource_dto, "list"),
