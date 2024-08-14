@@ -80,7 +80,8 @@ class OdpRawStorageClient(BaseModel):
         resource_dto: DatasetDto,
         metadata_filter: Optional[Dict[str, Any]] = None,
         cursor: Optional[str] = None,
-        limit: int = 1000,
+        page_size: int = 1000,
+        limit: int = 0,
     ) -> Tuple[List[FileMetadataDto], str]:
         """List page
 
@@ -88,7 +89,9 @@ class OdpRawStorageClient(BaseModel):
             resource_dto: Dataset manifest
             metadata_filter: List filter
             cursor: Optional cursor for pagination
-            limit: Optional limit for pagination
+            limit: Optional #This argument will be deprecated, you should use page_size instead.
+                This is used for backward compatibility. limit will be ignored.
+            page_size: Optional limit for each page
 
         Returns:
             Page of return values
@@ -99,8 +102,14 @@ class OdpRawStorageClient(BaseModel):
 
         if cursor:
             params["page"] = cursor
+        if page_size:
+            params["page_size"] = page_size
         if limit:
-            params["limit"] = limit
+            from warnings import warn
+
+            warn(
+                "limit argument will be deprecated, you should use page_size instead", DeprecationWarning, stacklevel=2
+            )
 
         response = self.http_client.post(url, params=params, content=metadata_filter)
 
