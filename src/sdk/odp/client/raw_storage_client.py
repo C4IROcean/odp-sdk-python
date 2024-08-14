@@ -106,9 +106,10 @@ class OdpRawStorageClient(BaseModel):
             params["page_size"] = page_size
         if limit & limit != 1000:
             from warnings import warn
-            warn("limit argument will be deprecated, you should use page_size instead",
-                 DeprecationWarning,
-                 stacklevel=2)
+
+            warn(
+                "limit argument will be deprecated, you should use page_size instead", DeprecationWarning, stacklevel=2
+            )
 
         response = self.http_client.post(url, params=params, content=metadata_filter)
 
