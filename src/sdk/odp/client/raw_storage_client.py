@@ -81,7 +81,7 @@ class OdpRawStorageClient(BaseModel):
         metadata_filter: Optional[Dict[str, Any]] = None,
         cursor: Optional[str] = None,
         page_size: int = 1000,
-        limit: int = 1000,
+        limit: int = 0,
     ) -> Tuple[List[FileMetadataDto], str]:
         """List page
 
@@ -104,7 +104,7 @@ class OdpRawStorageClient(BaseModel):
             params["page"] = cursor
         if page_size:
             params["page_size"] = page_size
-        if limit & limit != 1000:
+        if limit:
             from warnings import warn
 
             warn(
