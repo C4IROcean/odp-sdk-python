@@ -89,7 +89,7 @@ client.tabular.delete_schema(dataset, delete_data=True)
 try:
     client.tabular.get_schema(dataset)
 except OdpResourceNotFoundError as e:
-    print("Schema not found error since it is deleted:")
+    print("Schema not found error since it is deleted")
     print(e)
 
 print("Deleting dataset")
