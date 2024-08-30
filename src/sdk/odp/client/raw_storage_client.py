@@ -69,10 +69,11 @@ class OdpRawStorageClient(BaseModel):
             List of files in the dataset
         """
 
+        cursor_next = None
         while True:
-            page, cursor = self.list_paginated(resource_dto, metadata_filter=metadata_filter)
+            page, cursor_next = self.list_paginated(resource_dto, metadata_filter=metadata_filter, cursor=cursor_next)
             yield from page
-            if not cursor:
+            if not cursor_next:
                 break
 
     def list_paginated(
