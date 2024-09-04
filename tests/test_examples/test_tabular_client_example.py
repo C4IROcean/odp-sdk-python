@@ -65,7 +65,7 @@ def test_tabular_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
     try:
         odp_client_test_uuid[0].tabular.get_schema(my_dataset)
     except OdpResourceNotFoundError as e:
-        print("Schema not found error since it is deleted:")
+        print("Schema not found error since it is deleted")
         print(e)
 
     odp_client_test_uuid[0].catalog.delete(my_dataset)

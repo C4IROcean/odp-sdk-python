@@ -48,7 +48,7 @@ for file in client.raw.list(dataset):
     print(file)
 
 # Download file
-print("Downloading the file:")
+print("Downloading the file")
 
 client.raw.download_file(dataset, file_dto, "test.txt")
 
