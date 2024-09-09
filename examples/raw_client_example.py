@@ -42,6 +42,18 @@ file_dto = client.raw.create_file(
     contents=b"Hello, World!",
 )
 
+# Creating and uploading an existing file.
+# path_to_file = "folder/file.extension"
+# with open(path_to_file, "rb") as data:
+#     file_dto = client.raw.create_file(
+#         resource_dto=dataset,
+#         file_metadata_dto=FileMetadataDto(
+#             name=data.name,
+#             mime_type="text/plain", # Update mime type of the file
+#         ),
+#         contents=data.read(),
+#     )
+
 print("List of files in the dataset:")
 
 for file in client.raw.list(dataset):
