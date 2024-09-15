@@ -1,11 +1,12 @@
 from odp.client import OdpClient
 from odp.client.dto.file_dto import FileMetadataDto
+from odp.client.exc import OdpFileAlreadyExistsError, OdpResourceExistsError, OdpValidationError
 from odp.dto import Metadata
 from odp.dto.catalog import DatasetDto, DatasetSpec
 from odp.dto.common.contact_info import ContactInfo
 
 # Instantiate the client without specifying a token provider.
-#   The token provider will be set based on the environment.
+# The token provider will be set based on the environment.
 client = OdpClient()
 
 # Declare a dataset manifest to add to the catalog
@@ -30,17 +31,36 @@ dataset = DatasetDto(
 )
 
 # The dataset is created in the catalog.
-dataset = client.catalog.create(dataset)
+try:
+    dataset = client.catalog.create(dataset)
+    print("Resource created successfully:", dataset)
+except OdpValidationError as e:
+    print(e)
+except OdpResourceExistsError as e:
+    print(e)
+    dataset = client.catalog.get("catalog.hubocean.io/dataset/" + dataset.metadata.name)
+    print(dataset)
 
-# Creating and uploading a file.
-file_dto = client.raw.create_file(
-    resource_dto=dataset,
-    file_metadata_dto=FileMetadataDto(
-        name="test.txt",
-        mime_type="text/plain",
-    ),
-    contents=b"Hello, World!",
-)
+# Creating and uploading an existing file.
+path_to_file = "test.txt"
+file_metadata_dto = None
+file_dto = None
+try:
+    with open(path_to_file, "rb") as data:
+        file_metadata_dto = FileMetadataDto(
+            name=data.name,
+            mime_type="text/plain",  # Update mime type of the file
+        )
+        file_dto = client.raw.create_file(
+            resource_dto=dataset,
+            file_metadata_dto=file_metadata_dto,
+            contents=data.read(),
+        )
+except OdpValidationError as e:
+    print(e)
+except OdpFileAlreadyExistsError as e:
+    print(e)
+    file_dto = client.raw.get_file_metadata(dataset, file_metadata_dto)
 
 print("List of files in the dataset:")
 
@@ -51,7 +71,6 @@ for file in client.raw.list(dataset):
 print("Downloading the file:")
 
 client.raw.download_file(dataset, file_dto, "test.txt")
-
 
 # Clean up
 print("Cleaning up")
