@@ -8,7 +8,7 @@ GIT := git
 PYTHON := python3
 
 # Subprojects
-SUBPROJECTS := src/sdk src/dto
+SUBPROJECTS := src/sdk src/dto src/utils
 DIST_DIRS := $(SUBPROJECTS:%=%/dist)
 PYPROJECTS := $(SUBPROJECTS:%=%/pyproject.toml)
 MD5S := $(DIST_DIRS:%=%/md5.published)
@@ -43,7 +43,7 @@ CURRENT_VERSION := $(shell $(GIT) describe --tags --abbrev=0)
 
 # Update the version in all subprojects
 version: $(VERSIONS)
-	$(POETRY) update odp-sdk odp-dto
+	$(POETRY) update odp-sdk odp-dto odp-utils
 
 # Build all subprojects
 build: $(DIST_DIRS)
