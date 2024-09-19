@@ -1,4 +1,6 @@
+import logging
 import re
+from time import sleep
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 from uuid import UUID
 from warnings import warn
@@ -330,20 +332,23 @@ class OdpTabularStorageClient(BaseModel):
         if cursor:
             query_parameters["cursor"] = cursor
 
-        response = self.http_client.post(
-            self.tabular_endpoint(resource_dto, "list"),
-            params=query_parameters,
-            content=filter_query,
-            headers={"Accept": "application/x-ndjson"},
-            stream=True,
-        )
-
-        try:
-            response.raise_for_status()
-        except requests.HTTPError as e:
-            if response.status_code == 404:
-                raise OdpResourceNotFoundError("Resource not found") from e
-            raise
+        for retry_delay in [0.5, 2, 5, 20]:  # exponential backoff
+            response = self.http_client.post(
+                self.tabular_endpoint(resource_dto, "list"),
+                params=query_parameters,
+                content=filter_query,
+                headers={"Accept": "application/x-ndjson"},
+                stream=True,
+            )
+            try:
+                response.raise_for_status()
+            except requests.HTTPError as e:
+                if response.status_code == 404:
+                    raise OdpResourceNotFoundError("Resource not found") from e
+                logging.warning("retrying in %s after fetch failed: %s", retry_delay, e)
+                sleep(retry_delay)
+                continue
+            break
 
         for row in parse_ndjson(response.iter_content(chunk_size=None)):
             if len(row) == 1 and next(iter(row.keys())).startswith("@@"):
