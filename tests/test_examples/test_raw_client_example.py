@@ -4,12 +4,14 @@ import string
 from typing import Tuple
 from uuid import UUID
 
+import pytest
 from odp.client import OdpClient
 from odp.client.dto.file_dto import FileMetadataDto
 from odp.dto import DatasetDto, DatasetSpec
 
 
-def test_raw_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
+@pytest.mark.parametrize("file_name", ["test.txt", "foo/bar/test2.txt"])
+def test_raw_client(odp_client_test_uuid: Tuple[OdpClient, UUID], file_name):
     my_dataset = DatasetDto(
         **{
             "kind": "catalog.hubocean.io/dataset",
@@ -31,7 +33,7 @@ def test_raw_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
 
     file_dto = odp_client_test_uuid[0].raw.create_file(
         resource_dto=my_dataset,
-        file_metadata_dto=FileMetadataDto(**{"name": "test.txt", "mime_type": "text/plain"}),
+        file_metadata_dto=FileMetadataDto(**{"name": file_name, "mime_type": "text/plain"}),
         contents=b"Hello, World!",
     )
 
@@ -39,5 +41,6 @@ def test_raw_client(odp_client_test_uuid: Tuple[OdpClient, UUID]):
         assert isinstance(file, FileMetadataDto)
     assert odp_client_test_uuid[0].raw.list(my_dataset) != []
 
-    odp_client_test_uuid[0].raw.download_file(my_dataset, file_dto, "test.txt")
-    assert os.path.exists("test.txt")
+    save_path = os.path.basename(file_name)
+    odp_client_test_uuid[0].raw.download_file(my_dataset, file_dto, save_path)
+    assert os.path.exists(save_path)

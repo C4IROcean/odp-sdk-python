@@ -1,3 +1,4 @@
+import urllib.parse
 from io import BytesIO
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -29,6 +30,11 @@ class OdpRawStorageClient(BaseModel):
         else:
             return f"{self.raw_storage_url}/catalog.hubocean.io/dataset/{resource_dto.metadata.name}{endpoint}"
 
+    @staticmethod
+    def _encode_filename(filename: str) -> str:
+        filename = filename.lstrip("/")
+        return urllib.parse.quote(filename, safe="")
+
     def get_file_metadata(self, resource_dto: DatasetDto, file_metadata_dto: FileMetadataDto) -> FileMetadataDto:
         """Get file metadata by reference.
 
@@ -43,8 +49,7 @@ class OdpRawStorageClient(BaseModel):
         Raises:
             OdpFileNotFoundError: If the file does not exist
         """
-
-        url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}/metadata")
+        url = self._construct_url(resource_dto, endpoint=f"/{self._encode_filename(file_metadata_dto.name)}/metadata")
 
         response = self.http_client.get(url)
         try:
@@ -137,12 +142,12 @@ class OdpRawStorageClient(BaseModel):
             resource_dto: Dataset manifest
             file_metadata_dto: File metadata
             contents: File contents
+            overwrite: Overwrite file if it exists
 
         Returns:
             The metadata of the uploaded file
         """
-        filename = file_metadata_dto.name
-        url = self._construct_url(resource_dto, endpoint=f"/{filename}")
+        url = self._construct_url(resource_dto, endpoint=f"/{self._encode_filename(file_metadata_dto.name)}")
 
         if isinstance(contents, bytes):
             contents = BytesIO(contents)
@@ -158,7 +163,7 @@ class OdpRawStorageClient(BaseModel):
             response.raise_for_status()
         except requests.HTTPError as e:
             if response.status_code == 404:
-                raise OdpFileNotFoundError(f"File not found: {filename}") from e
+                raise OdpFileNotFoundError(f"File not found: {file_metadata_dto.name}") from e
             raise requests.HTTPError(f"HTTP Error - {response.status_code}: {response.text}")
 
         return self.get_file_metadata(resource_dto, file_metadata_dto)
@@ -217,7 +222,7 @@ class OdpRawStorageClient(BaseModel):
             file_metadata_dto: File metadata of file
             save_path: File path to save the downloaded file to
         """
-        url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}")
+        url = self._construct_url(resource_dto, endpoint=f"/{self._encode_filename(file_metadata_dto.name)}")
 
         response = self.http_client.get(url)
         try:
@@ -243,7 +248,7 @@ class OdpRawStorageClient(BaseModel):
         Returns:
             `True` if the file was deleted, `False` otherwise
         """
-        url = self._construct_url(resource_dto, endpoint=f"/{file_metadata_dto.name}")
+        url = self._construct_url(resource_dto, endpoint=f"/{self._encode_filename(file_metadata_dto.name)}")
 
         response = self.http_client.delete(url)
 
