@@ -66,8 +66,8 @@ def odp_client_test_uuid(odp_client: OdpClient) -> Tuple[OdpClient, uuid.UUID]:
         if "raw" in storage_class:
             for file in odp_client.raw.list(manifest):
                 delete_element(odp_client.raw.delete_file, manifest, file)
-                if os.path.exists(file.name):
-                    os.remove(file.name)
+                if os.path.exists(os.path.basename(file.name)):
+                    os.remove(os.path.basename(file.name))
         if "tabular" in storage_class:
             delete_element(odp_client.tabular.delete_schema, manifest, True)
         delete_element(odp_client.catalog.delete, manifest.metadata.uuid)
