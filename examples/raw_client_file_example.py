@@ -1,6 +1,6 @@
 from odp.client import OdpClient
 from odp.client.dto.file_dto import FileMetadataDto
-from odp.client.exc import OdpFileAlreadyExistsError, OdpResourceExistsError, OdpValidationError
+from odp.client.exc import OdpFileAlreadyExistsError, OdpResourceExistsError
 from odp.dto import Metadata
 from odp.dto.catalog import DatasetDto, DatasetSpec
 from odp.dto.common.contact_info import ContactInfo
@@ -34,10 +34,8 @@ dataset = DatasetDto(
 try:
     dataset = client.catalog.create(dataset)
     print("Resource created successfully:", dataset)
-except OdpValidationError as e:
-    print(e)
-except OdpResourceExistsError as e:
-    print(e)
+except OdpResourceExistsError:
+    print("Dataset already exists. Getting existing dataset")
     dataset = client.catalog.get("catalog.hubocean.io/dataset/" + dataset.metadata.name)
     print(dataset)
 
@@ -56,10 +54,8 @@ try:
             file_metadata_dto=file_metadata_dto,
             contents=data.read(),
         )
-except OdpValidationError as e:
-    print(e)
-except OdpFileAlreadyExistsError as e:
-    print(e)
+except OdpFileAlreadyExistsError:
+    print("File already exists. Getting metadata of existing file")
     file_dto = client.raw.get_file_metadata(dataset, file_metadata_dto)
 
 print("List of files in the dataset:")
