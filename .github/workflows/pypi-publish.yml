@@ -41,6 +41,7 @@ jobs:
         package_path:
           - "sdk"
           - "dto"
+          - "utils"
 
     steps:
       - name: Download build artifacts
