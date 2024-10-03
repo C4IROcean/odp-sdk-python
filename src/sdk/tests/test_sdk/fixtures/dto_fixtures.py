@@ -25,7 +25,7 @@ def raw_resource_dto() -> DatasetDto:
         spec=DatasetSpec(
             storage_class="registry.hubocean.io/storageClass/raw",
             maintainer=ContactInfo(
-                organization="HUB Ocean", contact="Name McNameson <name.mcnameson@emailprovider.com>"
+                organisation="HUB Ocean", contact="Name McNameson <name.mcnameson@emailprovider.com>"
             ),
             documentation=["https://oceandata.earth"],
             tags={"test", "hubocean"},
@@ -43,7 +43,7 @@ def tabular_resource_dto() -> DatasetDto:
         spec=DatasetSpec(
             storage_class="registry.hubocean.io/storageClass/tabular",
             maintainer=ContactInfo(
-                organization="HUB Ocean", contact="Name McNameson <name.mcnameson@emailprovider.com>"
+                organisation="HUB Ocean", contact="Name McNameson <name.mcnameson@emailprovider.com>"
             ),
             documentation=["https://oceandata.earth"],
             tags={"test", "hubocean"},
