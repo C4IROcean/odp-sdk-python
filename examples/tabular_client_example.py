@@ -25,7 +25,7 @@ dataset = DatasetDto(
         storage_class="registry.hubocean.io/storageClass/tabular",
         maintainer=ContactInfo(
             contact="User McUsername <user.mcusername@emailprovider.com>",
-            organization="Organization Name",
+            organisation="Organisation Name",
         ),
     ),
 )

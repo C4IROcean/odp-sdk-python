@@ -9,5 +9,5 @@ class ContactInfo(BaseModel):
     contact: str
     """Contact in the form `Firstname Lastname <email>`"""
 
-    organization: Optional[str] = None
-    """Organization name"""
+    organisation: Optional[str] = None
+    """Organisation name"""
