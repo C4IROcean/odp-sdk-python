@@ -62,3 +62,6 @@ class DatasetSpec(ResourceSpecABC):
 
     tags: Set[str] = Field(default_factory=set)
     """Tags for the dataset"""
+
+    attributes: List[Attribute] = Field(default_factory=list)
+    """Dataset attributes"""
