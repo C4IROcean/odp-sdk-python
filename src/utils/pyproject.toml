@@ -1,18 +1,21 @@
 [tool.poetry]
-name = "odp-dto"
+name = "odp-utils"
 version = "0.4.10"
-description = "ODP Data Transfer Object"
+description = "ODP Python Utilities"
 authors = ["Thomas Li Fredriksen <thomas.fredriksen@oceandata.earth>"]
 license = "MIT"
 readme = "README.md"
 packages = [
     {include="odp"},
-    {include="odp/dto/py.typed"},
+    {include="odp/utils/py.typed"},
 ]
+
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pydantic = "^2.4.2"
+odp-sdk = { path = "../sdk", develop = true }
+zarr = { version = "^2.18.3", python = "^3.10" }
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
