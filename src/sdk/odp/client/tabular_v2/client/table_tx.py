@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import Iterator, Union, Dict, List
+from typing import Dict, Iterator, List, Union
 
 import pyarrow as pa
 from odp.client.tabular_v2 import big

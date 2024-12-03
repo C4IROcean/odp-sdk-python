@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import TYPE_CHECKING, Iterator, Optional, List, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 import pyarrow as pa
 from odp.client.tabular_v2.big import big

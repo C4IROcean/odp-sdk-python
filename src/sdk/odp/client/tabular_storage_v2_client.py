@@ -1,3 +1,5 @@
+from typing import Union, Dict, Optional
+
 from odp.client.auth import TokenProvider
 from odp.client.tabular_v2.client import Client
 
@@ -10,11 +12,11 @@ class ClientAuthorization(Client):
         self.token_provider = token_provider
 
     def _request(
-            self,
-            path: str,
-            data: Union[Dict, bytes, None] = None,
-            params: Optional[Dict] = None,
-            headers: Optional[Dict] = None,
+        self,
+        path: str,
+        data: Union[Dict, bytes, None] = None,
+        params: Optional[Dict] = None,
+        headers: Optional[Dict] = None,
     ) -> Client.Response:
         headers = headers or {}
         headers["Authorization"] = self.token_provider.get_token()

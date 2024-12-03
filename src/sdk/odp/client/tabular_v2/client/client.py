@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import TYPE_CHECKING, Iterator, Dict, Union, Optional
+from typing import TYPE_CHECKING, Dict, Iterator, Optional, Union
 
 import requests
 from odp.client.tabular_v2.util.reader import Iter2Reader
