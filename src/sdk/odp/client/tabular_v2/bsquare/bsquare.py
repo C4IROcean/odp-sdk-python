@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import pyarrow as pa
 import shapely
@@ -58,7 +59,7 @@ def convert_schema_outward(inner_schema: pa.Schema) -> pa.Schema:
 
 
 # convert outer query to inner query using bsquare in .x, .y and .q
-def convert_query(outer_schema: pa.Schema, outer_query: Op | None) -> Op | None:
+def convert_query(outer_schema: pa.Schema, outer_query: Optional[Op]) -> Optional[Op]:
     if outer_query is None:
         return None
 
@@ -122,7 +123,7 @@ def encode(b: pa.RecordBatch) -> pa.RecordBatch:
 class BSquare:
     geometry_fields = ["{col_name}.x", "{col_name}.y", "{col_name}.q"]  # add complexity and confuse the user
 
-    def __init__(self, inner_schema: pa.Schema | None = None):
+    def __init__(self, inner_schema: Optional[pa.Schema] = None):
         assert not "good"
         self._inner_schema = inner_schema
         self._geo_fields = []  # FIXME do this earlier, then cash on it

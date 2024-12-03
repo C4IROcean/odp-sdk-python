@@ -11,6 +11,7 @@ python = "^3.9"
 odp-dto = { path = "./src/dto", develop = true }
 odp-sdk = { path = "./src/sdk", develop = true }
 jupyter = "^1.0.0"
+pyarrow = "^18.1.0"
 
 [tool.poetry.group.dev.dependencies]
 python-dotenv = "^1.0.1"

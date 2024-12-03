@@ -3,6 +3,7 @@ import logging
 import os
 import threading
 from time import time
+from typing import Optional
 
 from odp.client.tabular_v2.util.util import size2human
 
@@ -35,7 +36,7 @@ class Cache:
         def age(self) -> float:
             return time() - os.path.getctime(self.cache.root_folder + "/" + self.filename)
 
-        def get(self, max_age: float | None = None) -> bytes | None:
+        def get(self, max_age: Optional[float] = None) -> Optional[bytes]:
             try:
                 if max_age is not None:
                     if self.age() > max_age:  # expired

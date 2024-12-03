@@ -1,6 +1,6 @@
 import ast
 import json
-from typing import Any, Callable, Dict, Iterator, List, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional, Union
 
 import pyarrow.compute as pc
 from lark import Lark, Transformer, UnexpectedInput
@@ -200,7 +200,7 @@ class Scalar(Op):
                 return cls(src="true", type="bool")
             else:
                 return cls(src="false", type="bool")
-        if isinstance(val, float | int):
+        if isinstance(val, (float, int)):
             return cls(src=str(val), type="SIGNED_NUMBER")
         if isinstance(val, str):
             return cls(src=json.dumps(val), type="ESCAPED_STRING")
@@ -395,7 +395,7 @@ def parse(s: str) -> Op:
         raise ExpressionError("Can't parse:\n" + at + "\n" + str(e), at) from e
 
 
-def parse_oqs_dict(oqs: Dict[str, List[Any]] | str) -> Op:
+def parse_oqs_dict(oqs: Union[Dict[str, List[Any]], str]) -> Op:
     """parses the given JSON string into an Op tree"""
     # assert len(oqs) == 1
     if not oqs:

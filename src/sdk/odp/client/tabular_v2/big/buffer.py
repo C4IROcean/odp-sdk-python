@@ -1,5 +1,6 @@
 import uuid
 from threading import Lock
+from typing import Union
 
 import pandas as pd
 import pyarrow as pa
@@ -21,7 +22,7 @@ class Buffer:
         df[self.fields] = df[self.fields].map(self.append)
         return pa.RecordBatch.from_pandas(df, schema=batch.schema)
 
-    def append(self, data: str | bytes | None) -> str | bytes | None:
+    def append(self, data: Union[str, bytes, None]) -> Union[str, bytes, None]:
         if data is None:
             return None
         if len(data) < STR_LIMIT:

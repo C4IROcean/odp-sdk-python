@@ -12,9 +12,9 @@ class ClientAuthorization(Client):
     def _request(
             self,
             path: str,
-            data: dict | bytes | None = None,
-            params: dict | None = None,
-            headers: dict | None = None,
+            data: Union[Dict, bytes, None] = None,
+            params: Optional[Dict] = None,
+            headers: Optional[Dict] = None,
     ) -> Client.Response:
         headers = headers or {}
         headers["Authorization"] = self.token_provider.get_token()

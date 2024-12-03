@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import TYPE_CHECKING, Iterator, Optional
+from typing import TYPE_CHECKING, Iterator, Optional, List, Union
 
 import pyarrow as pa
 from odp.client.tabular_v2.big import big
@@ -87,8 +87,8 @@ class TableHandler:
 
     def select(
         self,
-        query: exp.Op | str | None = None,
-        cols: list[str] | None = None,
+        query: Union[exp.Op, str, None] = None,
+        cols: Optional[List[str]] = None,
     ) -> "Cursor":
         from odp.client.tabular_v2.client import Cursor
 
@@ -201,8 +201,8 @@ class TableHandler:
     def _select(
         self,
         tid: str = "",
-        inner_query: exp.Op | None = None,
-        cols: list[str] | None = None,
+        inner_query: Optional[exp.Op] = None,
+        cols: Optional[List[str]] = None,
         cursor: str = "",
     ) -> Iterator[pa.RecordBatch]:
         """

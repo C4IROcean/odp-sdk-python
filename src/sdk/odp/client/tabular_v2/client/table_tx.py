@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import Iterator
+from typing import Iterator, Union, Dict, List
 
 import pyarrow as pa
 from odp.client.tabular_v2 import big
@@ -22,11 +22,11 @@ class Transaction:
         self._big_buf: big.Buffer = big.Buffer(table._bigcol, table._inner_schema)
         self._old_rid = None
 
-    def select(self, query: exp.Op | str | None = None) -> Iterator[dict]:
+    def select(self, query: Union[exp.Op, str, None] = None) -> Iterator[dict]:
         for row in self._table.select(query).rows():
             yield row
 
-    def replace(self, query: exp.Op | str | None = None) -> Iterator[dict]:
+    def replace(self, query: Union[exp.Op, str, None] = None) -> Iterator[dict]:
         """perform a two-step replace:
         rows that don't match the query are kept.
         rows that match are removed and sent to the caller.
@@ -79,7 +79,7 @@ class Transaction:
                 for row in b2.to_pylist():
                     yield row
 
-    def delete(self, query: exp.Op | str | None = None) -> int:
+    def delete(self, query: Union[exp.Op, str, None] = None) -> int:
         ct = 0
         for _ in self.replace(query):
             ct += 1
@@ -107,7 +107,7 @@ class Transaction:
         self._buf = []
         self._buf_rows = 0
 
-    def insert(self, data: dict | list[dict] | pa.RecordBatch):
+    def insert(self, data: Union[Dict, List[Dict], pa.RecordBatch]):
         """queue data to be inserted on flush()"""
         if isinstance(data, dict):
             data = [data]

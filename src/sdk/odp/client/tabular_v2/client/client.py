@@ -1,6 +1,6 @@
 import io
 import logging
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING, Iterator, Dict, Union, Optional
 
 import requests
 from odp.client.tabular_v2.util.reader import Iter2Reader
@@ -15,7 +15,7 @@ class Client:
 
     class Response:
         # Abstraction for response object, shared between http client and test client
-        def __init__(self, res: requests.Response | Iterator[bytes] | dict | bytes):
+        def __init__(self, res: Union[requests.Response, Iterator[bytes], Dict, bytes]):
             if isinstance(res, requests.Response):
                 if res.status_code == 204:
                     raise FileNotFoundError(res.text)
@@ -52,9 +52,9 @@ class Client:
     def _request(
         self,
         path: str,
-        data: dict | bytes | None = None,
-        params: dict | None = None,
-        headers: dict | None = None,
+        data: Union[Dict, bytes, None] = None,
+        params: Optional[Dict] = None,
+        headers: Optional[Dict] = None,
     ) -> Response:
         logging.info("ktable: REQ %s %s (%d bytes)", path, params, len(data) if data else 0)
         if isinstance(data, dict):

@@ -1,5 +1,6 @@
 import copy
 import logging
+from typing import Optional
 
 import shapely
 from odp.client.tabular_v2.util import exp
@@ -15,12 +16,12 @@ class _QueryContext:
         c.negate = ~c.negate
         return c
 
-    def is_geo_field(self, op: exp.Op | None) -> bool:
+    def is_geo_field(self, op: Optional[exp.Op]) -> bool:
         if isinstance(op, exp.Field):
             return op.name in self.geo_fields
         return False
 
-    def convert(self, op: exp.Op | None) -> exp.Op | None:
+    def convert(self, op: Optional[exp.Op]) -> Optional[exp.Op]:
         if op is None:
             return None
         if isinstance(op, exp.Parens):
