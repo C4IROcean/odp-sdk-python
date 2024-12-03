@@ -1,4 +1,4 @@
-from typing import Union, Dict, Optional
+from typing import Dict, Optional, Union
 
 from odp.client.auth import TokenProvider
 from odp.client.tabular_v2.client import Client
