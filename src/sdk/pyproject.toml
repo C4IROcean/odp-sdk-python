@@ -23,6 +23,7 @@ pandas = { version = "^2.1.4", optional = true}
 shapely = "^2.0.4"
 geojson = "^3.1.0"
 validators = "^0.28.3"
+lark="^1.2.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

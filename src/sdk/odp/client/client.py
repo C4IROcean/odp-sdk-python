@@ -3,11 +3,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, PrivateAttr
 
+from ..dto import DatasetDto
 from .auth import TokenProvider, get_default_token_provider
 from .http_client import OdpHttpClient
 from .raw_storage_client import OdpRawStorageClient
 from .resource_client import OdpResourceClient
 from .tabular_storage_client import OdpTabularStorageClient
+from .tabular_storage_v2_client import ClientAuthorization
+from .tabular_v2.client import TableHandler
 
 
 class OdpClient(BaseModel):
@@ -28,6 +31,9 @@ class OdpClient(BaseModel):
         self._catalog_client = OdpResourceClient(http_client=self._http_client, resource_endpoint="/catalog")
         self._raw_storage_client = OdpRawStorageClient(http_client=self._http_client)
         self._tabular_storage_client = OdpTabularStorageClient(http_client=self._http_client)
+        self._tabular_storage_v2_client = ClientAuthorization(
+            base_url=self.base_url, token_provider=self.token_provider
+        )
 
     def personalize_name(self, name: str, fmt: Optional[str] = None) -> str:
         """Personalize a name by adding a postfix unique to the user
@@ -78,3 +84,6 @@ class OdpClient(BaseModel):
     @property
     def tabular(self) -> OdpTabularStorageClient:
         return self._tabular_storage_client
+
+    def table_v2(self, dataset_dto: DatasetDto) -> TableHandler:
+        return self._tabular_storage_v2_client.table(str(dataset_dto.uuid))
