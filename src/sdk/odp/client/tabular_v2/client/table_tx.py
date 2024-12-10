@@ -5,7 +5,7 @@ from typing import Dict, Iterator, List, Union
 import pyarrow as pa
 from odp.client.tabular_v2 import big
 from odp.client.tabular_v2.bsquare import bsquare
-from odp.client.tabular_v2.client.table_cursor import ScannerCursorException
+from odp.client.tabular_v2.client.table_cursor import CursorException
 from odp.client.tabular_v2.client.tablehandler import TableHandler
 from odp.client.tabular_v2.util import exp
 from odp.client.tabular_v2.util.reader import Iter2Reader
@@ -19,7 +19,7 @@ class Transaction:
         self._id = tx_id
         self._buf: list[pa.RecordBatch] = []
         self._buf_rows = 0
-        self._big_buf: big.Buffer = big.Buffer(table._bigcol, table._inner_schema)
+        self._big_buf: big.Buffer = big.Buffer(table._bigcol).with_inner_schema(table._inner_schema)
         self._old_rid = None
 
     def select(self, query: Union[exp.Op, str, None] = None) -> Iterator[dict]:
@@ -59,7 +59,7 @@ class Transaction:
                 if bm.custom_metadata:
                     meta = bm.custom_metadata
                     if b"cursor" in meta:
-                        raise ScannerCursorException(meta[b"cursor"].decode())
+                        raise CursorException(meta[b"cursor"].decode())
                     if b"error" in meta:
                         raise ValueError("remote: " + meta[b"error"].decode())
                 if bm.batch:
@@ -92,6 +92,8 @@ class Transaction:
         buf = io.BytesIO()
         w = pa.ipc.RecordBatchStreamWriter(buf, self._table._inner_schema)
         for b in self._buf:
+            if isinstance(b, list):
+                b = pa.RecordBatch.from_pylist(b, schema=self._table._outer_schema)
             b = bsquare.encode(b)
             b = self._big_buf.encode(b)
             w.write_batch(b)
@@ -112,14 +114,18 @@ class Transaction:
         if isinstance(data, dict):
             data = [data]
         if isinstance(data, list):
-            data = pa.RecordBatch.from_pylist(data, schema=self._table._outer_schema)
-
-        if isinstance(data, pa.RecordBatch):
-            # TODO bigcol + bsquare
+            # we expand the last list if it's already a list
+            last = self._buf[-1] if self._buf else None
+            if last and isinstance(last, list):
+                last.extend(data)
+            else:
+                self._buf.append(data)
+            self._buf_rows += len(data)
+        elif isinstance(data, pa.RecordBatch):
             self._buf.append(data)
             self._buf_rows += data.num_rows
         else:
             raise ValueError(f"unexpected type {type(data)}")
 
-        if self._buf_rows > 5_000:
+        if self._buf_rows > 50_000:
             self.flush()

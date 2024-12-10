@@ -3,7 +3,7 @@ from typing import Callable, Iterator
 import pyarrow as pa
 
 
-class ScannerCursorException(Exception):
+class CursorException(Exception):
     """Raised when the client is required to connect again with the given cursor to fetch more data"""
 
     def __init__(self, cursor: str):
@@ -23,7 +23,7 @@ class Cursor:
             try:
                 for b in self.scanner(cursor):
                     yield b
-            except ScannerCursorException as e:
+            except CursorException as e:
                 cursor = e.cursor
                 continue  # FIXME: Should not be raised?
             break
