@@ -6,9 +6,21 @@ from typing import Iterable, Optional
 import pyarrow as pa
 from odp.client.tabular_v2.util.exp import BinOp, Field, Op, Parens, Scalar, UnaryOp
 
+SMALL_MAX = 256
 STR_LIMIT = 128  # when to start using a reference
 STR_MIN = 12  # what to keep as prefix in the reference
 MAX_BIGFILE_SIZE = 64 * 1024 * 1024  # max size of a big file
+
+
+def convert_schema_outward(schema: pa.Schema) -> pa.Schema:
+    """drops the .ref fields"""
+    out = []
+    for name in schema.names:
+        field: pa.Field = schema.field(name)
+        if name.endswith(".ref") and name[:-4] in schema.names and field.type == pa.string():
+            continue  # skip
+        out.append(field)
+    return pa.schema(out)
 
 
 class BigCol:
@@ -26,53 +38,48 @@ class BigCol:
         raise NotImplementedError()
 
     def decode(self, batch: pa.RecordBatch) -> pa.RecordBatch:
-        cache = {}
+        cache = {}  # FIXME: can this use too much memory?
+        outer_schema = convert_schema_outward(batch.schema)
 
-        def decode(x):
-            if x is None:
-                return None
-            if isinstance(x, str):
-                prefix, ref = x.rsplit("~", 1)
-            else:
-                prefix, ref = x.rsplit(b"~", 1)
-                ref = ref.decode("utf-8")
-            if ref == "":
-                return prefix
-            big_id, start, size = ref.split(":")
-            start = int(start)
-            size = int(size)
-            if big_id in cache:
-                data = cache[big_id]
-            else:
-                data = self.fetch(big_id)
-                cache[big_id] = data
-            if isinstance(x, str):
-                return data[start : start + size].decode("utf-8")
-            else:
-                return data[start : start + size]
+        def decode(row):
+            for name in row.keys():
+                if not name.endswith(".ref"):  # only process the .ref fields
+                    continue
+                ref = row[name]
+                if not ref:
+                    continue
 
-        fields = _fields_from_schema(batch.schema)
+                target = name[:-4]
+                big_id, start, size = ref.split(":")
+                start = int(start)
+                size = int(size)
+                if big_id in cache:
+                    data = cache[big_id]
+                else:
+                    data = self.fetch(big_id)
+                    cache[big_id] = data
+                if isinstance(row[name], str):  # the field must contain the prefix, from which we infer the type
+                    row[target] = data[start : start + size].decode("utf-8")
+                else:
+                    row[target] = data[start : start + size]
+            return row
+
         df = batch.to_pandas()
-        df[fields] = df[fields].map(decode)
-        return pa.RecordBatch.from_pandas(df, schema=batch.schema)
-
-
-def _fields_from_schema(schema: pa.Schema) -> list[str]:
-    fields = []
-    for name in schema.names:
-        field: pa.Field = schema.field(name)
-        if field.type == pa.string():
-            fields.append(name)
-        if field.type == pa.binary():
-            fields.append(name)
-    return fields
+        df = df.apply(decode, axis=1)
+        return pa.RecordBatch.from_pandas(df, schema=outer_schema)
 
 
 def inner_exp(schema: pa.Schema, op: Optional[Op]) -> Optional[Op]:
     if op is None:
         return None
 
-    fields = _fields_from_schema(schema)
+    fields = []
+    for name in schema.names:
+        field: pa.Field = schema.field(name)
+        if field.type != pa.string() and field.type != pa.binary():
+            continue
+        if field.metadata and b"big" in field.metadata:
+            fields.append(name)
 
     # TODO don't use the visitor, instead parse manually and use negation context
     def visitor(neg: bool, op: Op) -> Op:
@@ -152,7 +159,7 @@ def _inner_exp_binop_str(neg: bool, field: Field, op: str, right: str) -> Op:
         return BinOp(
             left=field,
             op=op,
-            right=Scalar.from_py(right + "~"),
+            right=Scalar.from_py(right),
         )
     logging.error("can't convert big-col expression: %s %s %s", field, op, right)
     raise ValueError("can't convert big-col expression")

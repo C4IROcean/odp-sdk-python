@@ -26,15 +26,15 @@ class Cache:
             self.size = len(value)
             self.cache.tot_bytes += self.size
 
-            with open(self.cache.root_folder + "/" + self.filename, "wb") as f:
+            with open(os.path.join(self.cache.root_folder, self.filename), "wb") as f:
                 f.write(value)
 
         def exists(self) -> bool:
-            filename = self.cache.root_folder + "/" + self.filename
+            filename = os.path.join(self.cache.root_folder, self.filename)
             return os.path.exists(filename)
 
         def age(self) -> float:
-            return time() - os.path.getctime(self.cache.root_folder + "/" + self.filename)
+            return time() - os.path.getctime(os.path.join(self.cache.root_folder, self.filename))
 
         def get(self, max_age: Optional[float] = None) -> Optional[bytes]:
             try:
@@ -43,23 +43,23 @@ class Cache:
                         logging.info("expired %s (age: %.f > %.f)", self.key, self.age(), max_age)
                         # TODO remove?
                         return None
-                with open(self.cache.root_folder + "/" + self.filename, "rb") as f:
+                with open(os.path.join(self.cache.root_folder, self.filename), "rb") as f:
                     return f.read()
             except FileNotFoundError:
                 return None
 
         def touch(self):
-            file_path = self.cache.root_folder + "/" + self.filename
+            file_path = os.path.join(self.cache.root_folder, self.filename)
             if not os.path.exists(file_path):
                 return
             os.utime(file_path)
 
         def unlink(self):
             try:
-                os.unlink(self.cache.root_folder + "/" + self.filename)
+                os.unlink(os.path.join(self.cache.root_folder, self.filename))
             except FileNotFoundError:
                 logging.info(
-                    "removing but already gone: %s (%s)", self.key, self.cache.root_folder + "/" + self.filename
+                    "removing but already gone: %s (%s)", self.key, os.path.join(self.cache.root_folder, self.filename)
                 )
 
         def __enter__(self):
@@ -80,11 +80,13 @@ class Cache:
 
         os.makedirs(self.root_folder, exist_ok=True)
         # list files by mtime
-        files = sorted(os.listdir(self.root_folder), key=lambda f: os.path.getmtime(self.root_folder + "/" + f))
+        files = sorted(
+            os.listdir(self.root_folder), key=lambda file: os.path.getmtime(os.path.join(self.root_folder, file))
+        )
         for f in files:
             key = base64.b64decode(f.encode()).decode()
             e = Cache.Entry(key, self)
-            size = os.path.getsize(self.root_folder + "/" + f)
+            size = os.path.getsize(os.path.join(self.root_folder, f))
             self.tot_bytes += size
             assert f == e.filename
             logging.info("recovered %s file %s", size2human(size), key)
@@ -102,7 +104,7 @@ class Cache:
                     return
                 e = self.cache.pop(0)
                 try:
-                    size = os.path.getsize(self.root_folder + "/" + e.filename)
+                    size = os.path.getsize(os.path.join(self.root_folder, e.filename))
                     self.tot_bytes -= size
                     e.unlink()
                     logging.info("evicted %s file %s", size2human(size), e.key)

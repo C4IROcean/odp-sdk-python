@@ -9,7 +9,7 @@ from odp.client.tabular_v2.bsquare import bsquare
 
 # from odp.ktable.client import Cursor
 from odp.client.tabular_v2.client import Client
-from odp.client.tabular_v2.client.table_cursor import ScannerCursorException
+from odp.client.tabular_v2.client.table_cursor import CursorException
 from odp.client.tabular_v2.util import exp
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ class TableHandler:
             path="/api/table/v2/big_upload",
             params={"table_id": self._id, "big_id": bid},
             data=data,
-        ).json()
+        )
 
     def _bigcol_download(self, big_id: str) -> bytes:
         return self._client._request(
@@ -227,12 +227,11 @@ class TableHandler:
                 if b"error" in bm.custom_metadata:
                     raise Exception("server error: %s" % bm.custom_metadata[b"error"].decode())
                 elif b"cursor" in bm.custom_metadata:
-                    raise ScannerCursorException(bm.custom_metadata[b"cursor"].decode())
+                    raise CursorException(bm.custom_metadata[b"cursor"].decode())
                 else:
                     logging.warning("ignoring custom metadata: %s", bm.custom_metadata)
 
-            if bm.batch:
-                yield bm.batch
+            yield bm.batch
 
     def _insert_batch(
         self,
