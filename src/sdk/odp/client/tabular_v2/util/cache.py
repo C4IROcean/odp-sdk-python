@@ -80,7 +80,9 @@ class Cache:
 
         os.makedirs(self.root_folder, exist_ok=True)
         # list files by mtime
-        files = sorted(os.listdir(self.root_folder), key=lambda file: os.path.getmtime(os.path.join(self.root_folder, file)))
+        files = sorted(
+            os.listdir(self.root_folder), key=lambda file: os.path.getmtime(os.path.join(self.root_folder, file))
+        )
         for f in files:
             key = base64.b64decode(f.encode()).decode()
             e = Cache.Entry(key, self)
