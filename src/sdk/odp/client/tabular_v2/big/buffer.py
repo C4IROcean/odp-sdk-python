@@ -86,6 +86,8 @@ class Buffer:
                 if self.size > MAX_BIGFILE_SIZE:  # too much data? flush
                     self.parent.upload(self.next_id, self.data)
                     self.next_id = uuid.uuid4().hex
+                    self.data = []
+                    self.size = 0
             row[name + ".ref"] = ref
             row[name] = row[name][0:STR_MIN]
         return row
