@@ -3,7 +3,7 @@ import logging
 from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 import pyarrow as pa
-from odp.client.tabular_v2.big import big
+from odp.client.tabular_v2.big import big, convert_schema_inward
 from odp.client.tabular_v2.big.remote import RemoteBigCol
 from odp.client.tabular_v2.bsquare import bsquare
 
@@ -41,7 +41,8 @@ class TableHandler:
         assert len(empty) == 1
         assert empty[0].num_rows == 0
         self._inner_schema = empty[0].schema
-        self._outer_schema = bsquare.convert_schema_outward(self._inner_schema)
+        mid = big.convert_schema_outward(self._inner_schema)
+        self._outer_schema = bsquare.convert_schema_outward(mid)
 
     def drop(self):
         try:
@@ -58,7 +59,8 @@ class TableHandler:
 
     def create(self, schema: pa.Schema):
         self._outer_schema = schema
-        self._inner_schema = bsquare.convert_schema_inward(schema)
+        schema = bsquare.convert_schema_inward(schema)
+        self._inner_schema = convert_schema_inward(schema)
         buf = io.BytesIO()
         w = pa.ipc.RecordBatchStreamWriter(buf, self._inner_schema)
         w.write_batch(pa.RecordBatch.from_pylist([], schema=self._inner_schema))
@@ -131,9 +133,9 @@ class TableHandler:
                     tab = pa.Table.from_batches([b], schema=b.schema)
                     if e is not None:  # drop false positives
                         before = tab.num_rows
-                        logging.debug("filtering before %d rows...", tab.num_rows)
                         tab = tab.filter(e)
-                        logging.info("filtered %d rows to %d", before, tab.num_rows)
+                        if tab.num_rows < before:
+                            logging.debug("filtered %d rows to %d", before, tab.num_rows)
                     if cols:
                         tab = tab.select(cols)  # drop the cols used for filtering
                     for x in tab.to_batches():
@@ -187,10 +189,6 @@ class TableHandler:
 
     def schema(self) -> pa.Schema:
         return self._outer_schema
-
-    @property
-    def name(self) -> str:
-        return self._id
 
     # used as a filter in Cursor, encode in tx
     def _decode(self, b: pa.RecordBatch) -> pa.RecordBatch:
