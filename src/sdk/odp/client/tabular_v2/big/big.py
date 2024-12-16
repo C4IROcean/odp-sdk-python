@@ -41,10 +41,16 @@ class BigCol:
         cache = {}  # FIXME: can this use too much memory?
         outer_schema = convert_schema_outward(batch.schema)
 
-        def decode(row):
-            for name in row.keys():
-                if not name.endswith(".ref"):  # only process the .ref fields
-                    continue
+        refs = []
+        for name in outer_schema.names:
+            if name.endswith(".ref"):
+                refs.append(name)
+
+        if not refs:
+            return batch.select(outer_schema.names)
+
+        def decode_by_row(row):
+            for name in refs:
                 ref = row[name]
                 if not ref:
                     continue
@@ -65,7 +71,7 @@ class BigCol:
             return row
 
         df = batch.to_pandas()
-        df = df.apply(decode, axis=1)
+        df = df.apply(decode_by_row, axis=1)
         return pa.RecordBatch.from_pandas(df, schema=outer_schema)
 
 
