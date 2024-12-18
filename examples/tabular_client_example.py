@@ -2,12 +2,40 @@ from odp.client import OdpClient
 from odp.client.dto.table_spec import TableSpec
 from odp.client.exc import OdpResourceNotFoundError
 from odp.dto import Metadata
-from odp.dto.catalog import DatasetDto, DatasetSpec
+from odp.dto.catalog import DataCollectionDto, DataCollectionSpec, DatasetDto, DatasetSpec
 from odp.dto.common.contact_info import ContactInfo
+from odp.dto.common.license import License
 
 # Instantiate the client without specifying a token provider.
-#   The token provider will be set based on the environment.
+# The token provider will be set based on the environment.
 client = OdpClient()
+
+data_collection_name = "collection-manifest-example"
+
+collection = DataCollectionDto(
+    metadata=Metadata(
+        name=data_collection_name,
+        display_name="collection-example",
+        description="A test data collection",
+    ),
+    spec=DataCollectionSpec(
+        published_by=ContactInfo(
+            contact="User McUsername <user.mcusername@emailprovider.com>",
+            organisation="Organisation Name",
+        ),
+        published_date="2019-06-19T06:00:00",
+        website="https://hubocean.earth",
+        license=License(
+            name="proprietary",
+            full_text="This is a very strict legal text describing the data license.",
+            href="www.wikipedia.org",
+        ),
+        tags=[],
+    ),
+)
+
+collection = client.catalog.create(collection)
+print("Collection was created")
 
 # Declare a dataset manifest to add to the catalog
 
@@ -21,6 +49,7 @@ dataset = DatasetDto(
         labels={"hubocean.io/test": True},
     ),
     spec=DatasetSpec(
+        data_collection=f"catalog.hubocean.io/dataCollection/{data_collection_name}",
         storage_controller="registry.hubocean.io/storageController/storage-tabular",
         storage_class="registry.hubocean.io/storageClass/tabular",
         maintainer=ContactInfo(
@@ -29,7 +58,6 @@ dataset = DatasetDto(
         ),
     ),
 )
-
 
 # The dataset is created in the catalog.
 dataset = client.catalog.create(dataset)
@@ -94,7 +122,8 @@ except OdpResourceNotFoundError as e:
 
 print("Deleting dataset")
 
-# Delete the dataset
+# Delete the dataset and collection
 client.catalog.delete(dataset)
+client.catalog.delete(collection)
 
 print("Done")
