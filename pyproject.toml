@@ -37,6 +37,9 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 log_cli = "true"
 asyncio_mode = "auto"
+log_level = "INFO"
+log_format = "%(asctime)s  %(levelname)s  %(message)s [%(filename)s:%(lineno)d]"
+log_date_format = "%Y-%m-%d %H:%M:%S"
 testpaths = [
     "src/sdk/tests",
     "src/dto/tests",

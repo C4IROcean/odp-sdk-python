@@ -67,7 +67,7 @@ class Buffer:
             if data is None:
                 continue
             if len(data) > SMALL_MAX:
-                raise ValueError(f"field {name} is too long: “{data}”")
+                raise ValueError(f"field {name} is too long: “{len(data)}”")
 
         for name in self.big_fields:
             row[name + ".ref"] = None
