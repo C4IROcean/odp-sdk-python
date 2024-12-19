@@ -127,5 +127,5 @@ class Transaction:
         else:
             raise ValueError(f"unexpected type {type(data)}")
 
-        if self._buf_rows > 50_000:
+        if self._buf_rows > 10_000:
             self.flush()

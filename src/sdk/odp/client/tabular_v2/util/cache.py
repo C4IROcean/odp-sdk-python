@@ -89,11 +89,11 @@ class Cache:
             size = os.path.getsize(os.path.join(self.root_folder, f))
             self.tot_bytes += size
             assert f == e.filename
-            logging.info("recovered %s file %s", size2human(size), key)
+            # logging.debug("recovered %s file %s", size2human(size), key)
             self.cache.append(e)
 
         self._make_space(0)
-        logging.info("recovered %d files for a total of %s", len(self.cache), size2human(self.tot_bytes))
+        # logging.debug("recovered %d files for a total of %s", len(self.cache), size2human(self.tot_bytes))
 
     def _make_space(self, space_needed):
         with self.lock:
